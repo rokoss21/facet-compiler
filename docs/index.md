@@ -1,9 +1,3 @@
----
-layout: default
-title: FACET v2.0 Documentation
-description: Complete documentation suite for FACET v2.0 - Neural Architecture Description Language
----
-
 # FACET v2.0 Documentation
 
 **Complete documentation suite for FACET v2.0 - Neural Architecture Description Language**
