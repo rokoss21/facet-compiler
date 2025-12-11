@@ -1,3 +1,5 @@
+---
+---
 # 12. FACET v2.0 Error Codes Reference
 
 **Reading Time:** 15-20 minutes | **Difficulty:** Intermediate | **Previous:** [11-security.md](11-security.md) | **Next:** [13-import-system.md](13-import-system.md)

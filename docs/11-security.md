@@ -1,3 +1,5 @@
+---
+---
 # 11. FACET Security Model & Best Practices
 
 **Reading Time:** 20-25 minutes | **Difficulty:** Intermediate | **Previous:** [10-performance.md](10-performance.md) | **Next:** [12-errors.md](12-errors.md)

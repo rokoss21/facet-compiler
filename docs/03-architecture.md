@@ -1,3 +1,5 @@
+---
+---
 # 03. FACET v2.0 Architecture Guide
 
 **Reading Time:** 20-30 minutes | **Difficulty:** Intermediate | **Previous:** [02-tutorial.md](02-tutorial.md) | **Next:** [04-type-system.md](04-type-system.md)

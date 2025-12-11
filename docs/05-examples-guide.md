@@ -1,3 +1,5 @@
+---
+---
 # 05. FACET Examples Guide
 
 **Reading Time:** 45-60 minutes | **Difficulty:** Beginner → Advanced | **Previous:** [04-type-system.md](04-type-system.md) | **Next:** [06-cli.md](06-cli.md)

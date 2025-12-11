@@ -1,3 +1,5 @@
+---
+---
 # 07. FACET v2.0 Rust API Reference
 
 **Reading Time:** 30-40 minutes | **Difficulty:** Advanced | **Previous:** [06-cli.md](06-cli.md) | **Next:** [08-lenses.md](08-lenses.md)

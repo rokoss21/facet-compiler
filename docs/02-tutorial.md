@@ -1,3 +1,5 @@
+---
+---
 # 02. FACET v2.0 Complete Tutorial
 
 **Reading Time:** 30-60 minutes | **Difficulty:** Beginner → Advanced | **Previous:** [01-quickstart.md](01-quickstart.md) | **Next:** [03-architecture.md](03-architecture.md)

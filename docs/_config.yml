@@ -1,0 +1,13 @@
+title: "FACET v2.0 Documentation"
+description: "Complete documentation suite for FACET v2.0 - Neural Architecture Description Language"
+markdown: kramdown
+kramdown:
+  input: GFM
+theme: minima
+defaults:
+  - scope:
+      path: ""
+      type: "pages"
+    values:
+      layout: "default"
+      permalink: "/:basename.md"

@@ -1,3 +1,5 @@
+---
+---
 # 06. FACET CLI Reference
 
 **Reading Time:** 15-20 minutes | **Difficulty:** Beginner | **Previous:** [05-examples-guide.md](05-examples-guide.md) | **Next:** [07-api-reference.md](07-api-reference.md)

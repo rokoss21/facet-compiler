@@ -1,3 +1,5 @@
+---
+---
 # 04. FACET Type System (FTS) Reference
 
 **Reading Time:** 25-35 minutes | **Difficulty:** Intermediate | **Previous:** [03-architecture.md](03-architecture.md) | **Next:** [05-examples-guide.md](05-examples-guide.md)
