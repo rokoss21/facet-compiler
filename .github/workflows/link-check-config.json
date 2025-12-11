@@ -1,0 +1,28 @@
+{
+  "ignorePatterns": [
+    {
+      "pattern": "^http"
+    }
+  ],
+  "replacementPatterns": [
+    {
+      "pattern": "^/",
+      "replacement": "{{BASEURL}}/"
+    }
+  ],
+  "httpHeaders": [
+    {
+      "urls": ["https://crates.io"],
+      "headers": {
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:94.0) Gecko/20100101 Firefox/94.0"
+      }
+    }
+  ],
+  "timeout": "30s",
+  "retryOn429": true,
+  "retryCount": 3,
+  "fallbackHttpStatus": [999]
+}
+
+
