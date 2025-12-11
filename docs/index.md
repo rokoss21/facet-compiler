@@ -1,3 +1,9 @@
+---
+layout: default
+title: FACET v2.0 Documentation
+description: Complete documentation suite for FACET v2.0 - Neural Architecture Description Language
+---
+
 # FACET v2.0 Documentation
 
 **Complete documentation suite for FACET v2.0 - Neural Architecture Description Language**
@@ -88,9 +94,6 @@
 **Ready to master FACET? Start with [01-quickstart.md](01-quickstart.md)!** 🚀
 
 *Documentation automatically generated and maintained. Last updated: 2025-12-09*
-
-
-**Complete documentation suite for FACET v2.0 - Neural Architecture Description Language**
 
 ## 📚 Documentation Map
 
