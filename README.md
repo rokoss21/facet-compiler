@@ -1,4 +1,4 @@
-# FACET v2.0 Compiler (`fct`)
+# FACET Compiler (`fct`)
 
 <div align="center">
 
