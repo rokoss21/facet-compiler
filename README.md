@@ -8,11 +8,15 @@
 [![Coverage](https://img.shields.io/badge/coverage-100%25-success?style=for-the-badge)](facetparcer-checklist.md)
 [![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue?style=for-the-badge)](LICENSE-MIT)
 
+<div align="center">
+
 **The First Deterministic Neural Architecture Description Language (NADL)**
 
 *Infrastructure-as-Code for AI Agents. Typed. Compiled. Deterministic.*
 
 **From "Interesting GitHub Project" to "Industrial Standard"** 🚀
+
+</div>
 
 <div align="center">
   <img src="https://raw.githubusercontent.com/rokoss21/FACET/main/assets/logo.png" alt="FACET Logo" width="100%" height="auto" style="max-width: 600px;">
@@ -22,6 +26,8 @@
 </div>
 
 ---
+
+
 
 ## 🧠 What is NADL? (Neural Architecture Description Language)
 
