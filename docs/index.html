@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FACET v2.0 Documentation</title>
+    <meta name="description" content="Complete documentation suite for FACET v2.0 - Neural Architecture Description Language">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #fafafa;
+        }
+        .hero {
+            text-align: center;
+            padding: 60px 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .hero h1 { margin: 0 0 15px 0; font-size: 3em; font-weight: 300; }
+        .hero h2 { margin: 0 0 20px 0; font-size: 1.5em; font-weight: 400; opacity: 0.9; }
+        .hero p { margin: 0 0 30px 0; font-size: 1.2em; opacity: 0.9; }
+        .badges { margin: 30px 0; }
+        .badges img { margin: 0 8px; vertical-align: middle; }
+        .section {
+            background: white;
+            margin: 30px 0;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .section h2 { color: #2c3e50; border-bottom: 3px solid #667eea; padding-bottom: 10px; margin-top: 0; }
+        .section h3 { color: #34495e; margin-top: 30px; }
+        .crisis {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            padding: 25px;
+            border-radius: 8px;
+            margin: 25px 0;
+            border-left: 5px solid #f39c12;
+        }
+        .solutions {
+            background: linear-gradient(135deg, #d4edda 0%, #a8d5ba 100%);
+            padding: 25px;
+            border-radius: 8px;
+            margin: 25px 0;
+            border-left: 5px solid #27ae60;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 25px 0;
+            background: white;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        th, td {
+            border: 1px solid #e1e8ed;
+            padding: 15px;
+            text-align: left;
+        }
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+        }
+        tr:nth-child(even) { background: #f8f9fa; }
+        .feature-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 25px 0;
+        }
+        .feature-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-top: 4px solid #667eea;
+        }
+        .feature-card h4 { margin: 0 0 10px 0; color: #2c3e50; }
+        .feature-card ul { margin: 0; padding-left: 20px; }
+        .feature-card li { margin: 8px 0; }
+        .cta {
+            text-align: center;
+            margin: 50px 0;
+            padding: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+        .cta h2 { margin: 0 0 20px 0; font-size: 2.5em; }
+        .cta p { margin: 0 0 30px 0; font-size: 1.3em; }
+        .cta a { color: white; text-decoration: none; font-weight: bold; font-size: 1.2em; }
+        .cta a:hover { text-decoration: underline; }
+        footer {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            margin-top: 50px;
+            padding: 20px;
+        }
+        footer a { color: #667eea; text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
+        .diagram {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 10px;
+            margin: 25px 0;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+
+<div class="hero">
+    <h1>📚 FACET v2.0 Documentation</h1>
+    <h2>The First Deterministic Neural Architecture Description Language (NADL)</h2>
+    <p>Transforming AI engineering from artisanal practice to systematic discipline</p>
+
+    <div class="badges">
+        <img src="https://img.shields.io/badge/version-0.1.0-blue?style=flat-square" alt="Version">
+        <img src="https://img.shields.io/badge/license-MIT%2FApache--2.0-green?style=flat-square" alt="License">
+        <img src="https://img.shields.io/badge/GitHub-rokoss21%2Ffacet--compiler-black?style=flat-square&logo=github" alt="GitHub">
+    </div>
+</div>
+
+<div class="section">
+    <h2>🚀 What is FACET?</h2>
+
+    <p><strong>FACET (Feature-Aware Contracted Extension for Text)</strong> is a revolutionary approach to AI agent development that brings <strong>software engineering discipline</strong> to neural architectures.</p>
+
+    <p>Instead of fragile prompt engineering, FACET provides:</p>
+    <ul>
+        <li><strong>🔒 Type Safety</strong> - Compile-time validation of agent behavior</li>
+        <li><strong>⚡ Deterministic Execution</strong> - Predictable, reproducible results</li>
+        <li><strong>🔧 Modular Architecture</strong> - Reusable components and clean abstractions</li>
+        <li><strong>🧪 Testing Framework</strong> - Automated validation of AI behavior</li>
+    </ul>
+</div>
+
+<div class="section">
+    <h2>💡 Why Choose FACET?</h2>
+
+    <div class="crisis">
+        <h3>🎯 The AI Engineering Crisis</h3>
+        <p>Traditional AI development suffers from:</p>
+        <ul>
+            <li>❌ <strong>Unpredictable behavior</strong> - Same prompts yield different results</li>
+            <li>❌ <strong>Fragile architectures</strong> - Small changes break entire systems</li>
+            <li>❌ <strong>No testing</strong> - Impossible to validate AI behavior</li>
+            <li>❌ <strong>Vendor lock-in</strong> - Tied to specific LLM providers</li>
+        </ul>
+    </div>
+
+    <div class="solutions">
+        <h3>✅ FACET Solutions</h3>
+        <table>
+            <tr><th>Problem</th><th>Traditional AI</th><th>FACET NADL</th></tr>
+            <tr><td><strong>Behavior</strong></td><td>Emergent & unpredictable</td><td><strong>Deterministic & typed</strong></td></tr>
+            <tr><td><strong>Testing</strong></td><td>Manual validation</td><td><strong>Automated test suites</strong></td></tr>
+            <tr><td><strong>Maintenance</strong></td><td>Brittle & error-prone</td><td><strong>Type-safe & refactorable</strong></td></tr>
+            <tr><td><strong>Scaling</strong></td><td>Trial & error</td><td><strong>Mathematical guarantees</strong></td></tr>
+        </table>
+    </div>
+
+    <p><strong>FACET transforms AI from black-box magic into white-box engineering.</strong> 🔮➜🔧</p>
+</div>
+
+<div class="section">
+    <h2>🚀 Quick Start</h2>
+    <p><strong>New to FACET?</strong> Follow this recommended learning path:</p>
+
+    <div class="diagram">
+<h3>📖 Learning Journey</h3>
+<pre>
+graph LR
+    A[01-quickstart.md] --> B[02-tutorial.md]
+    B --> C[Choose Your Path]
+
+    C --> D[Developer Path]
+    C --> E[Production Path]
+
+    D --> F[06-cli.md]
+    D --> G[07-api-reference.md]
+    D --> H[08-lenses.md]
+
+    E --> I[10-performance.md]
+    E --> J[11-security.md]
+    E --> K[12-errors.md]
+
+    F --> L[Advanced Topics]
+    G --> L
+    H --> L
+    I --> L
+    J --> L
+    K --> L
+</pre>
+    </div>
+</div>
+
+<div class="section">
+    <h2>📚 Complete Documentation Guide</h2>
+
+    <h3>🎯 Structured Learning Path</h3>
+    <p>Follow this comprehensive curriculum designed for progressive skill development:</p>
+
+    <table>
+        <tr>
+            <th>#</th>
+            <th>Document</th>
+            <th>Purpose</th>
+            <th>Difficulty</th>
+            <th>Time</th>
+        </tr>
+        <tr>
+            <td><strong>01</strong></td>
+            <td><a href="01-quickstart.md">Quick Start Guide</a></td>
+            <td>Get running in 5 minutes</td>
+            <td>Beginner</td>
+            <td>5 min</td>
+        </tr>
+        <tr>
+            <td><strong>02</strong></td>
+            <td><a href="02-tutorial.md">Complete Tutorial</a></td>
+            <td>Learn from basics to advanced</td>
+            <td>Beginner → Advanced</td>
+            <td>30-60 min</td>
+        </tr>
+        <tr>
+            <td><strong>03</strong></td>
+            <td><a href="03-architecture.md">System Architecture</a></td>
+            <td>Understand FACET internals</td>
+            <td>Intermediate</td>
+            <td>20-30 min</td>
+        </tr>
+        <tr>
+            <td><strong>04</strong></td>
+            <td><a href="04-type-system.md">Type System (FTS)</a></td>
+            <td>Master Facet Type System</td>
+            <td>Intermediate</td>
+            <td>25-35 min</td>
+        </tr>
+        <tr>
+            <td><strong>05</strong></td>
+            <td><a href="05-examples-guide.md">Examples Guide</a></td>
+            <td>Practical examples explained</td>
+            <td>Beginner → Advanced</td>
+            <td>45-60 min</td>
+        </tr>
+        <tr>
+            <td><strong>06</strong></td>
+            <td><a href="06-cli.md">CLI Reference</a></td>
+            <td>Command-line interface</td>
+            <td>Beginner</td>
+            <td>15-20 min</td>
+        </tr>
+        <tr>
+            <td><strong>07</strong></td>
+            <td><a href="07-api-reference.md">Rust API Reference</a></td>
+            <td>Complete Rust API docs</td>
+            <td>Advanced</td>
+            <td>30-40 min</td>
+        </tr>
+        <tr>
+            <td><strong>08</strong></td>
+            <td><a href="08-lenses.md">Lens Library</a></td>
+            <td>Transformation functions</td>
+            <td>Intermediate</td>
+            <td>20-25 min</td>
+        </tr>
+        <tr>
+            <td><strong>09</strong></td>
+            <td><a href="09-testing.md">Testing Guide</a></td>
+            <td>@test blocks and mocking</td>
+            <td>Intermediate</td>
+            <td>15-20 min</td>
+        </tr>
+        <tr>
+            <td><strong>10</strong></td>
+            <td><a href="10-performance.md">Performance Guide</a></td>
+            <td>Optimization and benchmarking</td>
+            <td>Intermediate</td>
+            <td>25-30 min</td>
+        </tr>
+        <tr>
+            <td><strong>11</strong></td>
+            <td><a href="11-security.md">Security Model</a></td>
+            <td>Security best practices</td>
+            <td>Intermediate</td>
+            <td>20-25 min</td>
+        </tr>
+        <tr>
+            <td><strong>12</strong></td>
+            <td><a href="12-errors.md">Error Codes</a></td>
+            <td>Troubleshooting guide</td>
+            <td>Intermediate</td>
+            <td>15-20 min</td>
+        </tr>
+        <tr>
+            <td><strong>13</strong></td>
+            <td><a href="13-import-system.md">Import System</a></td>
+            <td>Modularity and imports</td>
+            <td>Intermediate</td>
+            <td>20-25 min</td>
+        </tr>
+    </table>
+
+    <h3>🎯 Quick Access by Topic</h3>
+
+    <div class="feature-list">
+        <div class="feature-card">
+            <h4>🚀 Getting Started</h4>
+            <ul>
+                <li><a href="01-quickstart.md">Quick Start Guide</a> - Fast setup</li>
+                <li><a href="05-examples-guide.md">Examples Guide</a> - Learn by examples</li>
+                <li><a href="faq.md">FAQ</a> - Frequently asked questions</li>
+            </ul>
+        </div>
+
+        <div class="feature-card">
+            <h4>🔧 Technical Reference</h4>
+            <ul>
+                <li><a href="03-architecture.md">System Architecture</a> - Core design</li>
+                <li><a href="04-type-system.md">Type System (FTS)</a> - Type safety</li>
+                <li><a href="07-api-reference.md">Rust API</a> - Developer docs</li>
+                <li><a href="08-lenses.md">Lens Library</a> - Functions</li>
+            </ul>
+        </div>
+
+        <div class="feature-card">
+            <h4>🛠️ Usage & Tools</h4>
+            <ul>
+                <li><a href="06-cli.md">CLI Reference</a> - Command line</li>
+                <li><a href="09-testing.md">Testing Guide</a> - Quality assurance</li>
+                <li><a href="13-import-system.md">Import System</a> - Modularity</li>
+            </ul>
+        </div>
+
+        <div class="feature-card">
+            <h4>⚡ Production</h4>
+            <ul>
+                <li><a href="10-performance.md">Performance</a> - Optimization</li>
+                <li><a href="11-security.md">Security</a> - Best practices</li>
+                <li><a href="12-errors.md">Errors</a> - Troubleshooting</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="section">
+    <h2>🔗 Related Resources</h2>
+    <ul>
+        <li><strong><a href="../README.md">Project README</a></strong> - Overview and status</li>
+        <li><strong><a href="facet2-specification.md">Technical Specification</a></strong> - Complete NADL spec</li>
+        <li><strong><a href="../examples/">Examples Directory</a></strong> - FACET file examples</li>
+        <li><strong><a href="https://github.com/rokoss21/facet-compiler">GitHub Repository</a></strong> - Source code</li>
+    </ul>
+</div>
+
+<div class="cta">
+    <h2>🚀 Ready to Master FACET?</h2>
+    <p>Start your journey with the <a href="01-quickstart.md">Quick Start Guide</a></p>
+    <p style="opacity: 0.9; font-size: 0.9em;">Documentation automatically generated and maintained.<br>Last updated: 2025-12-09</p>
+</div>
+
+<footer>
+    <p>© 2025 Emil Rokossovskiy. Licensed under <a href="../LICENSE-APACHE">Apache 2.0</a> or <a href="../LICENSE-MIT">MIT</a>.</p>
+    <p><a href="https://rokoss21.tech">rokoss21.tech</a></p>
+</footer>
+
+</body>
+</html>
