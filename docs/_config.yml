@@ -1,0 +1,14 @@
+title: "FACET v2.0 Documentation"
+description: "Complete documentation suite for FACET v2.0 - Neural Architecture Description Language"
+theme: minima
+markdown: kramdown
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+include:
+  - assets
+exclude:
+  - "*.md.bak"
