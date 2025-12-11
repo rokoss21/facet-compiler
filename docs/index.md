@@ -95,8 +95,6 @@ description: Complete documentation suite for FACET v2.0 - Neural Architecture D
 
 *Documentation automatically generated and maintained. Last updated: 2025-12-09*
 
-## 📚 Documentation Map
-
 ### 🎯 Learning Path (Recommended Order)
 
 | # | Document | Purpose | Difficulty | Time |
