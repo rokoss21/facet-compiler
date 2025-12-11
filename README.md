@@ -14,6 +14,8 @@ _Human-readable, machine-deterministic instructions for AI systems._
 
 ![FACET Logo](https://raw.githubusercontent.com/rokoss21/FACET/main/assets/logo.png)
 
+</div>
+
 ---
 
 
@@ -114,8 +116,6 @@ Infrastructure-as-Code for Neural Networks
 **Together, these create the first true programming language for describing neural network behavior.**
 
 [Quick Start](docs/01-quickstart.md) • [Documentation](docs/README.md) • [Specification](facet2-specification.md) • [Examples](examples/README.md)
-
-</div>
 
 ---
 
