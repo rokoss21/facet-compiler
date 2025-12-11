@@ -10,6 +10,7 @@ Cargo.lock
 # IDE and OS files
 .vscode/
 .idea/
+.claude/
 *.swp
 *.swo
 *~
