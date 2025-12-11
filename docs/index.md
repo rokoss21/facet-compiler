@@ -4,13 +4,96 @@ title: FACET v2.0 Documentation
 description: Complete documentation suite for FACET v2.0 - Neural Architecture Description Language
 ---
 
-# FACET v2.0 Documentation
+# 📚 FACET v2.0 Documentation
 
-**Complete documentation suite for FACET v2.0 - Neural Architecture Description Language**
+<div align="center">
 
-## 📚 Documentation Map
+## 🎯 Welcome to FACET Documentation
 
-### 🎯 Learning Path (Recommended Order)
+**The First Deterministic Neural Architecture Description Language (NADL)**
+
+*Transforming AI engineering from artisanal practice to systematic discipline*
+
+[![Version](https://img.shields.io/badge/version-0.1.0-blue?style=flat-square)](https://github.com/rokoss21/facet-compiler/releases)
+[![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-green?style=flat-square)](../LICENSE-MIT)
+[![GitHub](https://img.shields.io/badge/GitHub-rokoss21%2Ffacet--compiler-black?style=flat-square&logo=github)](https://github.com/rokoss21/facet-compiler)
+
+---
+
+### 🚀 **What is FACET?**
+
+**FACET (Feature-Aware Contracted Extension for Text)** is a revolutionary approach to AI agent development that brings **software engineering discipline** to neural architectures.
+
+Instead of fragile prompt engineering, FACET provides:
+- **🔒 Type Safety** - Compile-time validation of agent behavior
+- **⚡ Deterministic Execution** - Predictable, reproducible results
+- **🔧 Modular Architecture** - Reusable components and clean abstractions
+- **🧪 Testing Framework** - Automated validation of AI behavior
+
+---
+
+</div>
+
+## 💡 Why Choose FACET?
+
+### 🎯 **The AI Engineering Crisis**
+
+Traditional AI development suffers from:
+- ❌ **Unpredictable behavior** - Same prompts yield different results
+- ❌ **Fragile architectures** - Small changes break entire systems
+- ❌ **No testing** - Impossible to validate AI behavior
+- ❌ **Vendor lock-in** - Tied to specific LLM providers
+
+### ✅ **FACET Solutions**
+
+| Problem | Traditional AI | FACET NADL |
+|:---|:---:|:---:|
+| **Behavior** | Emergent & unpredictable | **Deterministic & typed** |
+| **Testing** | Manual validation | **Automated test suites** |
+| **Maintenance** | Brittle & error-prone | **Type-safe & refactorable** |
+| **Scaling** | Trial & error | **Mathematical guarantees** |
+
+**FACET transforms AI from black-box magic into white-box engineering.** 🔮➜🔧
+
+## 🚀 Quick Start
+
+**New to FACET?** Follow this recommended learning path:
+
+<div align="center">
+
+### 📖 **Learning Journey**
+
+```mermaid
+graph LR
+    A[01-quickstart.md] --> B[02-tutorial.md]
+    B --> C[Choose Your Path]
+
+    C --> D[Developer Path]
+    C --> E[Production Path]
+
+    D --> F[06-cli.md]
+    D --> G[07-api-reference.md]
+    D --> H[08-lenses.md]
+
+    E --> I[10-performance.md]
+    E --> J[11-security.md]
+    E --> K[12-errors.md]
+
+    F --> L[Advanced Topics]
+    G --> L
+    H --> L
+    I --> L
+    J --> L
+    K --> L
+```
+
+</div>
+
+## 📚 Complete Documentation Guide
+
+### 🎯 **Structured Learning Path**
+
+**Follow this comprehensive curriculum designed for progressive skill development:**
 
 | # | Document | Purpose | Difficulty | Time |
 |---|----------|---------|------------|------|
@@ -94,11 +177,6 @@ description: Complete documentation suite for FACET v2.0 - Neural Architecture D
 **Ready to master FACET? Start with [01-quickstart.md](01-quickstart.md)!** 🚀
 
 *Documentation automatically generated and maintained. Last updated: 2025-12-09*
-
-### 🎯 Learning Path (Recommended Order)
-
-| # | Document | Purpose | Difficulty | Time |
-|---|----------|---------|------------|------|
 | **[01](01-quickstart.md)** | **Quick Start Guide** | Get running in 5 minutes | Beginner | 5 min |
 | **[02](02-tutorial.md)** | **Complete Tutorial** | Learn from basics to advanced | Beginner → Advanced | 30-60 min |
 | **[03](03-architecture.md)** | **System Architecture** | Understand FACET internals | Intermediate | 20-30 min |
