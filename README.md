@@ -1,4 +1,4 @@
-# FACET v2.0 — Deterministic AI Architecture Compiler (NADL)
+# FACET v2.0 — Deterministic AI Architecture Compiler
 
 <div align="center">
 
