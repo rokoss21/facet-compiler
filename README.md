@@ -1,4 +1,4 @@
-# FACET Compiler (`fct`)
+# FACET Compiler (`NADL`)
 
 <div align="center">
 
@@ -178,7 +178,7 @@ Infrastructure-as-Code for Neural Networks
 **Problem:** AI development is artisanal craft
 **Solution:** **Engineering discipline** with tools, processes, and guarantees
 
-### **🏭 **From Open-Source Project to Industry Standard**
+### 🏭 **From Open-Source Project to Industry Standard**
 
 **This isn't just another GitHub repository. This is the foundation of how AI engineering will be done at scale.**
 
@@ -790,7 +790,7 @@ We welcome contributions from the community! FACET is designed to be extensible 
 **Getting started:**
 ```bash
 # Fork and clone
-git clone https://github.com/yourusername/facet-compiler.git
+git clone https://github.com/rokoss21/facet-compiler.git
 cd facet-compiler
 
 # Run tests
