@@ -7,6 +7,7 @@
 [![Tests](https://img.shields.io/badge/tests-54%2F54%20passing-success?style=for-the-badge)](tests/)
 [![Coverage](https://img.shields.io/badge/coverage-100%25-success?style=for-the-badge)](facetparcer-checklist.md)
 [![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue?style=for-the-badge)](LICENSE-MIT)
+[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue?style=for-the-badge)](https://rokoss21.github.io/facet-compiler/)
 
 # 🚀 Feature-Aware Contracted Extension for Text
 
@@ -112,7 +113,7 @@ Infrastructure-as-Code for Neural Networks
 
 **Together, these create the first true programming language for describing neural network behavior.**
 
-[Quick Start](docs/01-quickstart.md) • [Documentation](docs/README.md) • [Specification](facet2-specification.md) • [Examples](examples/README.md)
+[Quick Start](https://rokoss21.github.io/facet-compiler/) • [Documentation](https://rokoss21.github.io/facet-compiler/) • [Specification](facet2-specification.md) • [Examples](examples/README.md)
 
 ---
 
@@ -824,6 +825,8 @@ For enterprise deployments, commercial support, and custom integrations:
 ---
 
 ## 📚 Documentation Suite
+
+**📖 [Complete Online Documentation](https://rokoss21.github.io/facet-compiler/)** - Interactive docs with navigation and search
 
 We provide comprehensive documentation for all skill levels.
 
