@@ -1,0 +1,15 @@
+[package]
+name = "fct-parser"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+nom = { workspace = true }
+nom_locate = { workspace = true, optional = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
+fct-ast = { workspace = true }
+
+[features]
+default = ["nom_locate"]
+wasm = ["nom_locate"]

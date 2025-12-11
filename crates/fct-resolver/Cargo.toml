@@ -1,0 +1,12 @@
+[package]
+name = "fct-resolver"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+fct-ast = { workspace = true }
+fct-parser = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+tokio = { version = "1.40", features = ["fs", "time", "rt-multi-thread"] }
+tempfile = "3.10"

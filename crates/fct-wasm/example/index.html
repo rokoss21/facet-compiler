@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FACET v2.0 WebAssembly Demo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .editor, .output {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .editor {
+            grid-row: 1;
+        }
+        .output {
+            grid-row: 2;
+        }
+        textarea {
+            width: 100%;
+            min-height: 300px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 10px;
+            resize: vertical;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .error {
+            color: #dc3545;
+            background: #f8d7da;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .success {
+            color: #155724;
+            background: #d4edda;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #555;
+            margin-top: 30px;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-radius: 50%;
+            border-top-color: #007bff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>🚀 FACET v2.0 WebAssembly Demo</h1>
+    
+    <div class="container">
+        <div class="editor">
+            <h2>Input</h2>
+            <p>Enter your FACET code below:</p>
+            <textarea id="facet-input" placeholder="@vars { ... }&#10;@system { ... }&#10;@user { ... }&#10;@assistant { ... }">@vars {
+    name: "Alice"
+    role: "user"
+}
+
+@system {
+    role: "helpful assistant"
+    instructions: "Be concise and helpful"
+}
+
+@user {
+    query: "Hello, how are you?"
+}
+
+@assistant {
+    response: "I'm doing well! How can I help you today?"
+    sentiment: "positive"
+}</textarea>
+            
+            <button id="compile-btn" onclick="compileFacet()">
+                <span id="btn-text">Compile FACET</span>
+                <span id="loading" class="loading" style="display: none;"></span>
+            </button>
+            
+            <div id="status"></div>
+        </div>
+        
+        <div class="output">
+            <h2>Output</h2>
+            <div id="output"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        let compiler = null;
+        let isInitialized = false;
+        
+        // Initialize WASM
+        async function initializeCompiler() {
+            if (!isInitialized) {
+                const status = document.getElementById('status');
+                status.innerHTML = '<div class="loading"></div> Initializing WebAssembly...';
+                
+                try {
+                    // Import from CDN for direct opening
+                    const { init, FacetCompiler, version } = await import('https://cdn.skypack.dev/@facet/fct-wasm');
+                    
+                    await init();
+                    compiler = new FacetCompiler();
+                    isInitialized = true;
+                    
+                    const ver = version();
+                    status.innerHTML = `<div class="success">✅ Initialized FACET v${ver}</div>`;
+                } catch (error) {
+                    status.innerHTML = `<div class="error">❌ Failed to initialize: ${error}</div>`;
+                    console.error('Initialization error:', error);
+                    
+                    // Fallback: Try to load from local file if CDN fails
+                    try {
+                        status.innerHTML = '<div class="loading"></div> Trying local build...';
+                        const { init: initLocal, FacetCompiler: FacetCompilerLocal, version: versionLocal } = await import('./pkg/fct_wasm.js');
+                        await initLocal();
+                        compiler = new FacetCompilerLocal();
+                        isInitialized = true;
+                        
+                        const ver = versionLocal();
+                        status.innerHTML = `<div class="success">✅ Initialized FACET v${ver} (local)</div>`;
+                    } catch (localError) {
+                        status.innerHTML = `<div class="error">❌ Please build WASM first: run ./build.sh</div>`;
+                        console.error('Local error:', localError);
+                    }
+                }
+            }
+        }
+        
+        async function compileFacet() {
+            const input = document.getElementById('facet-input').value;
+            const output = document.getElementById('output');
+            const status = document.getElementById('status');
+            const btn = document.getElementById('compile-btn');
+            const btnText = document.getElementById('btn-text');
+            const loading = document.getElementById('loading');
+            
+            if (!isInitialized) {
+                await initializeCompiler();
+                if (!isInitialized) return;
+            }
+            
+            // Show loading state
+            btn.disabled = true;
+            btnText.style.display = 'none';
+            loading.style.display = 'inline-block';
+            status.innerHTML = '';
+            output.innerHTML = '';
+            
+            try {
+                const result = compiler.compile(input);
+                
+                if (result.success) {
+                    status.innerHTML = '<div class="success">✅ Compilation successful!</div>';
+                    
+                    // Display AST
+                    if (result.ast) {
+                        output.innerHTML += '<h3>📋 Parsed AST</h3>';
+                        output.innerHTML += `<pre>${JSON.stringify(result.ast, null, 2)}</pre>`;
+                    }
+                    
+                    // Display rendered output
+                    if (result.rendered) {
+                        output.innerHTML += '<h3>📤 Rendered Output</h3>';
+                        output.innerHTML += `<pre>${JSON.stringify(result.rendered, null, 2)}</pre>`;
+                    }
+                } else {
+                    status.innerHTML = '<div class="error">❌ Compilation failed</div>';
+                    
+                    if (result.errors && result.errors.length > 0) {
+                        output.innerHTML += '<h3>🚨 Errors</h3>';
+                        output.innerHTML += '<ul>';
+                        result.errors.forEach(error => {
+                            output.innerHTML += `<li><code>${error}</code></li>`;
+                        });
+                        output.innerHTML += '</ul>';
+                    }
+                }
+            } catch (error) {
+                status.innerHTML = `<div class="error">❌ Error: ${error}</div>`;
+                output.innerHTML = `<pre>${error.stack || error}</pre>`;
+            } finally {
+                // Hide loading state
+                btn.disabled = false;
+                btnText.style.display = 'inline';
+                loading.style.display = 'none';
+            }
+        }
+        
+        // Initialize on load
+        window.addEventListener('load', initializeCompiler);
+    </script>
+</body>
+</html>

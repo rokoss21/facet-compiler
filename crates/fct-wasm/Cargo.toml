@@ -1,0 +1,43 @@
+[package]
+name = "fct-wasm"
+version = "0.1.0"
+edition = "2021"
+description = "WebAssembly bindings for FACET v2.0 Compiler"
+license = "MIT OR Apache-2.0"
+authors = ["Emil Rokossovskiy <ecsiar@gmail.com>"]
+repository = "https://github.com/rokoss21/facet-compiler"
+categories = ["wasm", "compilers", "development-tools"]
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wasm-bindgen = "0.2"
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde-wasm-bindgen = "0.6"
+js-sys = "0.3"
+console_error_panic_hook = "0.1"
+web-sys = "0.3"
+
+# Workspace dependencies
+fct-ast = { workspace = true }
+fct-parser = { workspace = true, features = ["wasm"] }
+fct-validator = { workspace = true, features = ["wasm"] }
+fct-engine = { workspace = true, features = ["wasm"] }
+fct-render = { workspace = true, features = ["wasm"] }
+fct-std = { workspace = true, features = ["wasm"] }
+
+[dependencies.regex]
+version = "1.10"
+default-features = false
+# Use the std feature for WASM (no perf-lowering)
+features = ["std"]
+
+[dependencies.chrono]
+version = "0.4"
+default-features = false
+features = ["wasmbind", "clock"]
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = ["-O", "--enable-simd", "--enable-bulk-memory"]

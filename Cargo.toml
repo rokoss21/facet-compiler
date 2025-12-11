@@ -1,0 +1,86 @@
+[package]
+name = "facet-compiler"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+authors = ["Emil Rokossovskiy <ecsiar@gmail.com>"]
+description = "FACET v2.0 Compiler - First deterministic compiler for AI agent behavior architecture"
+repository = "https://github.com/rokoss21/facet-compiler"
+homepage = "https://rokoss21.tech/"
+documentation = "https://docs.rs/facet-compiler"
+keywords = ["ai", "agent", "compiler", "neural-architecture", "facet"]
+categories = ["compilers", "development-tools"]
+
+[workspace]
+resolver = "2"
+members = [
+    "crates/fct-ast",
+    "crates/fct-parser",
+    "crates/fct-resolver",
+    "crates/fct-validator",
+    "crates/fct-engine",
+    "crates/fct-render",
+    "crates/fct-std",
+    "crates/fct-wasm",
+]
+
+[workspace.dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "1.0"
+anyhow = "1.0"
+nom = "7.1"
+nom_locate = "4.2"
+fct-ast = { path = "crates/fct-ast" }
+fct-parser = { path = "crates/fct-parser" }
+fct-resolver = { path = "crates/fct-resolver" }
+fct-validator = { path = "crates/fct-validator" }
+fct-engine = { path = "crates/fct-engine" }
+fct-render = { path = "crates/fct-render" }
+fct-std = { path = "crates/fct-std" }
+fct-wasm = { path = "crates/fct-wasm" }
+governor = "0.6"
+nonzero_ext = "0.3"
+regex = "1.10"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "1.0"
+anyhow = "1.0"
+nom = "7.1"
+nom_locate = "4.2"
+clap = { version = "4.4", features = ["derive"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["json", "env-filter"] }
+indicatif = "0.17"
+console = "0.15"
+atty = "0.2"
+humantime = "2.1"
+governor = { workspace = true }
+nonzero_ext = { workspace = true }
+regex = "1.10"
+fct-ast = { path = "crates/fct-ast" }
+fct-parser = { path = "crates/fct-parser" }
+fct-resolver = { path = "crates/fct-resolver" }
+fct-validator = { path = "crates/fct-validator" }
+fct-engine = { path = "crates/fct-engine" }
+fct-render = { path = "crates/fct-render" }
+fct-std = { path = "crates/fct-std" }
+fct-wasm = { path = "crates/fct-wasm" }
+
+[dev-dependencies]
+wasm-pack = "0.12"
+wasm-bindgen-test = "0.3"
+fct-parser = { path = "crates/fct-parser" }
+fct-resolver = { path = "crates/fct-resolver" }
+fct-validator = { path = "crates/fct-validator" }
+fct-engine = { path = "crates/fct-engine" }
+fct-render = { path = "crates/fct-render" }
+fct-std = { path = "crates/fct-std" }
+fct-wasm = { path = "crates/fct-wasm" }
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true

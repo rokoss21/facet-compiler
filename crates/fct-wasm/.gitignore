@@ -1,0 +1,24 @@
+# Rust
+/target/
+**/*.rs.bk
+Cargo.lock
+
+# WASM build artifacts
+pkg/
+pkg-node/
+pkg-bundler/
+*.wasm
+*.js
+
+# Node
+node_modules/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

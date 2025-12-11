@@ -1,0 +1,46 @@
+{
+  "name": "@facet/fct-wasm",
+  "version": "0.1.0",
+  "description": "WebAssembly bindings for FACET v2.0 Compiler",
+  "main": "pkg/fct_wasm.js",
+  "types": "pkg/fct_wasm.d.ts",
+  "type": "module",
+  "files": [
+    "pkg/**/*"
+  ],
+  "scripts": {
+    "build": "wasm-pack build --target web --out-dir pkg",
+    "build-node": "wasm-pack build --target nodejs --out-dir pkg-node",
+    "build-bundler": "wasm-pack build --target bundler --out-dir pkg-bundler",
+    "dev": "wasm-pack build --dev --target web --out-dir pkg",
+    "test": "wasm-pack test --node",
+    "docs": "typedoc --out docs pkg/fct_wasm.d.ts"
+  },
+  "keywords": [
+    "facet",
+    "compiler",
+    "wasm",
+    "webassembly",
+    "ai",
+    "agent",
+    "deterministic"
+  ],
+  "author": "Emil Rokossovskiy",
+  "license": "MIT OR Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rokoss21/facet-compiler"
+  },
+  "bugs": {
+    "url": "https://github.com/rokoss21/facet-compiler/issues"
+  },
+  "homepage": "https://github.com/rokoss21/facet-compiler#readme",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "wasm-pack": "^0.12.0",
+    "typedoc": "^0.25.0"
+  }
+}

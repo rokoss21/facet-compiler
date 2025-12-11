@@ -1,0 +1,72 @@
+# Rust
+/target/
+**/*.rs.bk
+*.pdb
+Cargo.lock
+
+# Archive directory (internal development files)
+/archive/
+
+# IDE and OS files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+*.exe
+*.dll
+*.so
+*.dylib
+
+# WASM artifacts
+*.wasm
+pkg/
+wasm-pack.log
+
+# Test artifacts
+/tests/tmp/
+*.profraw
+
+# Documentation build artifacts
+/target/doc/
+
+# Temporary files
+*.tmp
+*.bak
+*.log
+
+# Development artifacts
+*.patch
+*.zip
+*.pdf
+*.facet
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# WASM artifacts
+*.wasm
+pkg/
+wasm-pack.log
+
+# Build artifacts
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test artifacts
+/tests/tmp/
+*.profraw
+
+# Documentation
+/target/doc/

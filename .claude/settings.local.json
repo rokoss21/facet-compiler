@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell.exe -Command \"Test-Path ''C:\\Users\\FACET\\.cargo\\bin\\cargo.exe''\")",
+      "Bash(powershell.exe -Command \"& ''C:\\Users\\FACET\\.cargo\\bin\\cargo.exe'' --version\")",
+      "Bash(powershell.exe -Command \"& ''C:\\Users\\FACET\\.cargo\\bin\\cargo.exe'' test --package fct-engine\")",
+      "Bash(powershell.exe -Command \"& ''C:\\Users\\FACET\\.cargo\\bin\\cargo.exe'' test --package fct-engine 2>&1 | Select-Object -First 100\")",
+      "Bash(powershell.exe -Command \"& ''C:\\Users\\FACET\\.cargo\\bin\\cargo.exe'' test --package fct-engine --lib 2>&1\")",
+      "Bash(powershell.exe -Command \"New-Item -Path ''C:\\projects'' -ItemType Directory -Force | Out-Null; Move-Item -Path ''C:\\Users\\FACET\\Documents\\Анимус\\facet-2.0\\FACET2'' -Destination ''C:\\projects\\FACET2'' -Force\")",
+      "Bash(powershell.exe -Command \"New-Item -Path ''C:\\projects'' -ItemType Directory -Force | Out-Null; Copy-Item -Path ''C:\\Users\\FACET\\Documents\\Анимус\\facet-2.0\\FACET2'' -Destination ''C:\\projects\\FACET2'' -Recurse -Force\")",
+      "Bash(powershell.exe -Command \"Get-ChildItem -Path ''C:\\projects\\FACET2'' | Select-Object Name, Mode, Length | Format-Table\")",
+      "Bash(powershell.exe -Command \"Get-ChildItem -Path ''C:\\projects\\FACET2\\crates'' | Select-Object Name\")",
+      "Bash(cargo test:*)",
+      "Bash(find:*)",
+      "Bash(powershell.exe -Command \"& ''C:\\Users\\FACET\\.cargo\\bin\\cargo.exe'' test --package fct-engine 2>&1\")",
+      "Bash(powershell.exe -Command \"& ''C:\\Users\\FACET\\.cargo\\bin\\cargo.exe'' test --package fct-parser 2>&1\")",
+      "Bash(powershell.exe -Command \"& ''C:\\Users\\FACET\\.cargo\\bin\\cargo.exe'' test --package fct-resolver 2>&1\")",
+      "Bash(powershell.exe:*)",
+      "WebSearch",
+      "Bash(dir:*)",
+      "Bash(Select-Object -First 100)",
+      "Bash(cargo build:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
