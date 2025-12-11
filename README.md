@@ -1,4 +1,4 @@
-# FACET v2.0 Compiler (`fct`)
+# FACET Compiler (`fct`)
 
 <div align="center">
 
@@ -13,6 +13,8 @@
 _Human-readable, machine-deterministic instructions for AI systems._
 
 ![FACET Logo](https://raw.githubusercontent.com/rokoss21/FACET/main/assets/logo.png)
+
+</div>
 
 ---
 </div>
@@ -37,13 +39,10 @@ Be nice and professional.
 **FACET NADL:**
 ```facet
 @var_types user_query: { type: "string", min_length: 1, max_length: 1000 }
-
 @vars user_query: "Analyze sales data"
-
 @system role: "data_analyst"
-model: "gpt-4"
-instructions: "You are a professional data analyst. Analyze: $user_query"
-
+    model: "gpt-4"
+    instructions: "You are a professional data analyst. Analyze: $user_query"
 @user content: $user_query |> trim() |> lowercase()
 ```
 
@@ -62,7 +61,7 @@ instructions: "You are a professional data analyst. Analyze: $user_query"
 
 ```
 ┌─────────────────────────────────────────┐
-│ FACET NADL: Neural Architecture Language │
+│ FACET NADL: Neural Architecture Language│
 ├─────────────────────────────────────────┤
 │ Type System (FTS) - Static typing       │
 │ Reactive DAG - Execution ordering       │
