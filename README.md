@@ -61,7 +61,7 @@ Be nice and professional.
 
 ```
 ┌─────────────────────────────────────────┐
-│ FACET NADL: Neural Architecture Language │
+│ FACET NADL: Neural Architecture Language│
 ├─────────────────────────────────────────┤
 │ Type System (FTS) - Static typing       │
 │ Reactive DAG - Execution ordering       │
