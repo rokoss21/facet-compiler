@@ -1,4 +1,4 @@
-# FACET Compiler (`fct`)
+# FACET Compiler (`NADL`)
 
 <div align="center">
 
