@@ -6,7 +6,7 @@ Cargo.lock
 
 # Archive directory (internal development files)
 /archive/
-
+ 
 # IDE and OS files
 .vscode/
 .idea/
