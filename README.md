@@ -790,7 +790,7 @@ We welcome contributions from the community! FACET is designed to be extensible 
 **Getting started:**
 ```bash
 # Fork and clone
-git clone https://github.com/yourusername/facet-compiler.git
+git clone https://github.com/rokoss21/facet-compiler.git
 cd facet-compiler
 
 # Run tests
