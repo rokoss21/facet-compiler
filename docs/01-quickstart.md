@@ -361,7 +361,7 @@ Error: F002: Tab characters forbidden (use 2 spaces)
 - 📖 [Language Spec](https://github.com/rokoss21/facet-compiler/blob/master/FACET-v2.1.3-Production-Language-Specification.md) - Full FACET specification
 
 ### Explore Examples
-- 🔍 [Basic Prompt](../examples/basic_prompt.facet) - Simple assistant
+- 🔍 [Basic Prompt](examples/basic_prompt.facet) - Simple assistant
 - 🔍 [RAG Pipeline](../examples/rag_pipeline.facet) - Retrieval-augmented generation
 - 🔍 [Advanced Features](../examples/advanced_features.facet) - All language features
 
@@ -485,7 +485,7 @@ run     --input FILE           # Execute
 
 ---
 
-**Ready to build deterministic AI agents?** Start with [examples/basic_prompt.facet](../examples/basic_prompt.facet)!
+**Ready to build deterministic AI agents?** Start with [examples/basic_prompt.facet](examples/basic_prompt.facet)!
 
 
 # CLI
@@ -516,4 +516,4 @@ run     --input FILE           # Execute
 
 ---
 
-**Ready to build deterministic AI agents?** Start with [examples/basic_prompt.facet](../examples/basic_prompt.facet)!
+**Ready to build deterministic AI agents?** Start with [examples/basic_prompt.facet](examples/basic_prompt.facet)!

@@ -238,12 +238,54 @@ tr:nth-child(even) td {
 }
 
 .site-footer {
+  margin: 1.2rem 0 2rem 0;
   color: #6d7782;
 }
 
-.footer-heading {
-  color: #33414d;
-  font-size: 1.05rem;
+.custom-footer {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.95rem 1rem;
+  border: 1px solid #d2dfea;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #f8fcff 0%, #eef5fb 100%);
+  box-shadow: 0 6px 16px rgba(19, 43, 64, 0.08);
+}
+
+.custom-footer-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #143446;
+}
+
+.custom-footer-author {
+  margin: 0;
+  font-size: 0.88rem;
+  color: #3f4a56;
+}
+
+.custom-footer-links {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.46rem;
+  align-items: center;
+  font-size: 0.86rem;
+}
+
+.custom-footer-links a {
+  color: var(--brand-strong);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.custom-footer-links a:hover {
+  text-decoration: underline;
+}
+
+.custom-footer-links span {
+  color: #8da4b8;
 }
 
 @media (max-width: 860px) {
@@ -267,6 +309,10 @@ tr:nth-child(even) td {
     margin: 0.8rem 0.7rem 1.3rem 0.7rem;
     padding: 1.2rem 1rem;
     border-radius: 12px;
+  }
+
+  .custom-footer {
+    padding: 0.8rem 0.85rem;
   }
 
   h1 {
