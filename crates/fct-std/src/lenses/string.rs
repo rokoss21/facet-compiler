@@ -363,7 +363,11 @@ impl Lens for SubstringLens {
                 let val = *n as usize;
                 if val > input_str.len() {
                     return Err(LensError::ArgumentError {
-                        message: format!("start index {} exceeds string length {}", val, input_str.len()),
+                        message: format!(
+                            "start index {} exceeds string length {}",
+                            val,
+                            input_str.len()
+                        ),
                     });
                 }
                 val
@@ -381,12 +385,19 @@ impl Lens for SubstringLens {
                     let val = *n as usize;
                     if val > input_str.len() {
                         return Err(LensError::ArgumentError {
-                            message: format!("end index {} exceeds string length {}", val, input_str.len()),
+                            message: format!(
+                                "end index {} exceeds string length {}",
+                                val,
+                                input_str.len()
+                            ),
                         });
                     }
                     if val < start {
                         return Err(LensError::ArgumentError {
-                            message: format!("end index {} is less than start index {}", val, start),
+                            message: format!(
+                                "end index {} is less than start index {}",
+                                val, start
+                            ),
                         });
                     }
                     val

@@ -5,7 +5,7 @@
 //! Adapter for bridging fct-std LensRegistry with the new LensSignatureProvider trait
 
 use crate::LensRegistry;
-use fct_ast::{LensSignature, LensSignatureProvider, FacetType, ParameterSignature, PrimitiveType};
+use fct_ast::{FacetType, LensSignature, LensSignatureProvider, ParameterSignature, PrimitiveType};
 use std::collections::HashMap;
 
 /// Adapter that makes fct-std's LensRegistry compatible with LensSignatureProvider
@@ -69,49 +69,41 @@ impl LensRegistryAdapter {
                 "map".to_string(),
                 FacetType::List(Box::new(FacetType::Any)),
                 FacetType::List(Box::new(FacetType::Any)),
-                vec![
-                    ParameterSignature {
-                        name: "function".to_string(),
-                        param_type: FacetType::Function,
-                        required: true,
-                    },
-                ],
+                vec![ParameterSignature {
+                    name: "function".to_string(),
+                    param_type: FacetType::Function,
+                    required: true,
+                }],
             ),
             "filter" => LensSignature::new(
                 "filter".to_string(),
                 FacetType::List(Box::new(FacetType::Any)),
                 FacetType::List(Box::new(FacetType::Any)),
-                vec![
-                    ParameterSignature {
-                        name: "predicate".to_string(),
-                        param_type: FacetType::Function,
-                        required: true,
-                    },
-                ],
+                vec![ParameterSignature {
+                    name: "predicate".to_string(),
+                    param_type: FacetType::Function,
+                    required: true,
+                }],
             ),
             "split" => LensSignature::new(
                 "split".to_string(),
                 FacetType::Primitive(PrimitiveType::String),
                 FacetType::List(Box::new(FacetType::Primitive(PrimitiveType::String))),
-                vec![
-                    ParameterSignature {
-                        name: "separator".to_string(),
-                        param_type: FacetType::Primitive(PrimitiveType::String),
-                        required: false,
-                    },
-                ],
+                vec![ParameterSignature {
+                    name: "separator".to_string(),
+                    param_type: FacetType::Primitive(PrimitiveType::String),
+                    required: false,
+                }],
             ),
             "join" => LensSignature::new(
                 "join".to_string(),
                 FacetType::List(Box::new(FacetType::Primitive(PrimitiveType::String))),
                 FacetType::Primitive(PrimitiveType::String),
-                vec![
-                    ParameterSignature {
-                        name: "separator".to_string(),
-                        param_type: FacetType::Primitive(PrimitiveType::String),
-                        required: false,
-                    },
-                ],
+                vec![ParameterSignature {
+                    name: "separator".to_string(),
+                    param_type: FacetType::Primitive(PrimitiveType::String),
+                    required: false,
+                }],
             ),
             "to_string" => LensSignature::new(
                 "to_string".to_string(),

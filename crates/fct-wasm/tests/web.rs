@@ -1,4 +1,7 @@
-use wasm_bindgen_test::wasm_bindgen_test_configure;
+#![cfg(target_arch = "wasm32")]
+
+use fct_wasm::{version, FacetCompiler};
+use wasm_bindgen_test::{wasm_bindgen_test, wasm_bindgen_test_configure};
 
 wasm_bindgen_test_configure!(run_in_browser);
 
@@ -72,7 +75,7 @@ mod tests {
         assert!(success, "Compilation should succeed");
         
         // Check AST is present
-        let has_ast = js_sys::Reflect::has(&result, &"ast".into());
+        let has_ast = js_sys::Reflect::has(&result, &"ast".into()).unwrap_or(false);
         assert!(has_ast, "Result should have AST");
     }
 

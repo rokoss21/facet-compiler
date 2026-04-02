@@ -306,8 +306,48 @@ fn test_f452_constraint_pattern_violation() {
 }
 
 #[test]
-fn test_f453_input_validation_missing_type() {
-    // @input directive without type argument should fail
+fn test_f452_constraint_enum_violation() {
+    let source = r#"
+@var_types
+  status: {
+    type: "string",
+    enum: ["open", "closed"]
+  }
+
+@vars
+  status: "pending"
+"#;
+
+    let result = parse_and_validate(source);
+    assert!(result.is_err());
+    let error_msg = result.unwrap_err();
+    eprintln!("F452 enum ERROR: {}", error_msg);
+    assert!(error_msg.contains("F452"), "Expected F452, got: {}", error_msg);
+}
+
+#[test]
+fn test_f452_constraint_enum_non_atom_item() {
+    let source = r#"
+@var_types
+  status: {
+    type: "string",
+    enum: ["ok", { bad: true }]
+  }
+
+@vars
+  status: "ok"
+"#;
+
+    let result = parse_and_validate(source);
+    assert!(result.is_err());
+    let error_msg = result.unwrap_err();
+    eprintln!("F452 enum non-atom ERROR: {}", error_msg);
+    assert!(error_msg.contains("F452"), "Expected F452, got: {}", error_msg);
+}
+
+#[test]
+fn test_f452_input_missing_type_attr() {
+    // @input directive without required type argument is a placement/schema error (F452)
     let source = r#"
 @vars
   query: @input(name="query")
@@ -316,10 +356,13 @@ fn test_f453_input_validation_missing_type() {
     let result = parse_and_validate(source);
     assert!(result.is_err());
     let error_msg = result.unwrap_err();
-    eprintln!("F453 input ERROR: {}", error_msg);
-    assert!(error_msg.contains("F453"), "Expected F453, got: {}", error_msg);
-    assert!(error_msg.contains("input validation") || error_msg.contains("Missing type"),
-            "Expected 'input validation', got: {}", error_msg);
+    eprintln!("F452 input ERROR: {}", error_msg);
+    assert!(error_msg.contains("F452"), "Expected F452, got: {}", error_msg);
+    assert!(
+        error_msg.contains("@input(...) requires 'type'") || error_msg.contains("Constraint"),
+        "Expected missing-type detail, got: {}",
+        error_msg
+    );
 }
 
 // ============================================================================

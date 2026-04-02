@@ -5,7 +5,7 @@
 // They are non-deterministic and require network access
 
 use crate::{Lens, LensContext, LensError, LensResult, LensSignature, TrustLevel};
-use fct_ast::{ScalarValue, ValueNode};
+use fct_ast::{OrderedMap, ScalarValue, ValueNode};
 use std::collections::HashMap;
 
 /// llm_call(prompt, model, **kwargs) - Call LLM API
@@ -39,20 +39,19 @@ impl Lens for LlmCallLens {
         };
 
         // Extract optional parameters from kwargs
-        let temperature = if let Some(ValueNode::Scalar(ScalarValue::Float(t))) =
-            kwargs.get("temperature")
-        {
-            *t
-        } else {
-            0.7
-        };
+        let temperature =
+            if let Some(ValueNode::Scalar(ScalarValue::Float(t))) = kwargs.get("temperature") {
+                *t
+            } else {
+                0.7
+            };
 
-        let max_tokens = if let Some(ValueNode::Scalar(ScalarValue::Int(t))) = kwargs.get("max_tokens")
-        {
-            *t as usize
-        } else {
-            1000
-        };
+        let max_tokens =
+            if let Some(ValueNode::Scalar(ScalarValue::Int(t))) = kwargs.get("max_tokens") {
+                *t as usize
+            } else {
+                1000
+            };
 
         // TODO: Implement actual LLM API call
         // For now, return a stub response
@@ -70,8 +69,12 @@ impl Lens for LlmCallLens {
             input_type: "string".to_string(),
             output_type: "string".to_string(),
             trust_level: TrustLevel::Bounded, // External API call
-            deterministic: false,              // Non-deterministic
+            deterministic: false,             // Non-deterministic
         }
+    }
+
+    fn effect_class(&self) -> Option<&'static str> {
+        Some("external")
     }
 }
 
@@ -120,8 +123,12 @@ impl Lens for EmbeddingLens {
             input_type: "string".to_string(),
             output_type: "list<float>".to_string(),
             trust_level: TrustLevel::Bounded, // External API call
-            deterministic: false,              // Non-deterministic
+            deterministic: false,             // Non-deterministic
         }
+    }
+
+    fn effect_class(&self) -> Option<&'static str> {
+        Some("external")
     }
 }
 
@@ -168,7 +175,7 @@ impl Lens for RagSearchLens {
         // For now, return stub results
         let stub_results: Vec<ValueNode> = (0..top_k)
             .map(|i| {
-                let mut result = HashMap::new();
+                let mut result = OrderedMap::new();
                 result.insert(
                     "content".to_string(),
                     ValueNode::String(format!("Result {} for query '{}'", i + 1, query)),
@@ -190,7 +197,11 @@ impl Lens for RagSearchLens {
             input_type: "string".to_string(),
             output_type: "list<map>".to_string(),
             trust_level: TrustLevel::Bounded, // External API call
-            deterministic: false,              // Non-deterministic
+            deterministic: false,             // Non-deterministic
         }
+    }
+
+    fn effect_class(&self) -> Option<&'static str> {
+        Some("external")
     }
 }

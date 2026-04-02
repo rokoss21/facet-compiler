@@ -1,10 +1,10 @@
 // Integration tests for FACET v2.0 Compiler
 // Tests full pipeline: Parse -> Resolve -> Validate -> Execute -> Render
 
-use fct_ast::{FacetDocument, FacetNode, ValueNode};
+use fct_ast::{FacetDocument, FacetNode, ValueNode, FACET_VERSION};
 use fct_engine::{ExecutionContext, RDagEngine, Section, TokenBoxModel};
-use fct_parser::parse_document;
-use fct_render::{CanonicalPayload, Renderer};
+use fct_parser::{compute_document_hash, parse_document};
+use fct_render::{to_json_compact, CanonicalPayload, RenderContext, Renderer};
 use fct_std::LensRegistry;
 use fct_validator::TypeChecker;
 
@@ -70,6 +70,10 @@ fn doc_to_sections(doc: &FacetDocument) -> Vec<Section> {
 }
 
 fn full_pipeline(source: &str) -> Result<CanonicalPayload, String> {
+    full_pipeline_with_context(source, None)
+}
+
+fn full_pipeline_with_context(source: &str, _created_at: Option<&str>) -> Result<CanonicalPayload, String> {
     // Step 1: Parse
     let doc = parse_document(source).map_err(|e| format!("Parse error: {:?}", e))?;
 
@@ -98,8 +102,18 @@ fn full_pipeline(source: &str) -> Result<CanonicalPayload, String> {
 
     // Step 6: Render to canonical JSON
     let renderer = Renderer::new();
+    let render_context = RenderContext {
+        document_hash: Some(compute_document_hash(source)),
+        policy_hash: None,
+        profile: None,
+        mode: None,
+        host_profile_id: None,
+        budget_units: None,
+        target_provider_id: None,
+        computed_vars: None,
+    };
     let payload = renderer
-        .render(&doc, &allocation)
+        .render_with_context(&doc, &allocation, render_context)
         .map_err(|e| format!("Render error: {:?}", e))?;
 
     Ok(payload)
@@ -113,11 +127,10 @@ fn full_pipeline(source: &str) -> Result<CanonicalPayload, String> {
 fn test_integration_parse_and_validate_basic() {
     let source = r#"
 @system
-  role: "assistant"
-  model: "gpt-4"
+  content: "You are a helpful assistant."
 
 @user
-  query: "Hello, world!"
+  content: "Hello, world!"
 "#;
 
     let result = parse_and_validate(source);
@@ -131,9 +144,7 @@ fn test_integration_parse_and_validate_basic() {
 fn test_integration_parse_validate_render() {
     let source = r#"
 @system
-  role: "assistant"
-  model: "gpt-4"
-  temperature: 0.7
+  content: "You are a helpful assistant."
 
 @user
   content: "Test message"
@@ -143,7 +154,7 @@ fn test_integration_parse_validate_render() {
     assert!(result.is_ok(), "Full pipeline should succeed");
 
     let payload = result.unwrap();
-    assert_eq!(payload.metadata.version, "2.0");
+    assert_eq!(payload.metadata.facet_version, FACET_VERSION);
 }
 
 // ============================================================================
@@ -158,7 +169,7 @@ fn test_integration_with_variables() {
   greeting: "Hello"
 
 @user
-  message: "Welcome!"
+  content: "Welcome!"
 "#;
 
     let result = parse_and_validate(source);
@@ -198,7 +209,7 @@ fn test_integration_r_dag_execution() {
   transformed: $base |> uppercase()
 
 @system
-  role: "assistant"
+  content: "Assistant context"
 "#;
 
     let result = full_pipeline(source);
@@ -206,7 +217,7 @@ fn test_integration_r_dag_execution() {
 
     // Engine should compute transformed variable
     let payload = result.unwrap();
-    assert_eq!(payload.metadata.version, "2.0");
+    assert_eq!(payload.metadata.facet_version, FACET_VERSION);
 }
 
 #[test]
@@ -304,17 +315,16 @@ fn test_integration_multiple_blocks() {
   author: "Test"
 
 @system
-  role: "assistant"
-  model: "gpt-4"
+  content: "System prompt"
 
 @vars
   context: "test context"
 
 @user
-  query: "What is AI?"
+  content: "What is AI?"
 
 @assistant
-  response: "AI is..."
+  content: "AI is..."
 "#;
 
     let result = parse_and_validate(source);
@@ -338,7 +348,7 @@ fn test_integration_nested_structures() {
   }
 
 @system
-  role: "assistant"
+  content: "System context"
 "#;
 
     let result = parse_and_validate(source);
@@ -368,8 +378,7 @@ fn test_integration_list_values() {
 fn test_integration_render_to_json() {
     let source = r#"
 @system
-  role: "assistant"
-  model: "gpt-4"
+  content: "You are assistant"
 
 @user
   content: "Hello"
@@ -381,8 +390,8 @@ fn test_integration_render_to_json() {
     let payload = result.unwrap();
 
     // Verify payload structure
-    assert_eq!(payload.metadata.version, "2.0");
-    assert!(payload.metadata.total_tokens > 0);
+    assert_eq!(payload.metadata.facet_version, FACET_VERSION);
+    assert!(!payload.messages.is_empty());
 }
 
 #[test]
@@ -394,7 +403,7 @@ fn test_integration_render_with_variables() {
   greeting: $user_name |> uppercase()
 
 @system
-  role: "assistant"
+  content: "Assistant context"
 
 @user
   content: "Test"
@@ -407,7 +416,7 @@ fn test_integration_render_with_variables() {
     );
 
     let payload = result.unwrap();
-    assert_eq!(payload.metadata.version, "2.0");
+    assert_eq!(payload.metadata.facet_version, FACET_VERSION);
 }
 
 // ============================================================================
@@ -455,7 +464,7 @@ fn test_integration_deep_pipeline() {
 fn test_integration_empty_blocks() {
     let source = r#"
 @system
-  role: "assistant"
+  content: "Assistant context"
 
 @vars
 
@@ -497,4 +506,63 @@ fn test_integration_special_characters() {
 
     let result = parse_and_validate(source);
     assert!(result.is_ok(), "Should handle escaped quotes: {:?}", result.err());
+}
+
+#[test]
+fn test_integration_nfc_equivalent_canonical_output_deterministic() {
+    let nfd = "@vars\n  word: \"e\u{0301}\"\n\n@user\n  content: $word\n";
+    let nfc = "@vars\n  word: \"é\"\n\n@user\n  content: $word\n";
+    let created_at = "2026-02-24T00:00:00Z";
+
+    let p1 = full_pipeline_with_context(nfd, Some(created_at)).expect("nfd pipeline must succeed");
+    let p2 = full_pipeline_with_context(nfc, Some(created_at)).expect("nfc pipeline must succeed");
+
+    assert_eq!(p1.metadata.document_hash, p2.metadata.document_hash);
+
+    let j1 = to_json_compact(&p1).expect("serialize payload 1");
+    let j2 = to_json_compact(&p2).expect("serialize payload 2");
+    assert_eq!(j1, j2);
+}
+
+#[test]
+fn test_integration_crlf_equivalent_canonical_output_deterministic() {
+    let lf = "@vars\n  word: \"hello\"\n\n@user\n  content: $word\n";
+    let crlf = "@vars\r\n  word: \"hello\"\r\n\r\n@user\r\n  content: $word\r\n";
+    let created_at = "2026-02-24T00:00:00Z";
+
+    let p1 = full_pipeline_with_context(lf, Some(created_at)).expect("lf pipeline must succeed");
+    let p2 = full_pipeline_with_context(crlf, Some(created_at)).expect("crlf pipeline must succeed");
+
+    assert_eq!(p1.metadata.document_hash, p2.metadata.document_hash);
+
+    let j1 = to_json_compact(&p1).expect("serialize payload 1");
+    let j2 = to_json_compact(&p2).expect("serialize payload 2");
+    assert_eq!(j1, j2);
+}
+
+#[test]
+fn test_integration_replay_canonical_bytes_and_hash_stable() {
+    let source = r#"
+@meta
+  version: "1.0"
+
+@vars
+  word: "hello"
+
+@system
+  content: "You are deterministic."
+
+@user
+  content: $word
+"#;
+    let created_at = "2026-02-24T00:00:00Z";
+
+    let p1 = full_pipeline_with_context(source, Some(created_at)).expect("first run");
+    let p2 = full_pipeline_with_context(source, Some(created_at)).expect("second run");
+
+    assert_eq!(p1.metadata.document_hash, p2.metadata.document_hash);
+
+    let j1 = to_json_compact(&p1).expect("serialize payload 1");
+    let j2 = to_json_compact(&p2).expect("serialize payload 2");
+    assert_eq!(j1, j2);
 }

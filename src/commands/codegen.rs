@@ -3,11 +3,11 @@
 //! This module implements the code generation command for the FACET compiler.
 //! The codegen command generates SDKs from FACET interface definitions.
 
-use anyhow::{Result, Context};
+use anyhow::{Context, Result};
 use console::style;
+use std::fs;
 use std::path::PathBuf;
 use tracing::info;
-use std::fs;
 
 // Icon constants
 const CODEGEN_EMOJI: console::Emoji = console::Emoji("🔧", "[CODEGEN] ");
@@ -24,7 +24,10 @@ pub fn execute_codegen(
 ) -> Result<()> {
     // Check rate limit
     if rate_limiter.check().is_err() {
-        eprintln!("{}", style("Rate limit exceeded. Please wait before running another command.").red());
+        eprintln!(
+            "{}",
+            style("Rate limit exceeded. Please wait before running another command.").red()
+        );
         std::process::exit(1);
     }
 
@@ -40,7 +43,10 @@ pub fn execute_codegen(
         "python" | "py" => "python",
         "rust" | "rs" => "rust",
         _ => {
-            eprintln!("{} Unsupported language: {}. Supported: typescript, python, rust", ERROR_EMOJI, language);
+            eprintln!(
+                "{} Unsupported language: {}. Supported: typescript, python, rust",
+                ERROR_EMOJI, language
+            );
             return Err(anyhow::anyhow!("Unsupported language: {}", language));
         }
     };
@@ -100,11 +106,13 @@ fn extract_interfaces(document: &fct_ast::FacetDocument) -> Vec<InterfaceInfo> {
 
     for block in &document.blocks {
         if let fct_ast::FacetNode::Interface(interface_block) = block {
-            let methods = interface_block.functions
+            let methods = interface_block
+                .functions
                 .iter()
                 .map(|func| MethodInfo {
                     name: func.name.clone(),
-                    parameters: func.params
+                    parameters: func
+                        .params
                         .iter()
                         .map(|param| ParameterInfo {
                             name: param.name.clone(),
@@ -149,7 +157,11 @@ fn type_node_to_string(type_node: &fct_ast::TypeNode) -> String {
 }
 
 /// Generate TypeScript SDK
-fn generate_typescript_sdk(interfaces: &[InterfaceInfo], sdk_name: &str, output: &PathBuf) -> Result<()> {
+fn generate_typescript_sdk(
+    interfaces: &[InterfaceInfo],
+    sdk_name: &str,
+    output: &PathBuf,
+) -> Result<()> {
     println!("{} Generating TypeScript SDK...", CODEGEN_EMOJI);
 
     let mut types_content = String::new();
@@ -170,7 +182,8 @@ fn generate_typescript_sdk(interfaces: &[InterfaceInfo], sdk_name: &str, output:
                 types_content.push_str(&format!("  /**\n   * {}\n   */\n", description));
             }
 
-            let params: Vec<String> = method.parameters
+            let params: Vec<String> = method
+                .parameters
                 .iter()
                 .map(|p| {
                     // TODO: Handle default values
@@ -178,12 +191,18 @@ fn generate_typescript_sdk(interfaces: &[InterfaceInfo], sdk_name: &str, output:
                 })
                 .collect();
 
-            let return_type = method.return_type
+            let return_type = method
+                .return_type
                 .as_ref()
                 .map(|t| type_to_ts(&Some(t.to_string())))
                 .unwrap_or("void".to_string());
 
-            types_content.push_str(&format!("  {}({}): Promise<{}>;\n", method.name, params.join(", "), return_type));
+            types_content.push_str(&format!(
+                "  {}({}): Promise<{}>;\n",
+                method.name,
+                params.join(", "),
+                return_type
+            ));
         }
 
         types_content.push_str("}\n\n");
@@ -204,7 +223,8 @@ fn generate_typescript_sdk(interfaces: &[InterfaceInfo], sdk_name: &str, output:
         for method in &interface.methods {
             client_content.push_str(&format!("  async {}(", method.name));
 
-            let params: Vec<String> = method.parameters
+            let params: Vec<String> = method
+                .parameters
                 .iter()
                 .map(|p| format!("{}: {}", p.name, type_to_ts(&p.param_type)))
                 .collect();
@@ -212,7 +232,8 @@ fn generate_typescript_sdk(interfaces: &[InterfaceInfo], sdk_name: &str, output:
             client_content.push_str(&params.join(", "));
             client_content.push_str("): Promise<");
 
-            let return_type = method.return_type
+            let return_type = method
+                .return_type
                 .as_ref()
                 .map(|t| type_to_ts(&Some(t.to_string())))
                 .unwrap_or("void".to_string());
@@ -220,7 +241,10 @@ fn generate_typescript_sdk(interfaces: &[InterfaceInfo], sdk_name: &str, output:
             client_content.push_str("> {\n");
 
             client_content.push_str("    // TODO: Implement actual API call\n");
-            client_content.push_str(&format!("    throw new Error('Method {} not implemented');\n", method.name));
+            client_content.push_str(&format!(
+                "    throw new Error('Method {} not implemented');\n",
+                method.name
+            ));
             client_content.push_str("  }\n\n");
         }
     }
@@ -245,12 +269,17 @@ fn generate_typescript_sdk(interfaces: &[InterfaceInfo], sdk_name: &str, output:
 }
 
 /// Generate Python SDK
-fn generate_python_sdk(interfaces: &[InterfaceInfo], sdk_name: &str, output: &PathBuf) -> Result<()> {
+fn generate_python_sdk(
+    interfaces: &[InterfaceInfo],
+    sdk_name: &str,
+    output: &PathBuf,
+) -> Result<()> {
     println!("{} Generating Python SDK...", CODEGEN_EMOJI);
 
     let mut content = String::new();
 
-    content.push_str(&format!(r#"# {} SDK
+    content.push_str(&format!(
+        r#"# {} SDK
 # Generated by FACET Codegen
 
 from typing import Dict, Any, Optional, List, Union
@@ -258,32 +287,44 @@ from dataclasses import dataclass
 import asyncio
 import json
 
-"#, sdk_name));
+"#,
+        sdk_name
+    ));
 
     for interface in interfaces {
         if let Some(description) = &interface.description {
-            content.push_str(&format!(r#"""{}"""
+            content.push_str(&format!(
+                r#"""{}"""
 
-"#, description));
+"#,
+                description
+            ));
         }
 
-        content.push_str(&format!(r#"class {}:
+        content.push_str(&format!(
+            r#"class {}:
     """{} interface"""
 
     def __init__(self, base_url: str = "https://api.facet.ai"):
         self.base_url = base_url
 
-"#, interface.name, interface.name));
+"#,
+            interface.name, interface.name
+        ));
 
         for method in &interface.methods {
             if let Some(description) = &method.description {
-                content.push_str(&format!(r#"    """
+                content.push_str(&format!(
+                    r#"    """
     {}
     """
-"#, description));
+"#,
+                    description
+                ));
             }
 
-            let params: Vec<String> = method.parameters
+            let params: Vec<String> = method
+                .parameters
                 .iter()
                 .map(|p| {
                     // TODO: Handle default values
@@ -291,16 +332,24 @@ import json
                 })
                 .collect();
 
-            let return_annotation = method.return_type
+            let return_annotation = method
+                .return_type
                 .as_ref()
                 .map(|t| format!(" -> {}", type_to_python(&Some(t.to_string()))))
                 .unwrap_or_default();
 
-            content.push_str(&format!(r#"    async def {}({}){}:
+            content.push_str(&format!(
+                r#"    async def {}({}){}:
         """TODO: Implement {} method"""
         # TODO: Implement actual API call
         raise NotImplementedError("Method {} not implemented")
-"#, method.name, params.join(", "), return_annotation, method.name, method.name));
+"#,
+                method.name,
+                params.join(", "),
+                return_annotation,
+                method.name,
+                method.name
+            ));
 
             content.push_str("\n\n");
         }
@@ -323,23 +372,30 @@ fn generate_rust_sdk(interfaces: &[InterfaceInfo], sdk_name: &str, output: &Path
 
     let mut content = String::new();
 
-    content.push_str(&format!(r#"//! {} SDK
+    content.push_str(&format!(
+        r#"//! {} SDK
 //! Generated by FACET Codegen
 
 use serde::{{Deserialize, Serialize}};
 use std::collections::HashMap;
 
-"#, sdk_name));
+"#,
+        sdk_name
+    ));
 
     for interface in interfaces {
         if let Some(description) = &interface.description {
-            content.push_str(&format!(r#"/// {}
+            content.push_str(&format!(
+                r#"/// {}
 ///
 {}
-"#, interface.name, description));
+"#,
+                interface.name, description
+            ));
         }
 
-        content.push_str(&format!(r#"pub struct {}Client {{{{
+        content.push_str(&format!(
+            r#"pub struct {}Client {{{{
     base_url: String,
 }}}}
 
@@ -350,30 +406,43 @@ impl {}Client {{{{
         }}}}
     }}}}
 
-"#, interface.name, interface.name));
+"#,
+            interface.name, interface.name
+        ));
 
         for method in &interface.methods {
             if let Some(description) = &method.description {
-                content.push_str(&format!(r#"    ///
+                content.push_str(&format!(
+                    r#"    ///
     {}
-    pub async fn {}("#, description, method.name));
+    pub async fn {}("#,
+                    description, method.name
+                ));
             } else {
                 content.push_str(&format!(r#"    pub async fn {}("#, method.name));
             }
 
-            let params: Vec<String> = method.parameters
+            let params: Vec<String> = method
+                .parameters
                 .iter()
                 .map(|p| format!("{}: {}", p.name, type_to_rust(&p.param_type)))
                 .collect();
 
-            let return_type = method.return_type
+            let return_type = method
+                .return_type
                 .as_ref()
                 .map(|t| type_to_rust(&Some(t.to_string())))
                 .unwrap_or("()".to_string());
 
             content.push_str(&params.join(", "));
-            content.push_str(&format!(") -> Result<{}, Box<dyn std::error::Error>> {{\n", return_type));
-            content.push_str(&format!("        // TODO: Implement {} method\n", method.name));
+            content.push_str(&format!(
+                ") -> Result<{}, Box<dyn std::error::Error>> {{\n",
+                return_type
+            ));
+            content.push_str(&format!(
+                "        // TODO: Implement {} method\n",
+                method.name
+            ));
             content.push_str("        Err(\"Not implemented\".into())\n");
             content.push_str("    }\n\n");
         }
@@ -387,7 +456,8 @@ impl {}Client {{{{
         .with_context(|| format!("Failed to write Rust file: {:?}", lib_path))?;
 
     // Write Cargo.toml
-    let cargo_toml = format!(r#"[package]
+    let cargo_toml = format!(
+        r#"[package]
 name = "{}-sdk"
 version = "0.1.0"
 edition = "2021"
@@ -396,7 +466,9 @@ edition = "2021"
 serde = {{ version = "1.0", features = ["derive"] }}
 serde_json = "1.0"
 tokio = {{ version = "1.0", features = ["full"] }}
-"#, sdk_name.to_lowercase());
+"#,
+        sdk_name.to_lowercase()
+    );
 
     let cargo_path = output.join("Cargo.toml");
     fs::write(&cargo_path, cargo_toml)
@@ -442,7 +514,7 @@ fn type_to_ts(type_str: &Option<String>) -> String {
             "boolean" => "boolean".to_string(),
             "object" => "any".to_string(),
             _ => t.clone(),
-        }
+        },
     }
 }
 
@@ -455,7 +527,7 @@ fn type_to_python(type_str: &Option<String>) -> String {
             "boolean" => "bool".to_string(),
             "object" => "Dict[str, Any]".to_string(),
             _ => t.clone(),
-        }
+        },
     }
 }
 
@@ -468,6 +540,6 @@ fn type_to_rust(type_str: &Option<String>) -> String {
             "boolean" => "bool".to_string(),
             "object" => "serde_json::Value".to_string(),
             _ => format!("serde_json::Value /* {} */", t),
-        }
+        },
     }
 }

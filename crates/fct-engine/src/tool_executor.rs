@@ -5,8 +5,10 @@
 // Supports multiple LLM providers: OpenAI, Anthropic, Llama
 
 use crate::errors::{EngineError, EngineResult};
-use fct_ast::ValueNode;
+use crate::r_dag::ExecutionGuardDecision;
+use fct_ast::{OrderedMap, ScalarValue, ValueNode, FACET_VERSION};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 
 // ============================================================================
@@ -52,6 +54,13 @@ pub struct ToolResult {
 
 /// Tool execution handler function type
 pub type ToolHandler = Box<dyn Fn(&ToolInvocation) -> EngineResult<ValueNode> + Send + Sync>;
+
+#[derive(Debug, Clone)]
+struct ToolPolicyDecision {
+    allowed: bool,
+    policy_rule_id: Option<String>,
+    error_code: Option<String>,
+}
 
 // ============================================================================
 // TOOL EXECUTOR
@@ -114,11 +123,12 @@ impl ToolExecutor {
 
     /// Validate tool invocation arguments against schema
     pub fn validate_invocation(&self, invocation: &ToolInvocation) -> EngineResult<()> {
-        let _tool = self.tools.get(&invocation.tool_name).ok_or_else(|| {
-            EngineError::ExecutionError {
-                message: format!("Tool '{}' not found", invocation.tool_name),
-            }
-        })?;
+        let _tool =
+            self.tools
+                .get(&invocation.tool_name)
+                .ok_or_else(|| EngineError::ExecutionError {
+                    message: format!("Tool '{}' not found", invocation.tool_name),
+                })?;
 
         // TODO: Implement JSON Schema validation
         // For now, just check if tool exists
@@ -129,6 +139,75 @@ impl ToolExecutor {
         }
 
         Ok(())
+    }
+
+    /// Evaluate policy guard for a tool call and produce a guard decision event.
+    pub fn evaluate_tool_call_guard(
+        &self,
+        invocation: &ToolInvocation,
+        policy: Option<&OrderedMap<String, ValueNode>>,
+        computed_vars: Option<&HashMap<String, ValueNode>>,
+        mode: &str,
+        host_profile_id: &str,
+        effect_class: Option<&str>,
+    ) -> EngineResult<ExecutionGuardDecision> {
+        let decision =
+            evaluate_tool_call(policy, &invocation.tool_name, effect_class, computed_vars);
+        let input_hash = tool_call_input_hash(
+            &invocation.tool_name,
+            &invocation.arguments,
+            host_profile_id,
+        )?;
+
+        Ok(ExecutionGuardDecision {
+            seq: 0,
+            op: "tool_call".to_string(),
+            name: invocation.tool_name.clone(),
+            effect_class: effect_class.map(|s| s.to_string()),
+            mode: mode.to_string(),
+            decision: if decision.allowed {
+                "allowed".to_string()
+            } else {
+                "denied".to_string()
+            },
+            policy_rule_id: decision.policy_rule_id,
+            input_hash,
+            error_code: decision.error_code,
+        })
+    }
+
+    /// Execute a tool invocation with fail-closed guard semantics.
+    pub fn execute_with_guard(
+        &self,
+        invocation: ToolInvocation,
+        policy: Option<&OrderedMap<String, ValueNode>>,
+        computed_vars: Option<&HashMap<String, ValueNode>>,
+        mode: &str,
+        host_profile_id: &str,
+        effect_class: Option<&str>,
+    ) -> EngineResult<(ToolResult, ExecutionGuardDecision)> {
+        let decision = self.evaluate_tool_call_guard(
+            &invocation,
+            policy,
+            computed_vars,
+            mode,
+            host_profile_id,
+            effect_class,
+        )?;
+
+        if decision.error_code.as_deref() == Some("F455") {
+            return Err(EngineError::GuardUndecidable {
+                name: invocation.tool_name.clone(),
+            });
+        }
+        if decision.decision == "denied" {
+            return Err(EngineError::PolicyDenied {
+                name: invocation.tool_name.clone(),
+            });
+        }
+
+        let result = self.execute(invocation)?;
+        Ok((result, decision))
     }
 
     /// Execute a tool invocation
@@ -185,6 +264,315 @@ impl Default for ToolExecutor {
     }
 }
 
+fn evaluate_tool_call(
+    policy: Option<&OrderedMap<String, ValueNode>>,
+    tool_name: &str,
+    effect_class: Option<&str>,
+    computed_vars: Option<&HashMap<String, ValueNode>>,
+) -> ToolPolicyDecision {
+    let Some(policy_map) = policy else {
+        return ToolPolicyDecision {
+            allowed: false,
+            policy_rule_id: None,
+            error_code: Some("F454".to_string()),
+        };
+    };
+
+    if let Some(deny_rules) = policy_map.get("deny").and_then(as_rule_list) {
+        for rule in deny_rules {
+            match rule_matches_tool_call(rule, tool_name, effect_class, computed_vars) {
+                RuleMatch::Matched(rule_id) => {
+                    return ToolPolicyDecision {
+                        allowed: false,
+                        policy_rule_id: rule_id,
+                        error_code: Some("F454".to_string()),
+                    }
+                }
+                RuleMatch::Undecidable(rule_id) => {
+                    return ToolPolicyDecision {
+                        allowed: false,
+                        policy_rule_id: rule_id,
+                        error_code: Some("F455".to_string()),
+                    }
+                }
+                RuleMatch::NoMatch => {}
+            }
+        }
+    }
+
+    if let Some(allow_rules) = policy_map.get("allow").and_then(as_rule_list) {
+        for rule in allow_rules {
+            match rule_matches_tool_call(rule, tool_name, effect_class, computed_vars) {
+                RuleMatch::Matched(rule_id) => {
+                    return ToolPolicyDecision {
+                        allowed: true,
+                        policy_rule_id: rule_id,
+                        error_code: None,
+                    }
+                }
+                RuleMatch::Undecidable(rule_id) => {
+                    return ToolPolicyDecision {
+                        allowed: false,
+                        policy_rule_id: rule_id,
+                        error_code: Some("F455".to_string()),
+                    }
+                }
+                RuleMatch::NoMatch => {}
+            }
+        }
+    }
+
+    default_guard_decision(policy_map, "tool_call", false)
+}
+
+fn as_rule_list(value: &ValueNode) -> Option<&Vec<ValueNode>> {
+    match value {
+        ValueNode::List(items) => Some(items),
+        _ => None,
+    }
+}
+
+enum RuleMatch {
+    Matched(Option<String>),
+    Undecidable(Option<String>),
+    NoMatch,
+}
+
+fn rule_matches_tool_call(
+    rule: &ValueNode,
+    tool_name: &str,
+    effect_class: Option<&str>,
+    computed_vars: Option<&HashMap<String, ValueNode>>,
+) -> RuleMatch {
+    let ValueNode::Map(map) = rule else {
+        return RuleMatch::NoMatch;
+    };
+
+    let Some(ValueNode::String(op)) = map.get("op") else {
+        return RuleMatch::NoMatch;
+    };
+    if op != "tool_call" {
+        return RuleMatch::NoMatch;
+    }
+    let rule_id = match map.get("id") {
+        Some(ValueNode::String(id)) => Some(id.clone()),
+        _ => None,
+    };
+
+    let name_match = match map.get("name") {
+        Some(ValueNode::String(pattern)) => matcher_matches(pattern, tool_name),
+        Some(_) => return RuleMatch::Undecidable(rule_id),
+        None => true,
+    };
+    if !name_match {
+        return RuleMatch::NoMatch;
+    }
+
+    if let Some(effect_matcher) = map.get("effect") {
+        match effect_matcher {
+            ValueNode::String(pattern) => {
+                let Some(op_effect) = effect_class else {
+                    return RuleMatch::NoMatch;
+                };
+                if !matcher_matches(pattern, op_effect) {
+                    return RuleMatch::NoMatch;
+                }
+            }
+            _ => return RuleMatch::Undecidable(rule_id),
+        }
+    }
+
+    let when_eval = match map.get("when") {
+        None => true,
+        Some(cond) => match eval_policy_cond(cond, computed_vars) {
+            Ok(v) => v,
+            Err(()) => return RuleMatch::Undecidable(rule_id),
+        },
+    };
+    if !when_eval {
+        return RuleMatch::NoMatch;
+    }
+
+    let unless_eval = match map.get("unless") {
+        None => false,
+        Some(cond) => match eval_policy_cond(cond, computed_vars) {
+            Ok(v) => v,
+            Err(()) => return RuleMatch::Undecidable(rule_id),
+        },
+    };
+    if unless_eval {
+        return RuleMatch::NoMatch;
+    }
+
+    RuleMatch::Matched(rule_id)
+}
+
+fn eval_policy_cond(
+    cond: &ValueNode,
+    computed_vars: Option<&HashMap<String, ValueNode>>,
+) -> Result<bool, ()> {
+    match cond {
+        ValueNode::Scalar(ScalarValue::Bool(v)) => Ok(*v),
+        ValueNode::Variable(var_ref) => {
+            let vars = computed_vars.ok_or(())?;
+            let value = resolve_policy_var(var_ref, vars)?;
+            match value {
+                ValueNode::Scalar(ScalarValue::Bool(v)) => Ok(*v),
+                _ => Err(()),
+            }
+        }
+        ValueNode::Map(map) => {
+            if map.len() != 1 {
+                return Err(());
+            }
+
+            let (op, arg) = map.iter().next().ok_or(())?;
+            match op.as_str() {
+                "not" => Ok(!eval_policy_cond(arg, computed_vars)?),
+                "all" => {
+                    let items = match arg {
+                        ValueNode::List(items) if !items.is_empty() => items,
+                        _ => return Err(()),
+                    };
+                    for item in items {
+                        if !eval_policy_cond(item, computed_vars)? {
+                            return Ok(false);
+                        }
+                    }
+                    Ok(true)
+                }
+                "any" => {
+                    let items = match arg {
+                        ValueNode::List(items) if !items.is_empty() => items,
+                        _ => return Err(()),
+                    };
+                    for item in items {
+                        if eval_policy_cond(item, computed_vars)? {
+                            return Ok(true);
+                        }
+                    }
+                    Ok(false)
+                }
+                _ => Err(()),
+            }
+        }
+        _ => Err(()),
+    }
+}
+
+fn resolve_policy_var<'a>(
+    var_ref: &str,
+    vars: &'a HashMap<String, ValueNode>,
+) -> Result<&'a ValueNode, ()> {
+    let mut parts = var_ref.split('.');
+    let base = parts.next().ok_or(())?;
+    let mut current = vars.get(base).ok_or(())?;
+
+    for seg in parts {
+        if seg.chars().all(|c| c.is_ascii_digit()) {
+            return Err(());
+        }
+        current = match current {
+            ValueNode::Map(map) => map.get(seg).ok_or(())?,
+            _ => return Err(()),
+        };
+    }
+
+    Ok(current)
+}
+
+fn default_guard_decision(
+    policy_map: &OrderedMap<String, ValueNode>,
+    op: &str,
+    fallback_allow: bool,
+) -> ToolPolicyDecision {
+    if let Some(defaults_node) = policy_map.get("defaults") {
+        let defaults_map = match defaults_node {
+            ValueNode::Map(map) => map,
+            _ => {
+                return ToolPolicyDecision {
+                    allowed: false,
+                    policy_rule_id: None,
+                    error_code: Some("F455".to_string()),
+                };
+            }
+        };
+
+        if let Some(op_default) = defaults_map.get(op) {
+            return match op_default {
+                ValueNode::String(s) if s == "allow" => ToolPolicyDecision {
+                    allowed: true,
+                    policy_rule_id: None,
+                    error_code: None,
+                },
+                ValueNode::String(s) if s == "deny" => ToolPolicyDecision {
+                    allowed: false,
+                    policy_rule_id: None,
+                    error_code: Some("F454".to_string()),
+                },
+                ValueNode::Scalar(ScalarValue::Bool(true)) => ToolPolicyDecision {
+                    allowed: true,
+                    policy_rule_id: None,
+                    error_code: None,
+                },
+                ValueNode::Scalar(ScalarValue::Bool(false)) => ToolPolicyDecision {
+                    allowed: false,
+                    policy_rule_id: None,
+                    error_code: Some("F454".to_string()),
+                },
+                _ => ToolPolicyDecision {
+                    allowed: false,
+                    policy_rule_id: None,
+                    error_code: Some("F455".to_string()),
+                },
+            };
+        }
+    }
+
+    ToolPolicyDecision {
+        allowed: fallback_allow,
+        policy_rule_id: None,
+        error_code: if fallback_allow {
+            None
+        } else {
+            Some("F454".to_string())
+        },
+    }
+}
+
+fn matcher_matches(pattern: &str, value: &str) -> bool {
+    if let Some(prefix) = pattern.strip_suffix(".*") {
+        value.starts_with(prefix)
+    } else {
+        pattern == value
+    }
+}
+
+fn canonicalize_json(value: &serde_json::Value) -> EngineResult<String> {
+    Ok(serde_json_canonicalizer::to_string(value)?)
+}
+
+fn tool_call_input_hash(
+    tool_name: &str,
+    args: &HashMap<String, ValueNode>,
+    host_profile_id: &str,
+) -> EngineResult<String> {
+    let (interface_name, fn_name) = match tool_name.split_once('.') {
+        Some((iface, func)) => (iface, func),
+        None => (tool_name, ""),
+    };
+
+    let input_obj = serde_json::json!({
+        "interface": interface_name,
+        "fn": fn_name,
+        "args": value_node_map_to_json(args)?,
+        "host_profile_id": host_profile_id,
+        "facet_version": FACET_VERSION,
+    });
+    let canonical = canonicalize_json(&input_obj)?;
+    Ok(format!("sha256:{:x}", Sha256::digest(canonical.as_bytes())))
+}
+
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
@@ -212,18 +600,15 @@ pub fn value_node_to_json(node: &ValueNode) -> EngineResult<serde_json::Value> {
             ScalarValue::Null => Ok(serde_json::Value::Null),
             ScalarValue::Bool(b) => Ok(serde_json::Value::Bool(*b)),
             ScalarValue::Int(i) => Ok(serde_json::Value::Number((*i).into())),
-            ScalarValue::Float(f) => {
-                serde_json::Number::from_f64(*f)
-                    .map(serde_json::Value::Number)
-                    .ok_or_else(|| EngineError::ExecutionError {
-                        message: format!("Invalid float value: {}", f),
-                    })
-            }
+            ScalarValue::Float(f) => serde_json::Number::from_f64(*f)
+                .map(serde_json::Value::Number)
+                .ok_or_else(|| EngineError::ExecutionError {
+                    message: format!("Invalid float value: {}", f),
+                }),
         },
         ValueNode::String(s) => Ok(serde_json::Value::String(s.clone())),
         ValueNode::List(items) => {
-            let json_items: Result<Vec<_>, _> =
-                items.iter().map(value_node_to_json).collect();
+            let json_items: Result<Vec<_>, _> = items.iter().map(value_node_to_json).collect();
             Ok(serde_json::Value::Array(json_items?))
         }
         ValueNode::Map(map) => {
@@ -242,7 +627,11 @@ pub fn value_node_to_json(node: &ValueNode) -> EngineResult<serde_json::Value> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use fct_ast::ScalarValue;
+    use fct_ast::{OrderedMap, ScalarValue};
+    use std::sync::{
+        atomic::{AtomicUsize, Ordering},
+        Arc,
+    };
 
     #[test]
     fn test_tool_registration() {
@@ -369,5 +758,360 @@ mod tests {
         assert_eq!(results.len(), 2);
         assert!(results[0].error.is_none());
         assert!(results[1].error.is_none());
+    }
+
+    #[test]
+    fn test_tool_call_guard_default_denies_without_policy() {
+        let mut executor = ToolExecutor::new();
+        executor
+            .register_tool(ToolDefinition {
+                name: "WeatherAPI.get_current".to_string(),
+                description: "weather".to_string(),
+                input_schema: serde_json::json!({}),
+                output_schema: None,
+            })
+            .unwrap();
+        executor
+            .register_handler("WeatherAPI.get_current".to_string(), |_| {
+                Ok(ValueNode::String("ok".to_string()))
+            })
+            .unwrap();
+
+        let invocation = ToolInvocation {
+            tool_name: "WeatherAPI.get_current".to_string(),
+            arguments: HashMap::new(),
+            invocation_id: Some("t1".to_string()),
+        };
+
+        let err = executor
+            .execute_with_guard(
+                invocation,
+                None,
+                None,
+                "exec",
+                "local.default.v1",
+                Some("read"),
+            )
+            .unwrap_err();
+
+        assert!(matches!(err, EngineError::PolicyDenied { .. }));
+        assert!(err.to_string().contains("F454"));
+    }
+
+    #[test]
+    fn test_tool_call_guard_allows_with_matching_rule() {
+        let mut executor = ToolExecutor::new();
+        executor
+            .register_tool(ToolDefinition {
+                name: "WeatherAPI.get_current".to_string(),
+                description: "weather".to_string(),
+                input_schema: serde_json::json!({}),
+                output_schema: None,
+            })
+            .unwrap();
+        executor
+            .register_handler("WeatherAPI.get_current".to_string(), |_| {
+                Ok(ValueNode::String("ok".to_string()))
+            })
+            .unwrap();
+
+        let allow_rule = ValueNode::Map(OrderedMap::from([
+            (
+                "id".to_string(),
+                ValueNode::String("allow-weather".to_string()),
+            ),
+            ("op".to_string(), ValueNode::String("tool_call".to_string())),
+            (
+                "name".to_string(),
+                ValueNode::String("WeatherAPI.get_current".to_string()),
+            ),
+            ("effect".to_string(), ValueNode::String("read".to_string())),
+        ]));
+        let policy = OrderedMap::from([("allow".to_string(), ValueNode::List(vec![allow_rule]))]);
+
+        let invocation = ToolInvocation {
+            tool_name: "WeatherAPI.get_current".to_string(),
+            arguments: HashMap::new(),
+            invocation_id: Some("t2".to_string()),
+        };
+
+        let (result, decision) = executor
+            .execute_with_guard(
+                invocation,
+                Some(&policy),
+                None,
+                "exec",
+                "local.default.v1",
+                Some("read"),
+            )
+            .unwrap();
+
+        assert!(result.error.is_none());
+        assert_eq!(decision.decision, "allowed");
+        assert_eq!(decision.policy_rule_id.as_deref(), Some("allow-weather"));
+        assert!(decision.error_code.is_none());
+
+        let expected_input_obj = serde_json::json!({
+            "interface": "WeatherAPI",
+            "fn": "get_current",
+            "args": serde_json::json!({}),
+            "host_profile_id": "local.default.v1",
+            "facet_version": FACET_VERSION,
+        });
+        let expected_hash = format!(
+            "sha256:{:x}",
+            Sha256::digest(canonicalize_json(&expected_input_obj).unwrap().as_bytes())
+        );
+        assert_eq!(decision.input_hash, expected_hash);
+    }
+
+    #[test]
+    fn test_tool_call_guard_effect_is_conjunctive_filter() {
+        let mut executor = ToolExecutor::new();
+        executor
+            .register_tool(ToolDefinition {
+                name: "WeatherAPI.get_current".to_string(),
+                description: "weather".to_string(),
+                input_schema: serde_json::json!({}),
+                output_schema: None,
+            })
+            .unwrap();
+        executor
+            .register_handler("WeatherAPI.get_current".to_string(), |_| {
+                Ok(ValueNode::String("ok".to_string()))
+            })
+            .unwrap();
+
+        let allow_rule = ValueNode::Map(OrderedMap::from([
+            ("op".to_string(), ValueNode::String("tool_call".to_string())),
+            (
+                "name".to_string(),
+                ValueNode::String("WeatherAPI.get_current".to_string()),
+            ),
+            ("effect".to_string(), ValueNode::String("read".to_string())),
+        ]));
+        let policy = OrderedMap::from([("allow".to_string(), ValueNode::List(vec![allow_rule]))]);
+
+        let invocation = ToolInvocation {
+            tool_name: "WeatherAPI.get_current".to_string(),
+            arguments: HashMap::new(),
+            invocation_id: None,
+        };
+
+        let err = executor
+            .execute_with_guard(
+                invocation,
+                Some(&policy),
+                None,
+                "exec",
+                "local.default.v1",
+                None,
+            )
+            .unwrap_err();
+        assert!(matches!(err, EngineError::PolicyDenied { .. }));
+    }
+
+    #[test]
+    fn test_tool_call_guard_short_circuit_any_avoids_undecidable_tail() {
+        let mut executor = ToolExecutor::new();
+        executor
+            .register_tool(ToolDefinition {
+                name: "WeatherAPI.get_current".to_string(),
+                description: "weather".to_string(),
+                input_schema: serde_json::json!({}),
+                output_schema: None,
+            })
+            .unwrap();
+        executor
+            .register_handler("WeatherAPI.get_current".to_string(), |_| {
+                Ok(ValueNode::String("ok".to_string()))
+            })
+            .unwrap();
+
+        let allow_rule = ValueNode::Map(OrderedMap::from([
+            ("id".to_string(), ValueNode::String("allow-any".to_string())),
+            ("op".to_string(), ValueNode::String("tool_call".to_string())),
+            (
+                "name".to_string(),
+                ValueNode::String("WeatherAPI.get_current".to_string()),
+            ),
+            (
+                "when".to_string(),
+                ValueNode::Map(OrderedMap::from([(
+                    "any".to_string(),
+                    ValueNode::List(vec![
+                        ValueNode::Scalar(ScalarValue::Bool(true)),
+                        ValueNode::Variable("missing.flag".to_string()),
+                    ]),
+                )])),
+            ),
+        ]));
+        let policy = OrderedMap::from([("allow".to_string(), ValueNode::List(vec![allow_rule]))]);
+
+        let invocation = ToolInvocation {
+            tool_name: "WeatherAPI.get_current".to_string(),
+            arguments: HashMap::new(),
+            invocation_id: None,
+        };
+
+        let (_result, decision) = executor
+            .execute_with_guard(
+                invocation,
+                Some(&policy),
+                Some(&HashMap::new()),
+                "exec",
+                "local.default.v1",
+                Some("read"),
+            )
+            .unwrap();
+        assert_eq!(decision.decision, "allowed");
+        assert_eq!(decision.policy_rule_id.as_deref(), Some("allow-any"));
+    }
+
+    #[test]
+    fn test_tool_call_guard_undecidable_returns_f455() {
+        let mut executor = ToolExecutor::new();
+        executor
+            .register_tool(ToolDefinition {
+                name: "WeatherAPI.get_current".to_string(),
+                description: "weather".to_string(),
+                input_schema: serde_json::json!({}),
+                output_schema: None,
+            })
+            .unwrap();
+        executor
+            .register_handler("WeatherAPI.get_current".to_string(), |_| {
+                Ok(ValueNode::String("ok".to_string()))
+            })
+            .unwrap();
+
+        let allow_rule = ValueNode::Map(OrderedMap::from([
+            ("op".to_string(), ValueNode::String("tool_call".to_string())),
+            (
+                "name".to_string(),
+                ValueNode::String("WeatherAPI.get_current".to_string()),
+            ),
+            (
+                "when".to_string(),
+                ValueNode::Variable("missing.flag".to_string()),
+            ),
+        ]));
+        let policy = OrderedMap::from([("allow".to_string(), ValueNode::List(vec![allow_rule]))]);
+
+        let invocation = ToolInvocation {
+            tool_name: "WeatherAPI.get_current".to_string(),
+            arguments: HashMap::new(),
+            invocation_id: None,
+        };
+
+        let err = executor
+            .execute_with_guard(
+                invocation,
+                Some(&policy),
+                Some(&HashMap::new()),
+                "exec",
+                "local.default.v1",
+                Some("read"),
+            )
+            .unwrap_err();
+        assert!(matches!(err, EngineError::GuardUndecidable { .. }));
+        assert!(err.to_string().contains("F455"));
+    }
+
+    #[test]
+    fn test_tool_call_guard_denied_does_not_invoke_handler() {
+        let mut executor = ToolExecutor::new();
+        executor
+            .register_tool(ToolDefinition {
+                name: "WeatherAPI.get_current".to_string(),
+                description: "weather".to_string(),
+                input_schema: serde_json::json!({}),
+                output_schema: None,
+            })
+            .unwrap();
+
+        let handler_calls = Arc::new(AtomicUsize::new(0));
+        let handler_calls_clone = Arc::clone(&handler_calls);
+        executor
+            .register_handler("WeatherAPI.get_current".to_string(), move |_| {
+                handler_calls_clone.fetch_add(1, Ordering::SeqCst);
+                Ok(ValueNode::String("ok".to_string()))
+            })
+            .unwrap();
+
+        let invocation = ToolInvocation {
+            tool_name: "WeatherAPI.get_current".to_string(),
+            arguments: HashMap::new(),
+            invocation_id: Some("deny-before-call".to_string()),
+        };
+
+        let err = executor
+            .execute_with_guard(
+                invocation,
+                None,
+                None,
+                "exec",
+                "local.default.v1",
+                Some("read"),
+            )
+            .unwrap_err();
+
+        assert!(matches!(err, EngineError::PolicyDenied { .. }));
+        assert_eq!(handler_calls.load(Ordering::SeqCst), 0);
+    }
+
+    #[test]
+    fn test_tool_call_guard_undecidable_does_not_invoke_handler() {
+        let mut executor = ToolExecutor::new();
+        executor
+            .register_tool(ToolDefinition {
+                name: "WeatherAPI.get_current".to_string(),
+                description: "weather".to_string(),
+                input_schema: serde_json::json!({}),
+                output_schema: None,
+            })
+            .unwrap();
+
+        let handler_calls = Arc::new(AtomicUsize::new(0));
+        let handler_calls_clone = Arc::clone(&handler_calls);
+        executor
+            .register_handler("WeatherAPI.get_current".to_string(), move |_| {
+                handler_calls_clone.fetch_add(1, Ordering::SeqCst);
+                Ok(ValueNode::String("ok".to_string()))
+            })
+            .unwrap();
+
+        let allow_rule = ValueNode::Map(OrderedMap::from([
+            ("op".to_string(), ValueNode::String("tool_call".to_string())),
+            (
+                "name".to_string(),
+                ValueNode::String("WeatherAPI.get_current".to_string()),
+            ),
+            (
+                "when".to_string(),
+                ValueNode::Variable("missing.flag".to_string()),
+            ),
+        ]));
+        let policy = OrderedMap::from([("allow".to_string(), ValueNode::List(vec![allow_rule]))]);
+
+        let invocation = ToolInvocation {
+            tool_name: "WeatherAPI.get_current".to_string(),
+            arguments: HashMap::new(),
+            invocation_id: Some("undecidable-before-call".to_string()),
+        };
+
+        let err = executor
+            .execute_with_guard(
+                invocation,
+                Some(&policy),
+                Some(&HashMap::new()),
+                "exec",
+                "local.default.v1",
+                Some("read"),
+            )
+            .unwrap_err();
+
+        assert!(matches!(err, EngineError::GuardUndecidable { .. }));
+        assert_eq!(handler_calls.load(Ordering::SeqCst), 0);
     }
 }

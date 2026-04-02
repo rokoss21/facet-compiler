@@ -3,17 +3,19 @@
 // ============================================================================
 
 use crate::errors::{EngineError, EngineResult};
+use crate::r_dag::ExecutionMode;
 use crate::tokenizer::Tokenizer;
-use fct_ast::{PipelineNode, ValueNode};
-use fct_std::{LensContext, LensRegistry};
+use fct_ast::{OrderedMap, PipelineNode, ValueNode};
+use fct_std::{LensContext, LensRegistry, TrustLevel};
 use std::collections::HashMap;
 
 /// Represents a logical prompt section with allocation attributes
 #[derive(Debug, Clone)]
 pub struct Section {
     pub id: String,
+    pub source_index: usize,            // original section order index
     pub priority: i32,                  // lower = dropped earlier
-    pub base_size: usize,               // token count after initial render
+    pub base_size: usize,               // FACET Units after initial render
     pub min: usize,                     // minimum guaranteed size
     pub grow: f64,                      // weight for distributing excess space
     pub shrink: f64,                    // weight for compression/removal
@@ -27,6 +29,7 @@ impl Section {
     pub fn new(id: String, content: ValueNode, base_size: usize) -> Self {
         Self {
             id,
+            source_index: usize::MAX,
             priority: 500, // default priority
             base_size,
             min: 0,
@@ -40,9 +43,10 @@ impl Section {
     }
 
     pub fn from_content(id: String, content: ValueNode, tokenizer: &Tokenizer) -> Self {
-        let base_size = tokenizer.count_tokens_in_value(&content);
+        let base_size = tokenizer.count_facet_units_in_value(&content);
         Self {
             id,
+            source_index: usize::MAX,
             priority: 500,
             base_size,
             min: 0,
@@ -74,7 +78,12 @@ impl Section {
     }
 
     /// Apply compression strategy and return new size
-    pub fn apply_compression(&self, lens_registry: &LensRegistry, tokenizer: &Tokenizer) -> EngineResult<usize> {
+    pub fn apply_compression(
+        &self,
+        lens_registry: &LensRegistry,
+        tokenizer: &Tokenizer,
+        mode: ExecutionMode,
+    ) -> EngineResult<(ValueNode, usize)> {
         if let Some(strategy) = &self.strategy {
             // Apply compression pipeline directly to content
             let mut current_value = self.content.clone();
@@ -83,28 +92,49 @@ impl Section {
             };
 
             for lens_call in &strategy.lenses {
-                let lens = lens_registry.get(&lens_call.name).ok_or_else(|| {
-                    EngineError::LensExecutionFailed {
-                        message: format!("Unknown compression lens: {}", lens_call.name),
-                    }
-                })?;
+                let lens = lens_registry
+                    .get(&lens_call.name)
+                    .ok_or_else(|| EngineError::UnknownLens {
+                        name: lens_call.name.clone(),
+                    })?;
+                let signature = lens.signature();
+                if !signature.deterministic {
+                    return Err(EngineError::LensExecutionFailed {
+                        message: format!(
+                            "Compression lens '{}' must be deterministic for layout strategy",
+                            lens_call.name
+                        ),
+                    });
+                }
+                if mode == ExecutionMode::Pure
+                    && signature.trust_level != TrustLevel::Pure
+                {
+                    return Err(EngineError::LensExecutionFailed {
+                        message: format!(
+                            "Compression lens '{}' disallowed in pure mode (Level-0 required)",
+                            lens_call.name
+                        ),
+                    });
+                }
+
+                let kwargs: HashMap<String, ValueNode> = lens_call
+                    .kwargs
+                    .iter()
+                    .map(|(k, v)| (k.clone(), v.clone()))
+                    .collect();
 
                 current_value = lens
-                    .execute(
-                        current_value,
-                        lens_call.args.clone(),
-                        lens_call.kwargs.clone(),
-                        &ctx,
-                    )
+                    .execute(current_value, lens_call.args.clone(), kwargs, &ctx)
                     .map_err(|e| EngineError::LensExecutionFailed {
                         message: format!("Compression lens '{}' failed: {}", lens_call.name, e),
                     })?;
             }
 
-            // Calculate real token count after compression
-            Ok(tokenizer.count_tokens_in_value(&current_value))
+            // Calculate FACET Units after compression
+            let size = tokenizer.count_facet_units_in_value(&current_value);
+            Ok((current_value, size))
         } else {
-            Ok(self.current_size)
+            Ok((self.content.clone(), self.current_size))
         }
     }
 }
@@ -136,11 +166,10 @@ pub struct TokenBoxModel {
 
 impl TokenBoxModel {
     pub fn new(budget: usize) -> Self {
-        let tokenizer = Tokenizer::new()
-            .unwrap_or_else(|_| {
-                // Fallback to default tokenizer if initialization fails
-                Tokenizer::default()
-            });
+        let tokenizer = Tokenizer::new().unwrap_or_else(|_| {
+            // Fallback to default tokenizer if initialization fails
+            Tokenizer::default()
+        });
         Self { budget, tokenizer }
     }
 
@@ -156,9 +185,22 @@ impl TokenBoxModel {
     /// Main allocation algorithm
     pub fn allocate(
         &self,
-        mut sections: Vec<Section>,
+        sections: Vec<Section>,
         lens_registry: &LensRegistry,
     ) -> EngineResult<AllocationResult> {
+        self.allocate_with_mode(sections, lens_registry, ExecutionMode::Exec)
+    }
+
+    pub fn allocate_with_mode(
+        &self,
+        mut sections: Vec<Section>,
+        lens_registry: &LensRegistry,
+        mode: ExecutionMode,
+    ) -> EngineResult<AllocationResult> {
+        for (idx, section) in sections.iter_mut().enumerate() {
+            section.source_index = idx;
+        }
+
         // Step 1: Calculate Fixed Load
         let (fixed_load, _critical_sections) = self.calculate_fixed_load(&sections)?;
 
@@ -169,16 +211,9 @@ impl TokenBoxModel {
             });
         }
 
-        // Step 2: Calculate current total and Free Space
+        // Step 2: If everything fits, keep all sections as-is.
         let current_total: usize = sections.iter().map(|s| s.current_size).sum();
-        let free_space = self.budget - fixed_load;
-
-        // Step 3: Expansion (only if we have space and no compression needed)
-        if current_total <= self.budget && free_space > 0 && !sections.is_empty() {
-            self.expand_sections(&mut sections, free_space)?;
-            let expanded_total: usize = sections.iter().map(|s| s.current_size).sum();
-
-            // Return the expanded result (budget is large enough to accommodate)
+        if current_total <= self.budget {
             let mut allocated_sections = Vec::new();
             for section in sections {
                 allocated_sections.push(AllocatedSection {
@@ -189,20 +224,16 @@ impl TokenBoxModel {
                     section,
                 });
             }
-
-            // Sort final sections by ID for deterministic output
-            allocated_sections.sort_by(|a, b| a.section.id.cmp(&b.section.id));
-
             return Ok(AllocationResult {
-                sections: allocated_sections,
-                total_size: expanded_total,
+                sections: sort_allocated_by_source(allocated_sections),
+                total_size: current_total,
                 budget: self.budget,
                 overflow: 0,
             });
         }
 
-        // Step 4: Compression (if needed)
-        let allocation_result = self.compress_sections(sections, lens_registry)?;
+        // Step 3: Compression/drop for flexible sections (if needed)
+        let allocation_result = self.compress_sections(sections, lens_registry, mode)?;
 
         Ok(allocation_result)
     }
@@ -222,42 +253,12 @@ impl TokenBoxModel {
         Ok((fixed_load, critical_indices))
     }
 
-    /// Step 3: Expand sections with free space proportionally
-    fn expand_sections(&self, sections: &mut [Section], free_space: usize) -> EngineResult<()> {
-        if free_space == 0 {
-            return Ok(());
-        }
-
-        // Find sections that can grow
-        let mut total_grow_weight = 0.0;
-        let mut grow_sections = Vec::new();
-
-        for section in sections.iter_mut() {
-            if section.grow > 0.0 {
-                total_grow_weight += section.grow;
-                grow_sections.push(section);
-            }
-        }
-
-        if total_grow_weight == 0.0 {
-            return Ok(());
-        }
-
-        // Sort by ID for deterministic behavior, then distribute free space proportionally
-        grow_sections.sort_by(|a, b| a.id.cmp(&b.id));
-        for section in grow_sections.iter_mut() {
-            let growth = (free_space as f64 * (section.grow / total_grow_weight)) as usize;
-            section.current_size = section.base_size + growth;
-        }
-
-        Ok(())
-    }
-
-    /// Step 4: Compress sections to fit budget
+    /// Step 3: Compress sections to fit budget
     fn compress_sections(
         &self,
         sections: Vec<Section>,
         lens_registry: &LensRegistry,
+        mode: ExecutionMode,
     ) -> EngineResult<AllocationResult> {
         // Separate critical and flexible sections
         let mut critical_sections: Vec<Section> = Vec::new();
@@ -310,17 +311,14 @@ impl TokenBoxModel {
             }
 
             return Ok(AllocationResult {
-                sections: allocated_sections,
+                sections: sort_allocated_by_source(allocated_sections),
                 total_size: current_total,
                 budget: self.budget,
                 overflow: 0,
             });
         }
 
-        let deficit = current_total - self.budget;
-        let remaining_budget = self.budget - critical_total;
-
-        // Sort flexible sections by (priority ASC, shrink DESC, id ASC) for deterministic ordering
+        // Sort flexible sections by (priority ASC, shrink DESC, original section order ASC)
         flexible_sections.sort_by(|a, b| {
             a.priority
                 .cmp(&b.priority)
@@ -329,17 +327,17 @@ impl TokenBoxModel {
                         .partial_cmp(&a.shrink)
                         .unwrap_or(std::cmp::Ordering::Equal)
                 })
-                .then_with(|| a.id.cmp(&b.id))
+                .then_with(|| a.source_index.cmp(&b.source_index))
         });
 
-        let mut remaining_deficit = deficit;
-        let mut remaining_flexible_budget = remaining_budget;
+        let mut running_total = current_total;
 
         for mut section in flexible_sections.into_iter() {
             let mut was_compressed = false;
+            let mut was_truncated = false;
             let original_size = section.current_size;
 
-            if remaining_deficit == 0 {
+            if running_total <= self.budget {
                 allocated_sections.push(AllocatedSection {
                     final_size: section.current_size,
                     was_compressed: was_compressed || section.current_size < original_size,
@@ -352,36 +350,48 @@ impl TokenBoxModel {
 
             // Try compression first
             if section.strategy.is_some() {
-                let compressed_size = section.apply_compression(lens_registry, &self.tokenizer)?;
+                let (compressed_content, compressed_size) =
+                    section.apply_compression(lens_registry, &self.tokenizer, mode)?;
                 let size_reduction = section.current_size.saturating_sub(compressed_size);
 
                 if size_reduction > 0 {
+                    section.content = compressed_content;
                     section.current_size = compressed_size;
-                    remaining_deficit = remaining_deficit.saturating_sub(size_reduction);
-                    remaining_flexible_budget =
-                        remaining_flexible_budget.saturating_sub(size_reduction);
+                    running_total = running_total.saturating_sub(size_reduction);
                     was_compressed = true;
                 }
             }
 
-            // If still over budget and we can shrink further
-            if remaining_deficit > 0
-                && remaining_flexible_budget > 0
-                && section.current_size > section.min
-            {
-                let max_shrink = section.current_size - section.min;
-                let actual_shrink = std::cmp::min(max_shrink, remaining_flexible_budget);
-                section.current_size -= actual_shrink;
-                remaining_flexible_budget -= actual_shrink;
+            // If still over budget, truncate deterministically from the end down to `min`.
+            if running_total > self.budget && section.current_size > section.min {
+                let need = running_total - self.budget;
+                let reducible = section.current_size - section.min;
+                let requested_reduction = std::cmp::min(need, reducible);
+                if requested_reduction > 0 {
+                    let target_size = section.current_size - requested_reduction;
+                    let (truncated_content, truncated_size) = self.truncate_content(
+                        &section.content,
+                        target_size,
+                        section.min,
+                    );
+                    if truncated_size < section.current_size {
+                        section.content = truncated_content;
+                        running_total = running_total.saturating_sub(
+                            section.current_size.saturating_sub(truncated_size),
+                        );
+                        section.current_size = truncated_size;
+                        was_truncated = true;
+                    }
+                }
             }
 
-            // If still no budget left, drop the section
-            if remaining_flexible_budget == 0 {
-                remaining_deficit = remaining_deficit.saturating_sub(section.current_size);
+            // If still over budget and this section is at min, drop it.
+            if running_total > self.budget && section.current_size == section.min {
+                running_total = running_total.saturating_sub(section.current_size);
                 allocated_sections.push(AllocatedSection {
                     final_size: 0,
-                    was_compressed: false,
-                    was_truncated: false,
+                    was_compressed: was_compressed,
+                    was_truncated,
                     was_dropped: true,
                     section,
                 });
@@ -389,15 +399,14 @@ impl TokenBoxModel {
                 allocated_sections.push(AllocatedSection {
                     final_size: section.current_size,
                     was_compressed: was_compressed || section.current_size < original_size,
-                    was_truncated: section.current_size == section.min,
+                    was_truncated,
                     was_dropped: false,
                     section,
                 });
             }
         }
 
-        // Sort final sections by ID for deterministic output
-        allocated_sections.sort_by(|a, b| a.section.id.cmp(&b.section.id));
+        let allocated_sections = sort_allocated_by_source(allocated_sections);
 
         let final_total: usize = allocated_sections.iter().map(|a| a.final_size).sum();
 
@@ -408,4 +417,153 @@ impl TokenBoxModel {
             overflow: final_total.saturating_sub(self.budget),
         })
     }
+
+    fn truncate_content(
+        &self,
+        content: &ValueNode,
+        target_units: usize,
+        min_units: usize,
+    ) -> (ValueNode, usize) {
+        let current_units = self.tokenizer.count_facet_units_in_value(content);
+        if current_units <= target_units {
+            return (content.clone(), current_units);
+        }
+
+        // Clamp requested bounds to a valid range for deterministic behavior.
+        let target_units = target_units.min(current_units);
+        let min_units = min_units.min(target_units);
+
+        match content {
+            ValueNode::String(text) => {
+                let current = self.tokenizer.count_facet_units(text);
+                let mut best_idx: Option<usize> = None;
+                let mut best_units = current;
+
+                for idx in text
+                    .char_indices()
+                    .map(|(i, _)| i)
+                    .chain(std::iter::once(text.len()))
+                {
+                    let prefix = &text[..idx];
+                    let units = self.tokenizer.count_facet_units(prefix);
+                    if units > target_units {
+                        break;
+                    }
+                    if units >= min_units {
+                        best_idx = Some(idx);
+                        best_units = units;
+                    }
+                }
+
+                if let Some(idx) = best_idx {
+                    let truncated = text[..idx].to_string();
+                    (ValueNode::String(truncated), best_units)
+                } else {
+                    (ValueNode::String(text.clone()), current)
+                }
+            }
+            ValueNode::List(items) => self.truncate_list(items, target_units, min_units),
+            ValueNode::Map(map) => self.truncate_map(map, target_units, min_units),
+            _ => {
+                // Atomic non-string values cannot be partially truncated.
+                (content.clone(), current_units)
+            }
+        }
+    }
+
+    fn truncate_list(
+        &self,
+        items: &[ValueNode],
+        target_units: usize,
+        min_units: usize,
+    ) -> (ValueNode, usize) {
+        let mut truncated_items = items.to_vec();
+        let mut item_sizes: Vec<usize> = truncated_items
+            .iter()
+            .map(|item| self.tokenizer.count_facet_units_in_value(item))
+            .collect();
+        let mut current_units: usize = item_sizes.iter().sum();
+
+        while current_units > target_units {
+            let Some(last_idx) = truncated_items.len().checked_sub(1) else {
+                break;
+            };
+            let last_size = item_sizes[last_idx];
+            let prefix_units = current_units.saturating_sub(last_size);
+
+            // Keep list-prefix and truncate from the end of the last item first.
+            let child_min = min_units.saturating_sub(prefix_units);
+            let child_target = target_units.saturating_sub(prefix_units);
+            let (new_last, new_last_size) =
+                self.truncate_content(&truncated_items[last_idx], child_target, child_min);
+
+            if new_last_size < last_size {
+                truncated_items[last_idx] = new_last;
+                item_sizes[last_idx] = new_last_size;
+                current_units = prefix_units + new_last_size;
+                continue;
+            }
+
+            // If the tail cannot be reduced further, drop the tail item if min allows.
+            if prefix_units >= min_units {
+                truncated_items.pop();
+                item_sizes.pop();
+                current_units = prefix_units;
+                continue;
+            }
+
+            break;
+        }
+
+        (ValueNode::List(truncated_items), current_units)
+    }
+
+    fn truncate_map(
+        &self,
+        map: &OrderedMap<String, ValueNode>,
+        target_units: usize,
+        min_units: usize,
+    ) -> (ValueNode, usize) {
+        let mut truncated_map = map.clone();
+        let mut current_units = self.tokenizer.count_facet_units_in_value(&ValueNode::Map(
+            truncated_map.clone(),
+        ));
+        let keys: Vec<String> = map.keys().cloned().collect();
+
+        while current_units > target_units {
+            let mut progress = false;
+
+            for key in keys.iter().rev() {
+                let Some(value) = truncated_map.get(key).cloned() else {
+                    continue;
+                };
+                let value_units = self.tokenizer.count_facet_units_in_value(&value);
+                let fixed_units = current_units.saturating_sub(value_units);
+                let child_min = min_units.saturating_sub(fixed_units);
+                let child_target = target_units.saturating_sub(fixed_units);
+                let (new_value, new_value_units) =
+                    self.truncate_content(&value, child_target, child_min);
+
+                if new_value_units < value_units {
+                    truncated_map.insert(key.clone(), new_value);
+                    current_units = fixed_units + new_value_units;
+                    progress = true;
+                    if current_units <= target_units {
+                        break;
+                    }
+                }
+            }
+
+            if !progress {
+                break;
+            }
+        }
+
+        (ValueNode::Map(truncated_map), current_units)
+    }
+}
+
+fn sort_allocated_by_source(mut sections: Vec<AllocatedSection>) -> Vec<AllocatedSection> {
+    sections.sort_by(|a, b| a.section.source_index.cmp(&b.section.source_index));
+    sections
 }

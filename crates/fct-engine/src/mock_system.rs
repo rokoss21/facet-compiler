@@ -151,8 +151,10 @@ impl EnhancedMockRegistry {
     where
         F: Fn(&HashMap<String, ValueNode>) -> EngineResult<ValueNode> + Send + Sync + 'static,
     {
-        self.tool_mocks
-            .insert(target.clone(), MockDefinition::dynamic_mock(target, handler));
+        self.tool_mocks.insert(
+            target.clone(),
+            MockDefinition::dynamic_mock(target, handler),
+        );
     }
 
     /// Check if interface is mocked
@@ -366,10 +368,7 @@ mod tests {
         });
 
         let mut args = HashMap::new();
-        args.insert(
-            "x".to_string(),
-            ValueNode::Scalar(ScalarValue::Int(21)),
-        );
+        args.insert("x".to_string(), ValueNode::Scalar(ScalarValue::Int(21)));
 
         let result = mock.execute(&args).unwrap();
         assert_eq!(result, ValueNode::Scalar(ScalarValue::Int(42)));
@@ -432,7 +431,10 @@ mod tests {
     #[test]
     fn test_call_counts() {
         let mut registry = EnhancedMockRegistry::new();
-        registry.add_tool_mock("counter".to_string(), ValueNode::Scalar(ScalarValue::Int(1)));
+        registry.add_tool_mock(
+            "counter".to_string(),
+            ValueNode::Scalar(ScalarValue::Int(1)),
+        );
 
         let args = HashMap::new();
 

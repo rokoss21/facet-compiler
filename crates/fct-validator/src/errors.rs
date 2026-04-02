@@ -24,21 +24,21 @@ pub enum ValidationError {
         var: String
     },
 
-    /// F402: Type inference failed due to insufficient or conflicting information.
+    /// X.validator.TYPE_INFERENCE: Type inference failed due to insufficient or conflicting information.
     ///
     /// This occurs when the validator cannot determine the type of a variable
     /// or expression, often due to circular dependencies or ambiguous usage.
-    #[error("F402: Type inference failed: {message}")]
+    #[error("X.validator.TYPE_INFERENCE: Type inference failed: {message}")]
     TypeInferenceFailed {
         /// Detailed explanation of why type inference failed
         message: String
     },
 
-    /// F404: Variable used before its declaration (forward reference).
+    /// X.validator.FORWARD_REFERENCE: Variable used before its declaration (forward reference).
     ///
     /// FACET requires variables to be declared before they are used.
     /// This error helps catch potential uninitialized variable usage.
-    #[error("F404: Forward reference detected: variable {var} used before declaration")]
+    #[error("X.validator.FORWARD_REFERENCE: variable {var} used before declaration")]
     ForwardReference {
         /// The name of the variable that was used forward-referenced
         var: String
@@ -80,6 +80,12 @@ pub enum ValidationError {
         message: String
     },
 
+    /// F456: Missing or invalid effect class declaration.
+    #[error("F456: Invalid or missing effect declaration: {message}")]
+    InvalidEffectDeclaration {
+        message: String
+    },
+
     /// F601: Import path could not be resolved or file not found.
     ///
     /// This error occurs when an @import directive references a file
@@ -109,4 +115,36 @@ pub enum ValidationError {
         /// The name of the lens that was not found
         lens_name: String
     },
+
+    /// F801: Construct disallowed in the active profile/mode.
+    ///
+    /// This error is emitted when the document uses a construct that is
+    /// syntactically valid FACET but not allowed by the selected profile.
+    #[error("F801: Construct disallowed in active profile/mode: {construct}")]
+    ProfileViolation {
+        /// Construct identifier or path (for example @interface, @test, @vars.x)
+        construct: String
+    },
+}
+
+#[cfg(test)]
+mod tests {
+    use super::ValidationError;
+
+    #[test]
+    fn extension_diagnostics_are_namespaced() {
+        let type_inference = ValidationError::TypeInferenceFailed {
+            message: "ambiguous type".to_string(),
+        };
+        assert!(type_inference
+            .to_string()
+            .starts_with("X.validator.TYPE_INFERENCE"));
+
+        let forward_reference = ValidationError::ForwardReference {
+            var: "x".to_string(),
+        };
+        assert!(forward_reference
+            .to_string()
+            .starts_with("X.validator.FORWARD_REFERENCE"));
+    }
 }

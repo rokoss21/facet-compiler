@@ -3,8 +3,8 @@
 // ============================================================================
 // Generates comprehensive test reports in JSON format
 
-use serde::{Deserialize, Serialize};
 use crate::test_runner::{AssertionResult, TestResult};
+use serde::{Deserialize, Serialize};
 // use serde_json::Value as JsonValue;
 use std::time::SystemTime;
 
@@ -51,6 +51,10 @@ pub struct TestReportEntry {
     pub telemetry: TelemetryReport,
     /// Rendered output (optional)
     pub output: Option<String>,
+    /// Canonical JSON context (optional)
+    pub canonical: Option<String>,
+    /// Execution artifact context (optional)
+    pub execution: Option<String>,
     /// Error message if test failed
     pub error: Option<String>,
 }
@@ -205,6 +209,8 @@ impl TestReporter {
             assertions,
             telemetry,
             output: result.rendered_output.clone(),
+            canonical: result.canonical_output.clone(),
+            execution: result.execution_output.clone(),
             error: result.error.clone(),
         }
     }
@@ -223,10 +229,22 @@ impl TestReporter {
     /// Compute summary statistics
     fn compute_summary(&self, tests: &[TestReportEntry]) -> TestSummary {
         let total = tests.len();
-        let passed = tests.iter().filter(|t| t.status == TestStatus::Passed).count();
-        let failed = tests.iter().filter(|t| t.status == TestStatus::Failed).count();
-        let skipped = tests.iter().filter(|t| t.status == TestStatus::Skipped).count();
-        let errors = tests.iter().filter(|t| t.status == TestStatus::Error).count();
+        let passed = tests
+            .iter()
+            .filter(|t| t.status == TestStatus::Passed)
+            .count();
+        let failed = tests
+            .iter()
+            .filter(|t| t.status == TestStatus::Failed)
+            .count();
+        let skipped = tests
+            .iter()
+            .filter(|t| t.status == TestStatus::Skipped)
+            .count();
+        let errors = tests
+            .iter()
+            .filter(|t| t.status == TestStatus::Error)
+            .count();
 
         let total_duration_ms = tests.iter().map(|t| t.duration_ms).sum();
         let total_tokens = tests.iter().map(|t| t.telemetry.tokens_used).sum();
@@ -291,13 +309,13 @@ fn format_timestamp(time: SystemTime) -> String {
             let nanos = duration.subsec_nanos();
             format!(
                 "{:04}-{:02}-{:02}T{:02}:{:02}:{:02}.{:03}Z",
-                1970 + secs / 31557600, // Approximate year
+                1970 + secs / 31557600,            // Approximate year
                 ((secs % 31557600) / 2629800) + 1, // Approximate month
-                ((secs % 2629800) / 86400) + 1, // Approximate day
-                (secs % 86400) / 3600, // Hours
-                (secs % 3600) / 60, // Minutes
-                secs % 60, // Seconds
-                nanos / 1_000_000 // Milliseconds
+                ((secs % 2629800) / 86400) + 1,    // Approximate day
+                (secs % 86400) / 3600,             // Hours
+                (secs % 3600) / 60,                // Minutes
+                secs % 60,                         // Seconds
+                nanos / 1_000_000                  // Milliseconds
             )
         }
         Err(_) => "1970-01-01T00:00:00.000Z".to_string(),
@@ -307,7 +325,7 @@ fn format_timestamp(time: SystemTime) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_runner::{TestTelemetry, TestResult, AssertionResult};
+    use crate::test_runner::{AssertionResult, TestResult, TestTelemetry};
     use fct_ast::{Assertion, AssertionKind, ValueNode};
 
     fn create_test_result(name: &str, passed: bool) -> TestResult {
@@ -323,7 +341,13 @@ mod tests {
                 variables_computed: 5,
             },
             rendered_output: Some("test output".to_string()),
-            error: if passed { None } else { Some("Test failed".to_string()) },
+            canonical_output: Some("{\"messages\":[]}".to_string()),
+            execution_output: Some("{\"provenance\":{\"events\":[]}}".to_string()),
+            error: if passed {
+                None
+            } else {
+                Some("Test failed".to_string())
+            },
         }
     }
 
@@ -339,6 +363,8 @@ mod tests {
         assert!(report.contains("test1"));
         assert!(report.contains("test2"));
         assert!(report.contains("summary"));
+        assert!(report.contains("canonical"));
+        assert!(report.contains("execution"));
     }
 
     #[test]

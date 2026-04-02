@@ -3,8 +3,9 @@
 // ============================================================================
 
 use crate::errors::EngineResult;
-use fct_ast::ValueNode;
+use fct_ast::{ScalarValue, ValueNode};
 use once_cell::sync::Lazy;
+use unicode_normalization::UnicodeNormalization;
 
 /// Tokenizer for production token counting
 /// Uses simple approximation that works well for most text
@@ -40,7 +41,8 @@ impl Tokenizer {
         while let Some(ch) = chars.next() {
             match ch {
                 // Spaces and punctuation
-                ' ' | '\t' | '\n' | '\r' | ',' | '.' | '!' | '?' | ';' | ':' | '"' | '\'' | '(' | ')' | '[' | ']' | '{' | '}' => {
+                ' ' | '\t' | '\n' | '\r' | ',' | '.' | '!' | '?' | ';' | ':' | '"' | '\'' | '('
+                | ')' | '[' | ']' | '{' | '}' => {
                     token_count += 1;
                 }
 
@@ -75,20 +77,52 @@ impl Tokenizer {
     pub fn count_tokens_in_value(&self, value: &ValueNode) -> usize {
         match value {
             ValueNode::String(s) => self.count_tokens(s),
-            ValueNode::List(items) => {
-                items.iter().map(|item| self.count_tokens_in_value(item)).sum()
-            }
-            ValueNode::Map(map) => {
-                map.iter()
-                    .map(|(key, val)| {
-                        self.count_tokens(key) + self.count_tokens_in_value(val)
-                    })
-                    .sum()
-            }
+            ValueNode::List(items) => items
+                .iter()
+                .map(|item| self.count_tokens_in_value(item))
+                .sum(),
+            ValueNode::Map(map) => map
+                .iter()
+                .map(|(key, val)| self.count_tokens(key) + self.count_tokens_in_value(val))
+                .sum(),
             ValueNode::Variable(var) => self.count_tokens(var),
             ValueNode::Scalar(scalar) => self.count_tokens(&format!("{:?}", scalar)),
             ValueNode::Pipeline(_) => 50, // Estimate tokens for pipeline expressions
             ValueNode::Directive(_) => 30, // Estimate tokens for directives
+        }
+    }
+
+    /// Count FACET Units for a string:
+    /// byte_length(UTF-8(NFC+LF normalized s))
+    pub fn count_facet_units(&self, text: &str) -> usize {
+        normalize_for_facet_units(text).as_bytes().len()
+    }
+
+    /// Count FACET Units in a ValueNode recursively.
+    /// For non-string values this uses their deterministic textual form.
+    pub fn count_facet_units_in_value(&self, value: &ValueNode) -> usize {
+        match value {
+            ValueNode::String(s) => self.count_facet_units(s),
+            ValueNode::Scalar(scalar) => match scalar {
+                ScalarValue::Int(i) => self.count_facet_units(&i.to_string()),
+                ScalarValue::Float(f) => self.count_facet_units(&f.to_string()),
+                ScalarValue::Bool(true) => self.count_facet_units("true"),
+                ScalarValue::Bool(false) => self.count_facet_units("false"),
+                ScalarValue::Null => self.count_facet_units("null"),
+            },
+            ValueNode::Variable(var) => self.count_facet_units(var),
+            ValueNode::List(items) => items
+                .iter()
+                .map(|item| self.count_facet_units_in_value(item))
+                .sum(),
+            ValueNode::Map(map) => map
+                .iter()
+                .map(|(key, val)| {
+                    self.count_facet_units(key) + self.count_facet_units_in_value(val)
+                })
+                .sum(),
+            ValueNode::Pipeline(_) => self.count_facet_units("<pipeline>"),
+            ValueNode::Directive(_) => self.count_facet_units("<directive>"),
         }
     }
 
@@ -118,12 +152,12 @@ impl Tokenizer {
     /// Estimate tokens for common patterns
     pub fn estimate_tokens_for_pattern(&self, pattern: &str) -> usize {
         match pattern {
-            "short_text" => 50,    // ~50 tokens for short text
-            "medium_text" => 200,  // ~200 tokens for medium text
-            "long_text" => 800,    // ~800 tokens for long text
-            "code_block" => 150,   // ~150 tokens for code block
-            "json_data" => 100,    // ~100 tokens for JSON data
-            _ => 100,              // default estimate
+            "short_text" => 50,   // ~50 tokens for short text
+            "medium_text" => 200, // ~200 tokens for medium text
+            "long_text" => 800,   // ~800 tokens for long text
+            "code_block" => 150,  // ~150 tokens for code block
+            "json_data" => 100,   // ~100 tokens for JSON data
+            _ => 100,             // default estimate
         }
     }
 }
@@ -135,9 +169,8 @@ impl Default for Tokenizer {
 }
 
 /// Global tokenizer instance for convenience (thread-safe)
-static GLOBAL_TOKENIZER: Lazy<Tokenizer> = Lazy::new(|| {
-    Tokenizer::new().expect("Failed to initialize global tokenizer")
-});
+static GLOBAL_TOKENIZER: Lazy<Tokenizer> =
+    Lazy::new(|| Tokenizer::new().expect("Failed to initialize global tokenizer"));
 
 /// Get global tokenizer instance (thread-safe)
 pub fn get_global_tokenizer() -> &'static Tokenizer {
@@ -154,19 +187,38 @@ pub fn count_tokens_in_value(value: &ValueNode) -> usize {
     get_global_tokenizer().count_tokens_in_value(value)
 }
 
+/// Normalize string to NFC and LF line endings for FACET Units.
+pub fn normalize_for_facet_units(input: &str) -> String {
+    let nfc: String = input.nfc().collect();
+    nfc.replace("\r\n", "\n").replace('\r', "\n")
+}
+
+/// Convenience function to count FACET Units in text.
+pub fn count_facet_units(text: &str) -> usize {
+    get_global_tokenizer().count_facet_units(text)
+}
+
+/// Convenience function to count FACET Units in ValueNode.
+pub fn count_facet_units_in_value(value: &ValueNode) -> usize {
+    get_global_tokenizer().count_facet_units_in_value(value)
+}
+
 /// Utility function to estimate tokens for content length planning
 #[allow(dead_code)] // Used by external callers
 pub fn estimate_tokens_for_length(chars: usize) -> usize {
     // Rule of thumb: ~4 characters per token for English text
     // Slightly conservative for better budgeting
-    if chars == 0 { 0 } else { (chars / 3).max(1) }
+    if chars == 0 {
+        0
+    } else {
+        (chars / 3).max(1)
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use fct_ast::ValueNode;
-    use std::collections::HashMap;
+    use fct_ast::{OrderedMap, ValueNode};
 
     #[test]
     fn test_tokenizer_creation() {
@@ -224,11 +276,30 @@ mod tests {
         assert!(count > 0);
 
         // Test map value
-        let mut map = HashMap::new();
+        let mut map = OrderedMap::new();
         map.insert("key".to_string(), ValueNode::String("value".to_string()));
         let map_val = ValueNode::Map(map);
         let map_count = tokenizer.count_tokens_in_value(&map_val);
         assert!(map_count > 0);
+    }
+
+    #[test]
+    fn test_count_facet_units_utf8_bytes() {
+        let tokenizer = Tokenizer::new().unwrap();
+        assert_eq!(tokenizer.count_facet_units("abc"), 3);
+        assert_eq!(tokenizer.count_facet_units("🙂"), 4);
+    }
+
+    #[test]
+    fn test_count_facet_units_normalization_nfc_lf() {
+        let tokenizer = Tokenizer::new().unwrap();
+        let nfd_crlf = "e\u{301}\r\nx";
+        let nfc_lf = "é\nx";
+        assert_eq!(tokenizer.count_facet_units(nfd_crlf), 4);
+        assert_eq!(
+            tokenizer.count_facet_units(nfd_crlf),
+            tokenizer.count_facet_units(nfc_lf)
+        );
     }
 
     #[test]
@@ -250,7 +321,8 @@ mod tests {
         let short_text = ValueNode::String("Hi".to_string());
         assert!(!tokenizer.exceeds_budget(&short_text, 100));
 
-        let long_text = ValueNode::String("This is a very long text that should exceed the budget".to_string());
+        let long_text =
+            ValueNode::String("This is a very long text that should exceed the budget".to_string());
         assert!(tokenizer.exceeds_budget(&long_text, 5)); // 5 tokens should be too small
     }
 
@@ -303,9 +375,9 @@ mod tests {
 
     #[test]
     fn test_global_tokenizer_thread_safety() {
-        use std::thread;
-        use std::sync::Arc;
         use std::sync::atomic::{AtomicUsize, Ordering};
+        use std::sync::Arc;
+        use std::thread;
 
         // Test that multiple threads can safely access the global tokenizer
         let num_threads = 10;

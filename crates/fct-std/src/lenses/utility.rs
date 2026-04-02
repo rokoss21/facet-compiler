@@ -3,7 +3,7 @@
 // ============================================================================
 
 use crate::{Lens, LensContext, LensError, LensResult, LensSignature, TrustLevel};
-use fct_ast::{ScalarValue, ValueNode};
+use fct_ast::{OrderedMap, ScalarValue, ValueNode};
 use std::collections::HashMap;
 
 /// default(value) - Return input if not null, else return default
@@ -115,7 +115,7 @@ impl JsonParseLens {
                 ValueNode::List(items)
             }
             serde_json::Value::Object(obj) => {
-                let map: HashMap<String, ValueNode> = obj
+                let map: OrderedMap<String, ValueNode> = obj
                     .into_iter()
                     .map(|(k, v)| (k, Self::json_value_to_value_node(v)))
                     .collect();

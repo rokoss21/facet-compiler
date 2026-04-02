@@ -27,6 +27,7 @@ members = [
 [workspace.dependencies]
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+serde_json_canonicalizer = "0.3.2"
 thiserror = "1.0"
 anyhow = "1.0"
 nom = "7.1"
@@ -46,6 +47,7 @@ regex = "1.10"
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+serde_json_canonicalizer = { workspace = true }
 thiserror = "1.0"
 anyhow = "1.0"
 nom = "7.1"
@@ -60,6 +62,7 @@ humantime = "2.1"
 governor = { workspace = true }
 nonzero_ext = { workspace = true }
 regex = "1.10"
+sha2 = "0.10"
 fct-ast = { path = "crates/fct-ast" }
 fct-parser = { path = "crates/fct-parser" }
 fct-resolver = { path = "crates/fct-resolver" }

@@ -232,9 +232,12 @@ impl Lens for FirstLens {
     ) -> LensResult<ValueNode> {
         match input {
             ValueNode::List(items) => {
-                items.first().cloned().ok_or_else(|| LensError::ExecutionError {
-                    message: "Cannot get first element of empty list".to_string(),
-                })
+                items
+                    .first()
+                    .cloned()
+                    .ok_or_else(|| LensError::ExecutionError {
+                        message: "Cannot get first element of empty list".to_string(),
+                    })
             }
             other => Err(LensError::TypeMismatch {
                 expected: "list".to_string(),
@@ -267,9 +270,12 @@ impl Lens for LastLens {
     ) -> LensResult<ValueNode> {
         match input {
             ValueNode::List(items) => {
-                items.last().cloned().ok_or_else(|| LensError::ExecutionError {
-                    message: "Cannot get last element of empty list".to_string(),
-                })
+                items
+                    .last()
+                    .cloned()
+                    .ok_or_else(|| LensError::ExecutionError {
+                        message: "Cannot get last element of empty list".to_string(),
+                    })
             }
             other => Err(LensError::TypeMismatch {
                 expected: "list".to_string(),
@@ -319,9 +325,15 @@ impl Lens for NthLens {
             }
         };
 
-        list.get(index).cloned().ok_or_else(|| LensError::ExecutionError {
-            message: format!("Index {} out of bounds for list of length {}", index, list.len()),
-        })
+        list.get(index)
+            .cloned()
+            .ok_or_else(|| LensError::ExecutionError {
+                message: format!(
+                    "Index {} out of bounds for list of length {}",
+                    index,
+                    list.len()
+                ),
+            })
     }
 
     fn signature(&self) -> LensSignature {
@@ -387,12 +399,19 @@ impl Lens for SliceLens {
                     let val = *n as usize;
                     if val > list.len() {
                         return Err(LensError::ArgumentError {
-                            message: format!("end index {} exceeds list length {}", val, list.len()),
+                            message: format!(
+                                "end index {} exceeds list length {}",
+                                val,
+                                list.len()
+                            ),
                         });
                     }
                     if val < start {
                         return Err(LensError::ArgumentError {
-                            message: format!("end index {} is less than start index {}", val, start),
+                            message: format!(
+                                "end index {} is less than start index {}",
+                                val, start
+                            ),
                         });
                     }
                     val
