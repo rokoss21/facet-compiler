@@ -131,25 +131,21 @@ pub trait LensSignatureProvider {
         args: &[FacetType],
         kwargs: &[(String, FacetType)],
     ) -> Result<FacetType, String> {
-        let signature = self.get_signature(lens_name)
+        let signature = self
+            .get_signature(lens_name)
             .ok_or_else(|| format!("Unknown lens: {}", lens_name))?;
 
         // Check input type compatibility
         if !signature.input_type.accepts(input_type) {
             return Err(format!(
                 "Type mismatch for lens '{}': expected {}, got {}",
-                lens_name,
-                signature.input_type,
-                input_type
+                lens_name, signature.input_type, input_type
             ));
         }
 
         // Validate arguments
         if !signature.validate_call(args, kwargs) {
-            return Err(format!(
-                "Invalid arguments for lens '{}'",
-                lens_name
-            ));
+            return Err(format!("Invalid arguments for lens '{}'", lens_name));
         }
 
         // Return output type
@@ -198,26 +194,22 @@ impl LensSignatureRegistry {
             "map".to_string(),
             FacetType::List(Box::new(FacetType::Any)),
             FacetType::List(Box::new(FacetType::Any)),
-            vec![
-                ParameterSignature {
-                    name: "function".to_string(),
-                    param_type: FacetType::Function,
-                    required: true,
-                },
-            ],
+            vec![ParameterSignature {
+                name: "function".to_string(),
+                param_type: FacetType::Function,
+                required: true,
+            }],
         ));
 
         self.register(LensSignature::new(
             "filter".to_string(),
             FacetType::List(Box::new(FacetType::Any)),
             FacetType::List(Box::new(FacetType::Any)),
-            vec![
-                ParameterSignature {
-                    name: "predicate".to_string(),
-                    param_type: FacetType::Function,
-                    required: true,
-                },
-            ],
+            vec![ParameterSignature {
+                name: "predicate".to_string(),
+                param_type: FacetType::Function,
+                required: true,
+            }],
         ));
 
         self.register(LensSignature::new(
@@ -264,13 +256,11 @@ impl LensSignatureRegistry {
             "split".to_string(),
             FacetType::Primitive(PrimitiveType::String),
             FacetType::List(Box::new(FacetType::Primitive(PrimitiveType::String))),
-            vec![
-                ParameterSignature {
-                    name: "separator".to_string(),
-                    param_type: FacetType::Primitive(PrimitiveType::String),
-                    required: false,
-                },
-            ],
+            vec![ParameterSignature {
+                name: "separator".to_string(),
+                param_type: FacetType::Primitive(PrimitiveType::String),
+                required: false,
+            }],
         ));
 
         self.register(LensSignature::new(
@@ -295,26 +285,22 @@ impl LensSignatureRegistry {
             "indent".to_string(),
             FacetType::Primitive(PrimitiveType::String),
             FacetType::Primitive(PrimitiveType::String),
-            vec![
-                ParameterSignature {
-                    name: "level".to_string(),
-                    param_type: FacetType::Primitive(PrimitiveType::Number),
-                    required: true,
-                },
-            ],
+            vec![ParameterSignature {
+                name: "level".to_string(),
+                param_type: FacetType::Primitive(PrimitiveType::Number),
+                required: true,
+            }],
         ));
 
         self.register(LensSignature::new(
             "join".to_string(),
             FacetType::List(Box::new(FacetType::Primitive(PrimitiveType::String))),
             FacetType::Primitive(PrimitiveType::String),
-            vec![
-                ParameterSignature {
-                    name: "separator".to_string(),
-                    param_type: FacetType::Primitive(PrimitiveType::String),
-                    required: false,
-                },
-            ],
+            vec![ParameterSignature {
+                name: "separator".to_string(),
+                param_type: FacetType::Primitive(PrimitiveType::String),
+                required: false,
+            }],
         ));
 
         // Type conversion lenses
@@ -330,6 +316,37 @@ impl LensSignatureRegistry {
             FacetType::Primitive(PrimitiveType::String),
             FacetType::Primitive(PrimitiveType::Number),
             vec![],
+        ));
+
+        // Level-1 runtime lenses (bounded external)
+        // Signatures are intentionally permissive for variadic args/kwargs while
+        // preserving base input/output typing used by Phase-2 pipeline checks.
+        self.register(LensSignature::variadic(
+            "llm_call".to_string(),
+            FacetType::Primitive(PrimitiveType::String),
+            FacetType::Primitive(PrimitiveType::String),
+            vec![],
+            Some(FacetType::Any),
+        ));
+
+        self.register(LensSignature::variadic(
+            "embedding".to_string(),
+            FacetType::Primitive(PrimitiveType::String),
+            FacetType::List(Box::new(FacetType::Primitive(PrimitiveType::Number))),
+            vec![],
+            Some(FacetType::Any),
+        ));
+
+        self.register(LensSignature::variadic(
+            "rag_search".to_string(),
+            FacetType::Primitive(PrimitiveType::String),
+            FacetType::List(Box::new(FacetType::Any)),
+            vec![ParameterSignature {
+                name: "index".to_string(),
+                param_type: FacetType::Primitive(PrimitiveType::String),
+                required: true,
+            }],
+            Some(FacetType::Any),
         ));
     }
 }
