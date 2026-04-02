@@ -601,7 +601,7 @@ Scanning dependencies...
 # All definitions in single file
 ```
 
-**v2.0 Syntax:**
+**Legacy syntax reference:**
 
 ```facet
 # Extract to separate files
@@ -711,7 +711,7 @@ Error: F602: Circular import detected
 ---
 
 **References:**
-- **[facet2-specification.md](../facet2-specification.md)** - Complete import specification
+- **[FACET v2.1.3 specification](../FACET-v2.1.3-Production-Language-Specification.md)** - Complete import specification
 - **[12-errors.md](12-errors.md)** - Import error codes
 - **[02-tutorial.md](02-tutorial.md)** - Import tutorial
 - **[03-architecture.md](03-architecture.md)** - Import architecture
@@ -732,7 +732,7 @@ Error: F602: Circular import detected
 ---
 
 **References:**
-- **[facet2-specification.md](../facet2-specification.md)** - Complete import specification
+- **[FACET v2.1.3 specification](../FACET-v2.1.3-Production-Language-Specification.md)** - Complete import specification
 - **[12-errors.md](12-errors.md)** - Import error codes
 - **[02-tutorial.md](02-tutorial.md)** - Import tutorial
 - **[03-architecture.md](03-architecture.md)** - Import architecture

@@ -4,7 +4,7 @@
 
 **Reading Time:** 20-25 minutes | **Difficulty:** Intermediate | **Previous:** [07-api-reference.md](07-api-reference.md) | **Next:** [09-testing.md](09-testing.md)
 
-Complete reference for all built-in lens functions in FACET v2.0.
+Complete reference for all built-in lens functions in FACET v2.1.3.
 
 ---
 
@@ -68,7 +68,7 @@ Complete reference for all built-in lens functions in FACET v2.0.
 
 ## Implementation Notes
 
-**Specification Compliance:** This implementation provides an **extended lens library** beyond the FACET v2.0 specification minimum requirements (Appendix A). All lenses are fully functional and tested.
+**Specification Compliance:** This implementation provides an **extended lens library** beyond the FACET v2.1.3 specification minimum requirements (Appendix A). All lenses are fully functional and tested.
 
 **Trust Levels:** Lenses are categorized by trust level:
 - **Level 0 (Pure):** 29 lenses - deterministic, no I/O
@@ -88,7 +88,7 @@ $variable |> lens1() |> lens2(arg1, arg2) |> lens3(kwarg=value)
 
 **Current Library:** 32 lenses (29 Level 0 + 3 Level 1)
 
-**Note:** FACET v2.0 specification defines a minimum standard lens library (Appendix A). This implementation provides an **extended library** with additional lenses for enhanced functionality.
+**Note:** FACET v2.1.3 specification defines a minimum standard lens library (Appendix A). This implementation provides an **extended library** with additional lenses for enhanced functionality.
 
 ---
 
@@ -1452,7 +1452,7 @@ Planned additions to the lens library:
 - **[06-cli.md](06-cli.md)** - CLI reference
 - **[01-quickstart.md](01-quickstart.md)** - Getting started tutorial
 - **[examples/](../examples/)** - Example FACET files
-- **[facet2-specification.md](../facet2-specification.md)** - Full language specification
+- **[FACET v2.1.3 specification](../FACET-v2.1.3-Production-Language-Specification.md)** - Full language specification
 
 
 ## Future Enhancements
@@ -1526,4 +1526,4 @@ Planned additions to the lens library:
 - **[06-cli.md](06-cli.md)** - CLI reference
 - **[01-quickstart.md](01-quickstart.md)** - Getting started tutorial
 - **[examples/](../examples/)** - Example FACET files
-- **[facet2-specification.md](../facet2-specification.md)** - Full language specification
+- **[FACET v2.1.3 specification](../FACET-v2.1.3-Production-Language-Specification.md)** - Full language specification

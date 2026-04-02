@@ -1,6 +1,6 @@
 ---
 ---
-# 02. FACET v2.0 Complete Tutorial
+# 02. FACET v2.1.3 Complete Tutorial
 
 **Reading Time:** 30-60 minutes | **Difficulty:** Beginner → Advanced | **Previous:** [01-quickstart.md](01-quickstart.md) | **Next:** [03-architecture.md](03-architecture.md)
 
@@ -146,7 +146,7 @@ $ fct run --input variables.facet
   base: "hello"
 ```
 
-**FACET v2.0 automatically resolves the dependency order using R-DAG.**
+**FACET v2.1.3 automatically resolves the dependency order using R-DAG.**
 
 ---
 
@@ -645,7 +645,7 @@ $ fct test --input example.facet
   base: "value"
 ```
 
-**✓ Correct (FACET v2.0):**
+**✓ Correct (FACET v2.1.3):**
 
 ```facet
 @vars
@@ -720,7 +720,7 @@ $ fct test --input example.facet
 
 ## Next Steps
 
-**Congratulations!** You've completed the FACET v2.0 tutorial.
+**Congratulations!** You've completed the FACET v2.1.3 tutorial.
 
 ### Continue Learning:
 

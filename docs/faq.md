@@ -1,6 +1,6 @@
 ---
 ---
-# FACET v2.0 Frequently Asked Questions
+# FACET v2.1.3 Frequently Asked Questions
 
 **Version:** 1.0
 **Last Updated:** 2025-12-09
@@ -31,9 +31,9 @@
 
 Unlike traditional templating systems, FACET is a **compiled language** that produces mathematically stable behavior across all platforms.
 
-### How is FACET v2.0 different from v1.x?
+### How is FACET v2.1.3 different from v1.x?
 
-| Aspect | FACET v1.x | FACET v2.0 |
+| Aspect | FACET v1.x | FACET v2.1.3 |
 |--------|------------|------------|
 | **Architecture** | Template system | Compiled language |
 | **Execution** | Runtime interpretation | Compile-time optimization |
@@ -48,7 +48,7 @@ FACET describes the **architecture** of AI agent behavior - the structure, data 
 
 ### Is FACET open source?
 
-Yes! FACET v2.0 is licensed under MIT OR Apache-2.0 and available on GitHub. The compiler is written in Rust for performance and safety.
+Yes! FACET v2.1.3 is licensed under MIT OR Apache-2.0 and available on GitHub. The compiler is written in Rust for performance and safety.
 
 ---
 
@@ -653,4 +653,4 @@ cargo fmt --check
 - **[12-errors.md](12-errors.md)** - Error codes and troubleshooting
 - **[13-import-system.md](13-import-system.md)** - Import system guide
 
-**FACET v2.0 is designed to be approachable yet powerful. Don't hesitate to experiment!** 🚀
+**FACET v2.1.3 is designed to be approachable yet powerful. Don't hesitate to experiment!** 🚀

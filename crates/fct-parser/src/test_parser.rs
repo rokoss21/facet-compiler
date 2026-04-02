@@ -1,13 +1,4 @@
-use crate::error::{ParseResult, SpanInput};
-use fct_ast::{Assertion, AssertionKind, MockDefinition, Span, TestBlock, ValueNode};
-use nom::{
-    branch::alt,
-    bytes::complete::{tag, take_while},
-    character::complete::{char, multispace0, none_of},
-    combinator::{map, opt, recognize},
-    sequence::{delimited, preceded},
-};
-use std::collections::HashMap;
+use fct_ast::{Assertion, AssertionKind, Span, ValueNode};
 
 /// Parse assertion from key-value pairs in assert section
 pub fn parse_assertion(assert_type: &str, assert_value: &ValueNode, span: &Span) -> Assertion {

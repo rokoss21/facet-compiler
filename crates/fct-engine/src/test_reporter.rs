@@ -325,8 +325,7 @@ fn format_timestamp(time: SystemTime) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_runner::{AssertionResult, TestResult, TestTelemetry};
-    use fct_ast::{Assertion, AssertionKind, ValueNode};
+    use crate::test_runner::{TestResult, TestTelemetry};
 
     fn create_test_result(name: &str, passed: bool) -> TestResult {
         TestResult {

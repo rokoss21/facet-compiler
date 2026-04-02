@@ -1069,10 +1069,8 @@ mod tests {
     #[test]
     fn test_smart_merge_key_value_replacement() {
         use fct_ast::{BodyNode, FacetBlock, KeyValueNode, Span, ValueNode};
-        use std::collections::HashMap;
 
         let resolver = Resolver::new(ResolverConfig::default());
-        let context = ResolverContext::new(ResolverConfig::default());
 
         // Create existing block with key1: "old" and key2: "stays"
         let mut existing = FacetBlock {
@@ -1193,8 +1191,6 @@ mod tests {
 
     #[test]
     fn test_import_not_found_f601() {
-        use fct_ast::{FacetDocument, ImportNode, Span};
-
         let config = ResolverConfig::default();
         let ctx = ResolverContext::new(config);
 
@@ -1206,11 +1202,9 @@ mod tests {
 
     #[test]
     fn test_multiple_blocks_merge() {
-        use fct_ast::{BodyNode, FacetBlock, FacetDocument, KeyValueNode, Span, ValueNode};
-        use std::collections::HashMap;
+        use fct_ast::{BodyNode, FacetBlock, KeyValueNode, Span, ValueNode};
 
         let resolver = Resolver::new(ResolverConfig::default());
-        let context = ResolverContext::new(ResolverConfig::default());
 
         // Create multiple system blocks to merge
         let blocks = vec![
@@ -1274,7 +1268,6 @@ mod tests {
     #[test]
     fn test_resolve_blocks_no_imports() {
         use fct_ast::{BodyNode, FacetBlock, FacetDocument, KeyValueNode, Span, ValueNode};
-        use std::collections::HashMap;
 
         let config = ResolverConfig::default();
         let mut resolver = Resolver::new(config);
@@ -1317,11 +1310,9 @@ mod tests {
 
     #[test]
     fn test_merge_preserves_order() {
-        use fct_ast::{BodyNode, FacetBlock, KeyValueNode, Span, ValueNode};
-        use std::collections::HashMap;
+        use fct_ast::{FacetBlock, Span};
 
         let resolver = Resolver::new(ResolverConfig::default());
-        let context = ResolverContext::new(ResolverConfig::default());
 
         // Create blocks: system, vars, user
         let blocks = vec![
@@ -1373,7 +1364,6 @@ mod tests {
     #[test]
     fn test_singleton_vars_merge_preserves_first_key_position() {
         use fct_ast::{BodyNode, FacetBlock, KeyValueNode, Span, ValueNode};
-        use std::collections::HashMap;
 
         let resolver = Resolver::new(ResolverConfig::default());
 
@@ -1480,7 +1470,6 @@ mod tests {
     #[test]
     fn test_policy_allow_list_merge_by_id() {
         use fct_ast::{BodyNode, FacetBlock, KeyValueNode, Span, ValueNode};
-        use std::collections::HashMap;
 
         let resolver = Resolver::new(ResolverConfig::default());
 
@@ -1576,7 +1565,6 @@ mod tests {
     #[test]
     fn test_keyed_list_merge_uses_attribute_key() {
         use fct_ast::{BodyNode, FacetBlock, KeyValueNode, ScalarValue, Span, ValueNode};
-        use std::collections::HashMap;
 
         let resolver = Resolver::new(ResolverConfig::default());
         let mut attrs = fct_ast::OrderedMap::new();
@@ -1809,13 +1797,9 @@ mod tests {
 
     #[test]
     fn test_file_read_timeout() {
-        use std::io::Write;
-        use std::thread;
-        use std::time::Duration;
         use tempfile::NamedTempFile;
 
         let resolver = Resolver::new(ResolverConfig::default());
-        let context = ResolverContext::new(ResolverConfig::default());
 
         // Create a named temp file path
         let temp_file = NamedTempFile::new().unwrap();

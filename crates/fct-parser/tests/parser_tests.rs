@@ -39,6 +39,6 @@ fn test_parse_pipeline() {
 @vars
   processed: $input |> trim() |> uppercase()
 "#;
-    let doc = parse_document(source).expect("Failed to parse pipeline");
-    // Verify structure deep down if needed, but successful parse is a good start
+    let _doc = parse_document(source).expect("Failed to parse pipeline");
+    // Successful parse is the target here.
 }

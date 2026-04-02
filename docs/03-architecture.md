@@ -1,6 +1,6 @@
 ---
 ---
-# 03. FACET v2.0 Architecture Guide
+# 03. FACET v2.1.3 Architecture Guide
 
 **Reading Time:** 20-30 minutes | **Difficulty:** Intermediate | **Previous:** [02-tutorial.md](02-tutorial.md) | **Next:** [04-type-system.md](04-type-system.md)
 
@@ -24,7 +24,7 @@
 
 ## Overview
 
-FACET v2.0 is a **deterministic compiler** for AI agent behavior, transforming `.facet` files into canonical JSON with guaranteed reproducibility across all platforms.
+FACET v2.1.3 is a **deterministic compiler** for AI agent behavior, transforming `.facet` files into canonical JSON with guaranteed reproducibility across all platforms.
 
 ### Key Properties
 
@@ -52,7 +52,7 @@ FACET v2.0 is a **deterministic compiler** for AI agent behavior, transforming `
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                        FACET v2.0                           │
+│                        FACET v2.1.3                           │
 │                   Deterministic Compiler                     │
 └─────────────────────────────────────────────────────────────┘
                               │
@@ -247,7 +247,7 @@ FACET v2.0 is a **deterministic compiler** for AI agent behavior, transforming `
 
 ## Crate Organization
 
-FACET v2.0 uses a modular 7-crate architecture:
+FACET v2.1.3 uses a modular 7-crate architecture:
 
 ### 1. `fct-ast`
 
@@ -766,7 +766,7 @@ Compile to WebAssembly for browser/Node.js
 
 ## References
 
-- [FACET v2.0 Specification](../facet2-specification.md)
+- [FACET v2.1.3 Specification](../FACET-v2.1.3-Production-Language-Specification.md)
 - [Error Reference](errors.md)
 - [Lens Reference](lenses.md)
 - [Testing Guide](testing.md)
@@ -785,7 +785,7 @@ Compile to WebAssembly for browser/Node.js
 - **[10-performance.md](10-performance.md)** - Optimization and scaling
 
 📚 **References:**
-- **[facet2-specification.md](../facet2-specification.md)** - Complete technical specification
+- **[FACET v2.1.3 specification](../FACET-v2.1.3-Production-Language-Specification.md)** - Complete technical specification
 - **[PRD](../facetparcer.prd)** - Product requirements document
 - **[README.md](../README.md)** - Project overview
 
@@ -804,7 +804,7 @@ Compile to WebAssembly for browser/Node.js
 - **[10-performance.md](10-performance.md)** - Optimization and scaling
 
 📚 **References:**
-- **[facet2-specification.md](../facet2-specification.md)** - Complete technical specification
+- **[FACET v2.1.3 specification](../FACET-v2.1.3-Production-Language-Specification.md)** - Complete technical specification
 - **[PRD](../facetparcer.prd)** - Product requirements document
 - **[README.md](../README.md)** - Project overview
 

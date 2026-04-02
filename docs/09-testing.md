@@ -1,10 +1,10 @@
 ---
 ---
-# 09. FACET v2.0 Testing Guide
+# 09. FACET v2.1.3 Testing Guide
 
 **Reading Time:** 15-20 minutes | **Difficulty:** Intermediate | **Previous:** [08-lenses.md](08-lenses.md) | **Next:** [10-performance.md](10-performance.md)
 
-**Specification Compliance:** Implements FACET v2.0 specification Section 13 (@test blocks) with extended features.
+**Specification Compliance:** Implements FACET v2.1.3 specification Section 13 (@test blocks) with extended features.
 
 ---
 
@@ -25,7 +25,7 @@
 
 ## Overview
 
-FACET v2.0 includes a built-in testing system using `@test` blocks. These blocks allow you to:
+FACET v2.1.3 includes a built-in testing system using `@test` blocks. These blocks allow you to:
 - Define test inputs and variable overrides
 - Mock external interfaces and lenses
 - Assert expected outputs and telemetry
@@ -310,10 +310,10 @@ Summary: 2/2 passed
 
 ## Reference
 
-See [FACET v2.0 Specification](../facet2-specification.md) for complete details on:
-- [Section 13: Testing (@test)](../facet2-specification.md#13-testing-test)
-- [Error Codes](../facet2-specification.md#appendix-c-normative-error-code-catalog)
-- [Execution Model](../facet2-specification.md#7-execution-model)
+See [FACET v2.1.3 Specification](../FACET-v2.1.3-Production-Language-Specification.md) for complete details on:
+- [Section 13: Testing (@test)](../FACET-v2.1.3-Production-Language-Specification.md#13-testing-test)
+- [Error Codes](../FACET-v2.1.3-Production-Language-Specification.md#appendix-c-normative-error-code-catalog)
+- [Execution Model](../FACET-v2.1.3-Production-Language-Specification.md#7-execution-model)
    ```
    ✗ Expected output to contain 'umbrella'
        Actual: It's sunny today!
@@ -347,7 +347,7 @@ See [FACET v2.0 Specification](../facet2-specification.md) for complete details 
 
 ## Reference
 
-See [FACET v2.0 Specification](../facet2-specification.md) for complete details on:
-- [Section 13: Testing (@test)](../facet2-specification.md#13-testing-test)
-- [Error Codes](../facet2-specification.md#appendix-c-normative-error-code-catalog)
-- [Execution Model](../facet2-specification.md#7-execution-model)
+See [FACET v2.1.3 Specification](../FACET-v2.1.3-Production-Language-Specification.md) for complete details on:
+- [Section 13: Testing (@test)](../FACET-v2.1.3-Production-Language-Specification.md#13-testing-test)
+- [Error Codes](../FACET-v2.1.3-Production-Language-Specification.md#appendix-c-normative-error-code-catalog)
+- [Execution Model](../FACET-v2.1.3-Production-Language-Specification.md#7-execution-model)

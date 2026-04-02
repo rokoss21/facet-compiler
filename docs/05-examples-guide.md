@@ -547,7 +547,7 @@ fct run --input examples/rag_pipeline.facet --format pretty
 
 ```facet
 @meta
-  title: "FACET v2.0 Feature Showcase"
+  title: "FACET v2.1.3 Feature Showcase"
   version: "2.0.0"
   tags: ["demo", "showcase", "tutorial"]
 

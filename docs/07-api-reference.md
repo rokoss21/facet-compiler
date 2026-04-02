@@ -1,6 +1,6 @@
 ---
 ---
-# 07. FACET v2.0 Rust API Reference
+# 07. FACET v2.1.3 Rust API Reference
 
 **Reading Time:** 30-40 minutes | **Difficulty:** Advanced | **Previous:** [06-cli.md](06-cli.md) | **Next:** [08-lenses.md](08-lenses.md)
 
@@ -26,7 +26,7 @@
 
 ## Overview
 
-FACET v2.0 provides a modular Rust API organized across 7 crates. All crates follow semantic versioning and are published to [crates.io](https://crates.io).
+FACET v2.1.3 provides a modular Rust API organized across 7 crates. All crates follow semantic versioning and are published to [crates.io](https://crates.io).
 
 ### Quick Start
 
@@ -700,13 +700,13 @@ fn compile_with_error_handling(source: &str) -> Result<serde_json::Value, String
 - **[12-errors.md](12-errors.md)** - Error handling in Rust
 
 📚 **Resources:**
-- **[facet2-specification.md](../facet2-specification.md)** - Complete specification
+- **[FACET v2.1.3 specification](../FACET-v2.1.3-Production-Language-Specification.md)** - Complete specification
 - **[PRD](../facetparcer.prd)** - Architecture requirements
 - **[README.md](../README.md)** - Integration examples
 
 ---
 
-This API reference provides comprehensive coverage of FACET v2.0's Rust interfaces. All crates follow Rust's stability guarantees and semantic versioning. For the latest documentation, see [docs.rs](https://docs.rs) or the inline code documentation.
+This API reference provides comprehensive coverage of FACET v2.1.3's Rust interfaces. All crates follow Rust's stability guarantees and semantic versioning. For the latest documentation, see [docs.rs](https://docs.rs) or the inline code documentation.
 
 🎯 **Implementation Guides:**
 - **[08-lenses.md](08-lenses.md)** - Lens library usage
@@ -719,10 +719,10 @@ This API reference provides comprehensive coverage of FACET v2.0's Rust interfac
 - **[12-errors.md](12-errors.md)** - Error handling in Rust
 
 📚 **Resources:**
-- **[facet2-specification.md](../facet2-specification.md)** - Complete specification
+- **[FACET v2.1.3 specification](../FACET-v2.1.3-Production-Language-Specification.md)** - Complete specification
 - **[PRD](../facetparcer.prd)** - Architecture requirements
 - **[README.md](../README.md)** - Integration examples
 
 ---
 
-This API reference provides comprehensive coverage of FACET v2.0's Rust interfaces. All crates follow Rust's stability guarantees and semantic versioning. For the latest documentation, see [docs.rs](https://docs.rs) or the inline code documentation.
+This API reference provides comprehensive coverage of FACET v2.1.3's Rust interfaces. All crates follow Rust's stability guarantees and semantic versioning. For the latest documentation, see [docs.rs](https://docs.rs) or the inline code documentation.

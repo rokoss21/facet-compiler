@@ -470,7 +470,7 @@ EXPOSE 8080
 
 📚 **Resources:**
 - **[PRD](../facetparcer.prd)** - Security requirements
-- **[facet2-specification.md](../facet2-specification.md)** - Security model specification
+- **[FACET v2.1.3 specification](../FACET-v2.1.3-Production-Language-Specification.md)** - Security model specification
 
 ---
 
@@ -488,7 +488,7 @@ EXPOSE 8080
 
 📚 **Resources:**
 - **[PRD](../facetparcer.prd)** - Security requirements
-- **[facet2-specification.md](../facet2-specification.md)** - Security model specification
+- **[FACET v2.1.3 specification](../FACET-v2.1.3-Production-Language-Specification.md)** - Security model specification
 
 ---
 

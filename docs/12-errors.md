@@ -1,10 +1,10 @@
 ---
 ---
-# 12. FACET v2.0 Error Codes Reference
+# 12. FACET v2.1.3 Error Codes Reference
 
 **Reading Time:** 15-20 minutes | **Difficulty:** Intermediate | **Previous:** [11-security.md](11-security.md) | **Next:** [13-import-system.md](13-import-system.md)
 
-This document provides a comprehensive reference for all error codes in FACET v2.0, including examples and troubleshooting guidance.
+This document provides a comprehensive reference for all error codes in FACET v2.1.3, including examples and troubleshooting guidance.
 
 ---
 
@@ -423,7 +423,7 @@ $ fct run document.facet --gas-limit 1000  # ✅
 
 ---
 
-For more information about specific errors, see the [FACET v2.0 Specification](../facet2-specification.md).
+For more information about specific errors, see the [FACET v2.1.3 Specification](../FACET-v2.1.3-Production-Language-Specification.md).
 | F901 | Runtime | Budget exceeded |
 | F902 | Runtime | Gas exhausted |
 
@@ -445,4 +445,4 @@ For more information about specific errors, see the [FACET v2.0 Specification](.
 
 ---
 
-For more information about specific errors, see the [FACET v2.0 Specification](../facet2-specification.md).
+For more information about specific errors, see the [FACET v2.1.3 Specification](../FACET-v2.1.3-Production-Language-Specification.md).

@@ -27,7 +27,7 @@
 
 ## Performance Overview
 
-FACET v2.0 is optimized for **production AI agent workloads** with sub-second compilation times and efficient resource utilization.
+FACET v2.1.3 is optimized for **production AI agent workloads** with sub-second compilation times and efficient resource utilization.
 
 ### Performance Characteristics
 
@@ -504,7 +504,7 @@ fct run --threads 8 --parallel
 
 ## Summary
 
-FACET v2.0 delivers **enterprise-grade performance** with:
+FACET v2.1.3 delivers **enterprise-grade performance** with:
 - **Sub-second compilation** for production workloads
 - **95%+ token utilization** for cost efficiency
 - **Linear scaling** with pipeline complexity
@@ -524,7 +524,7 @@ FACET v2.0 delivers **enterprise-grade performance** with:
 - **[12-errors.md](12-errors.md)** - Performance-related errors
 
 📚 **Resources:**
-- **[facet2-specification.md](../facet2-specification.md)** - Performance requirements in PRD
+- **[FACET v2.1.3 specification](../FACET-v2.1.3-Production-Language-Specification.md)** - Performance requirements in PRD
 - **[PRD](../facetparcer.prd)** - Performance specifications
 
 ---
@@ -544,7 +544,7 @@ The architecture is optimized for **high-throughput AI agent compilation** with 
 - **[12-errors.md](12-errors.md)** - Performance-related errors
 
 📚 **Resources:**
-- **[facet2-specification.md](../facet2-specification.md)** - Performance requirements in PRD
+- **[FACET v2.1.3 specification](../FACET-v2.1.3-Production-Language-Specification.md)** - Performance requirements in PRD
 - **[PRD](../facetparcer.prd)** - Performance specifications
 
 ---

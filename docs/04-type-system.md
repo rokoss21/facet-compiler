@@ -829,7 +829,7 @@ type B = {name: string, age: int, email: string}
 
 ## References
 
-- [FACET v2.0 Specification](../facet2-specification.md)
+- [FACET v2.1.3 Specification](../FACET-v2.1.3-Production-Language-Specification.md)
 - [Error Reference](errors.md)
 - [02-tutorial.md](02-tutorial.md) - Complete learning tutorial
 - [03-architecture.md](03-architecture.md) - System architecture overview
@@ -847,7 +847,7 @@ type B = {name: string, age: int, email: string}
 - **[07-api-reference.md](07-api-reference.md)** - Type system Rust API
 
 📚 **References:**
-- **[facet2-specification.md](../facet2-specification.md)** - Complete FTS specification
+- **[FACET v2.1.3 specification](../FACET-v2.1.3-Production-Language-Specification.md)** - Complete FTS specification
 - **[faq.md](../faq.md)** - Type system FAQs
 
 ---
@@ -865,7 +865,7 @@ type B = {name: string, age: int, email: string}
 - **[07-api-reference.md](07-api-reference.md)** - Type system Rust API
 
 📚 **References:**
-- **[facet2-specification.md](../facet2-specification.md)** - Complete FTS specification
+- **[FACET v2.1.3 specification](../FACET-v2.1.3-Production-Language-Specification.md)** - Complete FTS specification
 - **[faq.md](../faq.md)** - Type system FAQs
 
 ---

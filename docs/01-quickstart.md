@@ -1,6 +1,6 @@
 ---
 ---
-# 01. FACET v2.0 Quick Start Guide
+# 01. FACET v2.1.3 Quick Start Guide
 
 **Reading Time:** 5 minutes | **Difficulty:** Beginner | **Next:** [02-tutorial.md](02-tutorial.md)
 
@@ -359,7 +359,7 @@ Error: F002: Tab characters forbidden (use 2 spaces)
 ### Learn More
 - 📖 [CLI Reference](./cli.md) - Complete command documentation
 - 📖 [Lens Reference](./lenses.md) - All 14 built-in transformations
-- 📖 [Language Spec](../facet2-specification.md) - Full FACET specification
+- 📖 [Language Spec](../FACET-v2.1.3-Production-Language-Specification.md) - Full FACET specification
 
 ### Explore Examples
 - 🔍 [Basic Prompt](../examples/basic_prompt.facet) - Simple assistant

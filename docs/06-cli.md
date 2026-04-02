@@ -676,7 +676,7 @@ fct run --input myfile.facet --budget 8192
 **Related Documentation:**
 - **[08-lenses.md](08-lenses.md)** - Available lens functions
 - **[01-quickstart.md](01-quickstart.md)** - Getting started tutorial
-- **[facet2-specification.md](../facet2-specification.md)** - Full language specification
+- **[FACET v2.1.3 specification](../FACET-v2.1.3-Production-Language-Specification.md)** - Full language specification
 - **[examples/README.md](../examples/README.md)** - Example files
 
 fct run --input myfile.facet --budget 8192
@@ -727,5 +727,5 @@ fct run --input myfile.facet --budget 8192
 **Related Documentation:**
 - **[08-lenses.md](08-lenses.md)** - Available lens functions
 - **[01-quickstart.md](01-quickstart.md)** - Getting started tutorial
-- **[facet2-specification.md](../facet2-specification.md)** - Full language specification
+- **[FACET v2.1.3 specification](../FACET-v2.1.3-Production-Language-Specification.md)** - Full language specification
 - **[examples/README.md](../examples/README.md)** - Example files
