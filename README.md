@@ -1,108 +1,127 @@
 # FACET Compiler (Rust)
 
-Deterministic compiler/runtime for **FACET v2.1.3** (Neural Architecture Description Language).
+[![CI](https://github.com/rokoss21/facet-compiler/actions/workflows/ci.yml/badge.svg)](https://github.com/rokoss21/facet-compiler/actions/workflows/ci.yml)
+[![Release](https://github.com/rokoss21/facet-compiler/actions/workflows/release.yml/badge.svg)](https://github.com/rokoss21/facet-compiler/actions/workflows/release.yml)
+[![Latest Release](https://img.shields.io/github/v/release/rokoss21/facet-compiler?sort=semver)](https://github.com/rokoss21/facet-compiler/releases)
+[![FACET Spec](https://img.shields.io/badge/FACET-v2.1.3-0A66C2)](./FACET-v2.1.3-Production-Language-Specification.md)
+[![Rust](https://img.shields.io/badge/rust-stable-orange?logo=rust)](https://www.rust-lang.org/)
+[![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue)](./LICENSE-MIT)
 
-FACET turns `.facet` documents into validated, reproducible execution artifacts and canonical request payloads.
+Deterministic compiler/runtime for **FACET v2.1.3** — a contract-first language for reliable AI request construction.
 
-## Philosophy
+FACET Compiler turns `.facet` programs into validated, reproducible canonical payloads with strict typing, deterministic execution, policy guard enforcement, and provenance artifacts.
 
-FACET keeps the original ideology: AI behavior must be engineered like software.
+## Why FACET Compiler
 
-- Deterministic phases instead of ad-hoc prompt string handling
-- Static validation (types, policy schema, placement rules) before execution
-- Fail-closed runtime guard (`F454/F455`) for policy-sensitive operations
-- Canonical JSON + hashes for replayability and auditability
+Most AI stacks fail at the contract boundary: schemas drift, tool calls are weakly enforced, context packing is ad hoc, and behavior differs across runs/providers.
 
-## Current Status
+FACET Compiler addresses this by enforcing the contract **before generation**:
 
-- Language target: **FACET v2.1.3 REC-PROD**
-- Implementation: **Rust workspace** (`fct-*` crates)
-- Canonical spec: `FACET-v2.1.3-Production-Language-Specification.md`
-- Migration evidence/checklist: `docs/14-v2.1.3-migration-checklist.md`
-- Main local gate: `cargo test -q --workspace`
+- deterministic phases (resolution -> type check -> compute -> layout -> render)
+- strict FTS typing and placement rules
+- fail-closed policy/guard model (`F454`, `F455`)
+- canonical JSON with stable hashes for replay/audit
+- deterministic context budget behavior (Token Box Model)
 
-## Install / Build
+## What This Repository Is
 
-Build from source:
+This repository is the **Rust reference compiler implementation** for FACET v2.1.3.
+
+- Language target: FACET v2.1.3 REC-PROD
+- Binary: `facet-fct` (`fct --version`)
+- Conformance tracker: [`docs/14-v2.1.3-migration-checklist.md`](./docs/14-v2.1.3-migration-checklist.md)
+- Canonical spec in this repo: [`FACET-v2.1.3-Production-Language-Specification.md`](./FACET-v2.1.3-Production-Language-Specification.md)
+
+## Quick Start
+
+### 1) Build
 
 ```bash
-cargo build --release
-```
-
-Release binary:
-
-```bash
-target/release/facet-fct
-```
-
-Check version:
-
-```bash
+cargo build --release --bin facet-fct
 ./target/release/facet-fct --version
 ```
 
-## CLI Usage
-
-Global help:
+### 2) Validate a `.facet` file (Phases 1-2)
 
 ```bash
-cargo run -q -- --help
+./target/release/facet-fct build --input examples/spec/01_minimal.facet
 ```
 
-Build (parse + resolve + validate):
+### 3) Run full pipeline (Phases 1-5)
 
 ```bash
-cargo run -q -- build --input examples/quickstart.facet
+./target/release/facet-fct run --input examples/spec/01_minimal.facet --exec --format pretty
 ```
 
-Run full pipeline (phases 1-5):
+### 4) Run deterministic suites used in CI/release gates
 
 ```bash
-cargo run -q -- run --input examples/quickstart.facet --exec --format pretty
+./scripts/smoke_examples_spec.sh ./target/release/facet-fct
+./scripts/spec_matrix_examples.sh ./target/release/facet-fct
 ```
 
-Run in pure mode:
+## CLI Overview
 
 ```bash
-cargo run -q -- run --input examples/quickstart.facet --pure
-```
+# Global help
+./target/release/facet-fct --help
 
-Run tests from `@test` blocks:
+# Build: parse + resolve + validate
+./target/release/facet-fct build --input file.facet
 
-```bash
-cargo run -q -- test --input examples/quickstart.facet --exec
-```
+# Run: full execution pipeline
+./target/release/facet-fct run --input file.facet --exec
+./target/release/facet-fct run --input file.facet --pure
 
-Inspect internals (AST/DAG/layout/policy):
+# Test: execute @test blocks
+./target/release/facet-fct test --input file.facet --exec
 
-```bash
-cargo run -q -- inspect --input examples/quickstart.facet \
+# Inspect: dump compiler internals
+./target/release/facet-fct inspect --input file.facet \
   --ast ast.json --dag dag.json --layout layout.json --policy policy.json
 ```
 
-## Runtime Inputs (`@input`)
-
-Provide runtime values as JSON object:
+Runtime inputs for `@input(...)`:
 
 ```bash
-cargo run -q -- run --input examples/with-input.facet \
-  --runtime-input runtime-input.json --exec
+./target/release/facet-fct run \
+  --input examples/spec/03_input_runtime.facet \
+  --runtime-input examples/spec/03_input_runtime.input.json \
+  --exec
 ```
 
-## Project Layout
+## Architecture (Compiler Pipeline)
 
-- `src/commands/*` — CLI commands (`build/run/test/inspect/codegen`)
-- `crates/fct-parser` — parser + normalization
-- `crates/fct-resolver` — import resolution + deterministic merge
-- `crates/fct-validator` — Phase 2 semantic/type/policy checks
-- `crates/fct-engine` — R-DAG compute + guard-aware execution
-- `crates/fct-render` — canonical payload rendering
-- `crates/fct-std` — standard lenses
-- `docs/` — documentation and migration/conformance artifacts
+| Phase | Purpose |
+| --- | --- |
+| Phase 1 | Normalize, parse, resolve `@import`, deterministic merge |
+| Phase 2 | Type checking, semantic validation, policy schema validation |
+| Phase 3 | Reactive compute (R-DAG), lens execution, input materialization |
+| Phase 4 | Deterministic context packing (Token Box Model) |
+| Phase 5 | Canonical JSON render + execution provenance emission |
+
+## Ecosystem and Methodology
+
+FACET Compiler is part of a broader engineering model around deterministic AI systems and measurable delivery:
+
+- **FACET Standard**: language/specification source of truth  
+  [github.com/rokoss21/facet-standard](https://github.com/rokoss21/facet-standard)
+- **IOSM Specification**: methodology for controlled improvement cycles  
+  [github.com/rokoss21/IOSM](https://github.com/rokoss21/IOSM)
+- **IOSM CLI Runtime**: terminal execution runtime implementing IOSM  
+  [github.com/rokoss21/iosm-cli](https://github.com/rokoss21/iosm-cli)
+
+How they connect conceptually:
+
+- FACET defines the **deterministic contract layer** for AI behavior.
+- IOSM defines the **engineering methodology** (Improve -> Optimize -> Shrink -> Modularize) for iterative system quality improvement with artifacts/metrics.
+- iosm-cli operationalizes IOSM as a runtime for real repositories.
+
+Together they align language contracts, execution control, and process governance.
 
 ## Quality Gates
 
-Recommended local release gate:
+Recommended local gate:
 
 ```bash
 cargo fmt --all -- --check
@@ -110,17 +129,28 @@ cargo clippy --all-targets --all-features -- -D warnings
 cargo test -q --workspace
 ```
 
-## Release
+Release tag gate (`v*`) includes:
 
-GitHub release workflow is tag-driven (`v*`).
+- workspace tests
+- spec smoke/matrix runs
+- compliance report artifact generation
 
-Example:
+## Project Layout
 
-```bash
-git tag v0.1.2
-git push origin v0.1.2
-```
+- `src/commands/*` — CLI commands (`build`, `run`, `test`, `inspect`, `codegen`)
+- `crates/fct-parser` — parser + normalization
+- `crates/fct-resolver` — import resolution + deterministic merge
+- `crates/fct-validator` — Phase 2 semantic/type/policy validation
+- `crates/fct-engine` — Phase 3/4 runtime + guard-aware compute
+- `crates/fct-render` — canonical payload/provenance render
+- `crates/fct-std` — standard lens registry/library
+- `docs/` — documentation and migration evidence
+- `examples/spec/` — ordered spec-conformance examples
+
+## Author
+
+**Emil Rokossovskiy**
 
 ## License
 
-Dual-licensed under MIT or Apache-2.0.
+Dual-licensed under [MIT](./LICENSE-MIT) or [Apache-2.0](./LICENSE-APACHE).
