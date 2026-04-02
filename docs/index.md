@@ -2,21 +2,40 @@
 permalink: /
 ---
 
-# FACET v2.1.3 Docs
+# FACET v2.1.3 Documentation
 
-Rust implementation documentation for FACET v2.1.3.
+FACET is a deterministic execution layer for LLM systems.
+It compiles structured contracts into reproducible, resource-bounded runtime behavior.
 
-## Start Here
+## What Problem FACET Solves
+
+- LLM pipelines are often hard to reproduce, hard to validate, and hard to audit.
+- Prompt/runtime glue code tends to mix schema, policy, and execution concerns.
+- Production systems need explicit failure surfaces, not best-effort behavior.
+
+## What FACET Guarantees
+
+- Deterministic compilation pipeline and canonical request assembly (for fixed normalized source, inputs, profile, and mode).
+- Type-checked contracts with explicit error codes.
+- Bounded execution via budget/gas/policy controls.
+
+## What FACET Does Not Guarantee
+
+- FACET does not eliminate model-level nondeterminism in generation.
+- FACET constrains model interaction so system-level correctness remains controlled by contracts, policy, and validation.
+
+## Quick Path
 
 1. [Quick Start](01-quickstart.html)
 2. [Tutorial](02-tutorial.html)
-3. [CLI Reference](06-cli.html)
-4. [Examples Guide](05-examples-guide.html)
+3. [Examples Guide](05-examples-guide.html)
+4. [CLI Reference](06-cli.html)
 
-## Core References
+## Evidence And References
 
-- [Language Specification (v2.1.3)](https://github.com/rokoss21/facet-compiler/blob/master/FACET-v2.1.3-Production-Language-Specification.md)
-- [Migration Checklist / Conformance](14-v2.1.3-migration-checklist.html)
+- [FACET v2.1.3 Production Language Specification](https://github.com/rokoss21/facet-compiler/blob/master/FACET-v2.1.3-Production-Language-Specification.md)
+- [v2.1.3 Migration Checklist / Conformance](14-v2.1.3-migration-checklist.html)
+- [MIGRATION Summary](https://github.com/rokoss21/facet-compiler/blob/master/MIGRATION.md)
 - [Project README](https://github.com/rokoss21/facet-compiler/blob/master/README.md)
 
 ## Deep Dives

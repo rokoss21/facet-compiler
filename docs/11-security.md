@@ -4,13 +4,14 @@ permalink: /11-security.html
 
 # 11. FACET Security Model & Best Practices
 **Reading Time:** 20-25 minutes | **Difficulty:** Intermediate | **Previous:** [10-performance.md](10-performance.html) | **Next:** [12-errors.md](12-errors.html)
-**Version:** 1.0
-**Last Updated:** 2025-12-09
-**Status:** Production Ready
+**Version:** 0.1.2
+**Last Updated:** 2026-04-02
+**Status:** Spec-aligned guidance
 
 ## Table of Contents
 
 - [Security Principles](#security-principles)
+- [Security Boundaries](#security-boundaries)
 - [Threat Model](#threat-model)
 - [Secure Configuration](#secure-configuration)
 - [Input Validation](#input-validation)
@@ -18,22 +19,21 @@ permalink: /11-security.html
 - [Network Security](#network-security)
 - [Error Handling](#error-handling)
 - [Audit Logging](#audit-logging)
-- [Compliance](#compliance)
+- [Compliance Posture](#compliance-posture)
 - [Security Checklist](#security-checklist)
 
 ---
 
 ## Security Principles
 
-FACET implements a **zero-trust security model** with defense-in-depth architecture designed for enterprise AI agent deployment.
+FACET provides deterministic, fail-closed controls around LLM execution boundaries. Security is implemented as explicit constraints in parsing, typing, policy, and runtime guard decisions.
 
 ### Core Security Tenets
 
 **1. Deterministic Execution**
-- Same input → same output, always
-- No randomness in execution paths
-- Predictable resource usage
-- Reproducible behavior for audit trails
+- Deterministic compilation and canonical rendering for fixed normalized inputs
+- Deterministic merge, R-DAG traversal, and policy decision order
+- Reproducible execution artifacts for auditing (when enabled)
 
 **2. Resource Bounding**
 - Token budget enforcement prevents runaway costs
@@ -47,10 +47,30 @@ FACET implements a **zero-trust security model** with defense-in-depth architect
 - Runtime type enforcement prevents injection attacks
 
 **4. Hermetic Execution**
-- No external network access during compilation
-- No file system access during execution
+- No external network access during compilation/type-check phases
+- File access restricted to import sandbox during resolution
 - Isolated execution environment
 - Minimal attack surface
+
+---
+
+## Security Boundaries
+
+### FACET Controls Directly
+
+- Parsing and normalization guarantees (UTF-8, NFC, LF, no tabs)
+- Import sandbox (`allowlisted roots`, no absolute paths, no `..`, no URLs)
+- Type constraints and placement checks
+- Policy/guard fail-closed enforcement for guarded operations
+- Deterministic canonical request assembly and bounded layout
+
+### FACET Does Not Control Directly
+
+- Model hallucinations or provider-side sampling behavior
+- Trustworthiness of external APIs/tools beyond declared effects
+- Organization-level legal certifications by itself
+
+FACET is a control layer for execution correctness and evidence. It is not a standalone compliance certificate.
 
 ---
 
@@ -96,11 +116,11 @@ FACET implements a **zero-trust security model** with defense-in-depth architect
 ### Production Deployment
 
 ```bash
-# Enable all security features
-export FACET_SECURITY_LEVEL=maximum
-export FACET_NETWORK_ISOLATION=true
-export FACET_FILE_SANDBOX=true
-export FACET_AUDIT_LOG=/var/log/facet/audit.log
+# Example host-level controls (implementation-specific)
+export FACET_MODE=exec
+export FACET_PROFILE=hypervisor
+export FACET_IMPORT_ROOTS=/srv/facet/modules
+export FACET_AUDIT_LOG=/var/log/facet/execution.json
 ```
 
 ### Security Headers
@@ -108,7 +128,7 @@ export FACET_AUDIT_LOG=/var/log/facet/audit.log
 ```json
 {
   "security": {
-    "level": "enterprise",
+    "level": "strict",
     "audit": {
       "enabled": true,
       "log_level": "detailed",
@@ -147,8 +167,8 @@ fct validate --input user_input.facet --strict
 ```
 
 **3. Import Security**
-- Import paths must be absolute or relative to trusted directories
-- No `..` path traversal allowed
+- Import paths must be relative to allowlisted roots
+- Absolute paths and `..` traversal are rejected (`F601`)
 - File existence validation before import
 - Circular import detection
 
@@ -237,7 +257,7 @@ client.send(signed_request)?;
 
 **1. Secure Import Paths**
 ```facet
-@import "trusted/library.facet"  // ✅ Absolute path
+@import "trusted/library.facet"  // ✅ Relative to allowlisted root
 @import "./local/utils.facet"    // ✅ Relative trusted
 @import "../external.facet"      // ❌ Path traversal blocked
 ```
@@ -340,41 +360,22 @@ logrotate -s /var/log/facets.state /etc/logrotate.d/facets
 
 ---
 
-## Compliance
+## Compliance Posture
 
-### Regulatory Compliance
+FACET provides technical controls that can support audits, but FACET itself is not a legal/compliance certification.
 
-**1. GDPR Compliance**
-- Data minimization in error messages
-- Audit trails for data processing
-- Right to erasure implementation
-- Privacy by design
+### Evidence FACET Can Provide
 
-**2. SOC 2 Compliance**
-- Security controls documentation
-- Audit procedures
-- Incident response plan
-- Continuous monitoring
+- Deterministic canonical request artifacts
+- Typed policy configuration and policy hash
+- Guard decision logs and hash chain (Hypervisor profile)
+- Explicit error surface (`F*` and namespaced host diagnostics)
 
-**3. Industry Standards**
-- OWASP security guidelines
-- NIST cybersecurity framework
-- ISO 27001 information security
+### Organization Responsibilities
 
-### Certification Readiness
-
-**1. Penetration Testing**
-```bash
-# Automated security testing
-cargo test --test security_tests
-./scripts/security-scan.sh
-```
-
-**2. Vulnerability Assessment**
-- Regular dependency updates
-- CVE monitoring
-- Security code reviews
-- Third-party audits
+- Map FACET controls to your internal control framework
+- Maintain operational evidence (access, change management, incident response)
+- Run independent legal/compliance assessments for your environment
 
 ---
 
@@ -456,38 +457,8 @@ EXPOSE 8080
 
 ## Next Steps
 
-🎯 **Secure Implementation:**
-- **[06-cli.md](06-cli.html)** - Secure CLI usage
-- **[07-api-reference.md](07-api-reference.html)** - Secure API programming
-- **[12-errors.md](12-errors.html)** - Security-related error codes
-
-🔧 **Compliance & Deployment:**
-- **[13-import-system.md](13-import-system.html)** - Secure import validation
-- **[10-performance.md](10-performance.html)** - Security vs performance trade-offs
-- **[09-testing.md](09-testing.html)** - Security testing practices
-
-📚 **Resources:**
-- **[PRD](../facetparcer.prd)** - Security requirements
-- **[FACET v2.1.3 specification](https://github.com/rokoss21/facet-compiler/blob/master/FACET-v2.1.3-Production-Language-Specification.md)** - Security model specification
-
----
-
-*This security model ensures FACET can be safely deployed in enterprise environments handling sensitive AI workloads with full compliance and audit capabilities.* 🔒✨
-
-🎯 **Secure Implementation:**
-- **[06-cli.md](06-cli.html)** - Secure CLI usage
-- **[07-api-reference.md](07-api-reference.html)** - Secure API programming
-- **[12-errors.md](12-errors.html)** - Security-related error codes
-
-🔧 **Compliance & Deployment:**
-- **[13-import-system.md](13-import-system.html)** - Secure import validation
-- **[10-performance.md](10-performance.html)** - Security vs performance trade-offs
-- **[09-testing.md](09-testing.html)** - Security testing practices
-
-📚 **Resources:**
-- **[PRD](../facetparcer.prd)** - Security requirements
-- **[FACET v2.1.3 specification](https://github.com/rokoss21/facet-compiler/blob/master/FACET-v2.1.3-Production-Language-Specification.md)** - Security model specification
-
----
-
-*This security model ensures FACET can be safely deployed in enterprise environments handling sensitive AI workloads with full compliance and audit capabilities.* 🔒✨
+- **[06-cli.md](06-cli.html)** - CLI runtime flags and operational controls
+- **[12-errors.md](12-errors.html)** - Security-relevant error codes and failure modes
+- **[13-import-system.md](13-import-system.html)** - Import sandbox and deterministic resolution
+- **[09-testing.md](09-testing.html)** - Test patterns for policy and guard behavior
+- **[FACET v2.1.3 specification](https://github.com/rokoss21/facet-compiler/blob/master/FACET-v2.1.3-Production-Language-Specification.md)** - Normative security and policy sections

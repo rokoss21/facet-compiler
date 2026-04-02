@@ -502,7 +502,7 @@ fct run --threads 8 --parallel
 
 ## Summary
 
-FACET v2.1.3 delivers **enterprise-grade performance** with:
+FACET v2.1.3 targets production performance with:
 - **Sub-second compilation** for production workloads
 - **95%+ token utilization** for cost efficiency
 - **Linear scaling** with pipeline complexity

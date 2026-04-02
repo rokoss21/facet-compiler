@@ -19,12 +19,18 @@ Get up and running with FACET in 5 minutes.
 
 ## What is FACET?
 
-**FACET** (Formal Agent Configuration & Execution Template) is a deterministic compiler for AI agent behavior. It transforms `.facet` files into canonical JSON for AI models with:
+**FACET** (Formal Agent Configuration & Execution Template) is a deterministic execution layer for LLM systems. It transforms `.facet` contracts into canonical JSON with:
 
-- ✅ **Type safety** - Catch errors before runtime
-- ✅ **Deterministic** - Same input → same output, always
+- ✅ **Type safety** - Catch schema and placement errors before runtime
+- ✅ **Deterministic assembly** - Stable compile/render behavior for fixed normalized input
 - ✅ **Pipeline transformations** - Compose data processing with `|>`
-- ✅ **Token budgeting** - Precise context window control
+- ✅ **Resource controls** - Budget, gas, and policy guardrails
+
+### Determinism Model (Important)
+
+- FACET guarantees deterministic compilation, validation, and canonical request assembly.
+- Model generation itself remains provider-dependent and can be non-deterministic.
+- Practical result: FACET controls system-level correctness boundaries around model calls.
 
 ## Installation
 
@@ -33,15 +39,15 @@ Get up and running with FACET in 5 minutes.
 
 ### Build
 ```bash
-git clone https://github.com/yourorg/facet.git
-cd facet
+git clone https://github.com/rokoss21/facet-compiler
+cd facet-compiler
 cargo build --release
 ```
 
 ### Verify
 ```bash
 cargo run -- --version
-# Output: facet-fct 0.1.0-beta
+# Output: fct 0.1.2
 ```
 
 ---
@@ -51,13 +57,21 @@ cargo run -- --version
 Create `hello.facet`:
 
 ```facet
+@meta
+  version: "1.0"
+  author: "Quick Start"
+
+@context
+  budget: 32000
+
+@vars
+  user_prompt: "Hello, who are you?"
+
 @system
-  role: "assistant"
-  model: "gpt-5.2"
-  instructions: "You are a helpful assistant."
+  content: "You are a helpful assistant."
 
 @user
-  query: "Hello, who are you?"
+  content: $user_prompt
 ```
 
 ### Validate
@@ -75,26 +89,50 @@ cargo run -- run --input hello.facet --format pretty
 ```json
 {
   "metadata": {
-    "version": "2.0",
-    "total_tokens": 156,
-    "budget": 4096
+    "facet_version": "2.1.3",
+    "profile": "hypervisor",
+    "mode": "exec",
+    "host_profile_id": "facet-playground-1.0",
+    "document_hash": "sha256:...",
+    "policy_hash": null,
+    "policy_version": "1",
+    "budget_units": 32000,
+    "target_provider_id": "generic-llm"
   },
-  "system": [
+  "tools": [],
+  "messages": [
     {
       "role": "system",
-      "content": "{\"role\":\"assistant\",\"model\":\"gpt-5.2\",...}",
-      "tokens": 89
-    }
-  ],
-  "user": [
+      "content": "You are a helpful assistant."
+    },
     {
       "role": "user",
-      "content": "{\"query\":\"Hello, who are you?\"}",
-      "tokens": 67
+      "content": "Hello, who are you?"
     }
   ]
 }
 ```
+
+---
+
+## Why FACET Instead Of Raw Prompt Glue
+
+### Without FACET
+
+```python
+# prompt -> model -> parse json -> hope validation passes
+prompt = build_prompt(user_input, docs, policy_hint)
+raw = llm(prompt)
+result = json.loads(raw)   # may fail
+```
+
+### With FACET
+
+```
+contract (.facet) -> build/type-check -> deterministic execution -> canonical json
+```
+
+FACET makes failures explicit (`F*` codes) and moves most contract issues to compile-time.
 
 ---
 
@@ -362,8 +400,8 @@ Error: F002: Tab characters forbidden (use 2 spaces)
 
 ### Explore Examples
 - 🔍 [Basic Prompt](examples/basic_prompt.facet) - Simple assistant
-- 🔍 [RAG Pipeline](../examples/rag_pipeline.facet) - Retrieval-augmented generation
-- 🔍 [Advanced Features](../examples/advanced_features.facet) - All language features
+- 🔍 [RAG Pipeline](examples/rag_pipeline.facet) - Retrieval-augmented generation
+- 🔍 [Advanced Features](examples/advanced_features.facet) - All language features
 
 ### Try These
 1. **Modify examples** - Change variables, add pipelines

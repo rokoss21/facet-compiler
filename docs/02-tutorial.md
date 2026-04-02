@@ -737,8 +737,8 @@ $ fct test --input example.facet
 
 ### Contribute:
 
-- [GitHub Repository](https://github.com/yourorg/facet)
-- [Issue Tracker](https://github.com/yourorg/facet/issues)
+- [GitHub Repository](https://github.com/rokoss21/facet-compiler)
+- [Issue Tracker](https://github.com/rokoss21/facet-compiler/issues)
 - [Contributing Guide](https://github.com/rokoss21/facet-compiler/blob/master/CONTRIBUTING.md)
 
 ---

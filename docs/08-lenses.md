@@ -1196,7 +1196,7 @@ FACET lenses operate at different trust levels based on their behavior:
 
 ### Level 0 - Pure (29 lenses)
 **Characteristics:**
-- ✅ **Deterministic:** Same input always produces same output
+- ✅ **Deterministic:** For fixed normalized input and args, output is stable
 - ✅ **No I/O:** No network, file, or external calls
 - ✅ **No side effects:** Only transforms data
 

@@ -4,9 +4,9 @@ permalink: /03-architecture.html
 
 # 03. FACET v2.1.3 Architecture Guide
 **Reading Time:** 20-30 minutes | **Difficulty:** Intermediate | **Previous:** [02-tutorial.md](02-tutorial.html) | **Next:** [04-type-system.md](04-type-system.html)
-**Last Updated:** 2025-12-09
-**Version:** 0.1.0
-**Status:** Production Ready
+**Last Updated:** 2026-04-02
+**Compiler Version:** 0.1.2
+**Status:** Spec-aligned (v2.1.3)
 
 ## Table of Contents
 
@@ -22,15 +22,17 @@ permalink: /03-architecture.html
 
 ## Overview
 
-FACET v2.1.3 is a **deterministic compiler** for AI agent behavior, transforming `.facet` files into canonical JSON with guaranteed reproducibility across all platforms.
+FACET v2.1.3 is a deterministic execution layer that compiles `.facet` contracts into canonical request contexts.
+Determinism applies to compilation, validation, dependency evaluation order, policy decisions, and canonical rendering for fixed normalized inputs/configuration.
+Model token generation is outside FACET determinism scope.
 
 ### Key Properties
 
 **Determinism:**
-- Same input → same output, always
-- No random number generation
-- Deterministic token allocation
-- Stable JSON field ordering
+- Normalized source form (UTF-8, NFC, LF)
+- Stable import expansion and merge ordering
+- Deterministic R-DAG tie-break by ordered-map insertion order
+- Canonical JSON serialization with stable ordering
 
 **Type Safety:**
 - Static type checking (FTS - Facet Type System)
@@ -43,6 +45,18 @@ FACET v2.1.3 is a **deterministic compiler** for AI agent behavior, transforming
 - Gas limit for computation (F902)
 - No infinite loops
 - Predictable memory usage
+
+## Execution Invariants
+
+The architecture enforces these invariants across runs with identical inputs:
+
+1. Parsing and resolution are hermetic (no network, controlled import roots).
+2. Singleton-map merge keeps first insertion position even when later values override keys.
+3. Variable evaluation order is deterministic and cycle-safe (R-DAG, `F505` on cycles).
+4. Policy decisions are fail-closed (`F454` deterministic deny, `F455` undecidable).
+5. Canonical output ordering is fixed (`system*`, then `user*`, then `assistant*`).
+
+These invariants define the deterministic contract boundary. They do not imply deterministic model inference output.
 
 ---
 
@@ -133,43 +147,30 @@ FACET v2.1.3 is a **deterministic compiler** for AI agent behavior, transforming
 
 ## Compilation Pipeline
 
-### Phase 1: Parsing
+The FACET specification defines 5 normative phases. The Rust implementation uses internal sub-steps that map to these phases.
+
+### Spec Phase 1: Resolution (Implementation sub-steps include parsing)
 
 **Input:** `.facet` source file
-**Output:** `FacetDocument` AST
-**Crate:** `fct-parser`
+**Output:** Resolved source form and resolved AST
+**Crates:** `fct-parser`, `fct-resolver`
 
 **Process:**
 1. Tokenization - Break source into tokens
 2. Syntax validation - Check grammar rules
 3. AST construction - Build tree structure
-4. Span tracking - Record source positions
+4. Import resolution and cycle detection
+5. Deterministic merge across singleton/repeatable facets
+6. Span tracking - Record source positions
 
 **Error Codes:**
 - F001: Invalid indentation
 - F002: Tabs not allowed
 - F003: Unclosed delimiter
 
-### Phase 2: Resolution
+### Spec Phase 2: Type Checking
 
-**Input:** `FacetDocument` AST
-**Output:** Merged AST with resolved imports
-**Crate:** `fct-resolver`
-
-**Process:**
-1. Find @import directives
-2. Load imported files recursively
-3. Detect circular imports (F602)
-4. Merge blocks with smart strategy
-5. Build single unified AST
-
-**Error Codes:**
-- F601: Import not found
-- F602: Circular import
-
-### Phase 3: Type Checking
-
-**Input:** Merged AST
+**Input:** Resolved AST
 **Output:** Typed and validated AST
 **Crate:** `fct-validator`
 
@@ -184,13 +185,13 @@ FACET v2.1.3 is a **deterministic compiler** for AI agent behavior, transforming
 
 **Error Codes:**
 - F401: Variable not found
-- F402: Type inference failed
 - F451: Type mismatch
 - F452: Constraint violation
 - F453: Input validation failed
+- F456: Missing/invalid effect class
 - F802: Unknown lens
 
-### Phase 4: Reactive Compute (R-DAG)
+### Spec Phase 3: Reactive Compute (R-DAG)
 
 **Input:** Typed AST
 **Output:** Evaluated variables with computed values
@@ -211,7 +212,7 @@ FACET v2.1.3 is a **deterministic compiler** for AI agent behavior, transforming
 - F801: Lens execution failed
 - F902: Gas exhausted
 
-### Phase 5: Layout (Token Box Model)
+### Spec Phase 4: Layout (Token Box Model)
 
 **Input:** Evaluated variables
 **Output:** Packed context within budget
@@ -229,7 +230,7 @@ FACET v2.1.3 is a **deterministic compiler** for AI agent behavior, transforming
 **Error Codes:**
 - F901: Budget exceeded
 
-### Phase 6: Rendering
+### Spec Phase 5: Rendering
 
 **Input:** Packed context
 **Output:** Canonical JSON

@@ -4,443 +4,222 @@ permalink: /12-errors.html
 
 # 12. FACET v2.1.3 Error Codes Reference
 **Reading Time:** 15-20 minutes | **Difficulty:** Intermediate | **Previous:** [11-security.md](11-security.html) | **Next:** [13-import-system.md](13-import-system.html)
-This document provides a comprehensive reference for all error codes in FACET v2.1.3, including examples and troubleshooting guidance.
+
+This reference follows the normative error catalog in FACET v2.1.3.
 
 ## Table of Contents
 
-- [Syntax Errors (F001-F003)](#syntax-errors-f001-f003)
-- [Semantic Errors (F401-F453)](#semantic-errors-f401-f453)
+- [Error Model](#error-model)
+- [Syntax & Parse Errors (F001-F003, F402)](#syntax--parse-errors-f001-f003-f402)
+- [Semantic & Type Errors (F401-F456)](#semantic--type-errors-f401-f456)
 - [Graph Errors (F505)](#graph-errors-f505)
 - [Import Errors (F601-F602)](#import-errors-f601-f602)
-- [Runtime Errors (F801-F902)](#runtime-errors-f801-f902)
+- [Runtime, Security, and Layout Errors (F801-F902)](#runtime-security-and-layout-errors-f801-f902)
+- [Quick Reference](#quick-reference)
 
 ---
 
-## Syntax Errors (F001-F003)
+## Error Model
 
-Syntax errors occur during parsing when the FACET code doesn't conform to the language grammar.
+FACET treats errors as part of the contract surface, not incidental side effects.
 
-### F001: Invalid Indentation
+- **Compile-time errors:** Parsing, resolution, type and policy validation failures (`build` / Phase 1-2).
+- **Runtime errors:** Deterministic execution failures in reactive compute, guard checks, and layout (`run` / Phase 3-5).
+- **Contract violations:** Invalid placement, unsupported constructs, or denied operations with explicit `F*` code.
 
-**Description**: Indentation must be consistent and use either 2 spaces or 4 spaces.
+Operational rule: if FACET cannot prove a guarded operation is safe/allowed, execution fails closed.
 
-**Example**:
+---
+
+## Syntax & Parse Errors (F001-F003, F402)
+
+### F001: Invalid indentation
+
+**Description:** Indentation is not exactly 2 spaces per level.
+
+**Example**
 ```facet
 @system
-   role: "assistant"  // ❌ 3 spaces - invalid
+   content: "bad"   # 3 spaces
 ```
 
-**Fix**: Use consistent 2 or 4 spaces:
-```facet
-@system
-  role: "assistant"  // ✅ 2 spaces
-```
+**Fix:** Use exact 2-space indentation.
 
-### F002: Tabs Not Allowed
+### F002: Tabs forbidden
 
-**Description**: TAB characters are not allowed for indentation.
+**Description:** TAB (`\t`) appears in source.
 
-**Example**:
-```facet
-@system
-\trole: "assistant"  // ❌ Tab character
-```
+**Fix:** Replace tabs with spaces.
 
-**Fix**: Use spaces instead of tabs:
-```facet
-@system
-  role: "assistant"  // ✅ Spaces
-```
+### F003: Malformed syntax / invalid token / invalid escape
 
-### F003: Unclosed Delimiter
-
-**Description**: A bracket, brace, or quote is not properly closed.
-
-**Examples**:
+**Examples**
 ```facet
 @vars
-  list: [1, 2, 3  // ❌ Missing ]
-  map: {"key": "value"  // ❌ Missing }
-  text: "unclosed  // ❌ Missing "
+  text: "unclosed
 ```
 
-**Fix**: Close all delimiters:
 ```facet
 @vars
-  list: [1, 2, 3]  // ✅
-  map: {"key": "value"}  // ✅
-  text: "closed"  // ✅
+  items: ["a", "b",]   # trailing comma
+```
+
+### F402: Attribute interpolation forbidden
+
+**Description:** `{{` or `}}` used inside facet attributes.
+
+**Example**
+```facet
+@system(model="{{gpt}}")
+  content: "..."
 ```
 
 ---
 
-## Semantic Errors (F401-F453)
+## Semantic & Type Errors (F401-F456)
 
-Semantic errors occur during validation when the code is syntactically correct but has logical issues.
+### F401: Variable not found
 
-### F401: Variable Not Found
+**Description:** Reference to missing variable.
 
-**Description**: Reference to a variable that doesn't exist.
-
-**Example**:
 ```facet
 @vars
-  name: "Alice"
-  greeting: "Hello, $undefined_name!"  // ❌ undefined_name doesn't exist
+  greeting: $missing
 ```
 
-**Fix**: Define the variable or check spelling:
+### F405: Invalid variable path
+
+**Description:** Path segment missing in `$var.path` traversal.
+
 ```facet
 @vars
-  name: "Alice"
-  greeting: "Hello, $name!"  // ✅
+  profile: { name: "Alice" }
+  city: $profile.address.city
 ```
 
-### F402: Type Inference Failed
+### F451: Type mismatch
 
-**Description**: The compiler cannot determine the type of an expression.
+**Description:** Value is not assignable to declared/required type.
 
-**Example**:
-```facet
-@vars
-  ambiguous: null |> unknown_lens()  // ❌ Cannot infer type
-```
+### F452: Constraint violation / invalid placement / unsupported construct
 
-**Fix**: Provide explicit type or more context:
-```facet
-@var_types
-  value: string
+Common cases:
+- `@input(...)` placed outside allowed positions.
+- String-keyed map entry outside `@meta`.
+- Invalid policy rule shape.
+- Numeric list indexing in var paths (not standardized in v2.1.3).
 
-@vars
-  value: "hello" |> trim()  // ✅ Type can be inferred
-```
+### F453: Runtime input validation failed
 
-### F404: Forward Reference
+**Description:** `@input` value (supplied or defaulted) fails declared type/constraints.
 
-**Description**: Variable is used before it's declared.
+### F454: Policy deny (deterministic)
 
-**Example**:
-```facet
-@vars
-  b: $a  // ❌ 'a' used before declaration
-  a: "value"
-```
+**Description:** Policy evaluation succeeded and outcome is a deterministic DENY.
 
-**Fix**: Declare variables before using them:
-```facet
-@vars
-  a: "value"
-  b: $a  // ✅
-```
+### F455: Guard undecidable (fail-closed)
 
-### F451: Type Mismatch
+**Description:** Guard cannot complete deterministic decision due to evaluation failure (missing data/type failure/internal guard failure).
 
-**Description**: Value doesn't match the declared type.
+### F456: Missing/invalid effect class
 
-**Example**:
-```facet
-@var_types
-  age: int
+**Description:** Required effect declaration is missing or invalid.
 
-@vars
-  age: "not-a-number"  // ❌ String assigned to int
-```
-
-**Fix**: Use correct type or change declaration:
-```facet
-@var_types
-  age: string  // ✅ Changed to string
-
-@vars
-  age: "25"
-```
-
-### F452: Constraint Violation
-
-**Description**: Value violates type constraints.
-
-**Example**:
-```facet
-@var_types
-  age: {
-    type: "int"
-    min: 0
-    max: 120
-  }
-
-@vars
-  age: 150  // ❌ Exceeds max constraint
-```
-
-**Fix**: Use value within constraints:
-```facet
-@vars
-  age: 25  // ✅ Within range
-```
-
-### F453: Input Validation Failed
-
-**Description**: Missing or invalid @input directive configuration.
-
-**Example**:
-```facet
-@vars
-  query: @input {name: "query"}  // ❌ Missing type
-```
-
-**Fix**: Provide required type argument:
-```facet
-@vars
-  query: @input {type: "string", name: "query"}  // ✅
-```
+Common cases:
+- `@interface fn ...` missing `effect="..."`
+- Level-1/2 lens registry entry missing `effect_class`
 
 ---
 
 ## Graph Errors (F505)
 
-Graph errors occur when analyzing variable dependencies.
+### F505: Cyclic dependency detected
 
-### F505: Cyclic Dependency
+**Description:** R-DAG contains direct or indirect cycle.
 
-**Description**: Variables depend on each other in a cycle.
-
-**Examples**:
 ```facet
 @vars
-  a: $b  // ❌ Direct cycle
+  a: $b
   b: $a
 ```
 
-```facet
-@vars
-  a: $b  // ❌ Indirect cycle
-  b: $c
-  c: $a
-```
-
-**Fix**: Break the cycle by restructuring dependencies:
-```facet
-@vars
-  base: "common_value"
-  a: $base
-  b: $base
-```
+Forward references are allowed in FACET; cycles are not.
 
 ---
 
 ## Import Errors (F601-F602)
 
-Import errors occur when handling module imports.
+### F601: Import not found / disallowed import path
 
-### F601: Import Not Found
+Raised for:
+- File not found
+- Absolute import path
+- `..` traversal
+- URL import
+- Path outside allowlisted roots
 
-**Description**: The imported file cannot be found.
+### F602: Import cycle
 
-**Example**:
-```facet
-@import "nonexistent.facet"  // ❌ File doesn't exist
-```
-
-**Fix**: Check file path and ensure file exists:
-```facet
-@import "./utils.facet"  // ✅ Correct path
-```
-
-### F602: Circular Import
-
-**Description**: Files import each other in a cycle.
-
-**Example**:
-```facet
-# File A
-@import "file_b.facet"
-```
-
-```facet
-# File B
-@import "file_a.facet"  // ❌ Circular import
-```
-
-**Fix**: Use a third file for shared definitions or restructure imports.
+Raised when imports form a cycle.
 
 ---
 
-## Runtime Errors (F801-F902)
+## Runtime, Security, and Layout Errors (F801-F902)
 
-Runtime errors occur during execution.
+### F801: I/O prohibited / lens disallowed by profile or mode
 
-### F801: Lens Execution Failed
+Examples:
+- Hypervisor-only construct used in Core profile.
+- Level-2 lens in Pure mode.
+- Runtime I/O outside allowed interfaces/lenses.
 
-**Description**: A lens function failed during execution.
+### F802: Unknown lens
 
-**Example**:
-```facet
-@vars
-  text: "hello"
-  result: $text |> split()  // ❌ split() requires delimiter
-```
+Lens name not present in registry.
 
-**Fix**: Provide required arguments:
-```facet
-@vars
-  text: "a,b,c"
-  result: $text |> split(",")  // ✅
-```
+### F803: Pure cache miss
 
-### F802: Unknown Lens
+In Pure mode, Level-1 lens attempted without cache hit.
 
-**Description**: Reference to a lens that doesn't exist.
+### F901: Critical overflow (Token Box Model)
 
-**Example**:
-```facet
-@vars
-  text: "hello"
-  result: $text |> nonexistent_lens()  // ❌ Lens doesn't exist
-```
+Critical sections alone exceed budget.
 
-**Fix**: Use correct lens name or implement custom lens:
-```facet
-@vars
-  text: "hello"
-  result: $text |> trim()  // ✅
-```
+### F902: Compute gas exhausted
 
-### F901: Budget Exceeded
-
-**Description**: Token budget for critical sections exceeded.
-
-**Example**:
-```bash
-# Running with budget of 100 tokens
-$ fct run document.facet --budget 100  # ❌ Document needs more
-```
-
-**Fix**: Increase budget or optimize document:
-```bash
-$ fct run document.facet --budget 1000  # ✅
-```
-
-### F902: Gas Exhausted
-
-**Description**: Computation gas limit exceeded during variable evaluation.
-
-**Example**:
-```bash
-# Running with gas limit of 10
-$ fct run document.facet --gas-limit 10  # ❌ Complex pipeline needs more
-```
-
-**Fix**: Increase gas limit or optimize computation:
-```bash
-$ fct run document.facet --gas-limit 1000  # ✅
-```
+Total gas for lens/runtime compute exceeded configured limit.
 
 ---
 
-## Troubleshooting Guide
+## Quick Reference
 
-### Common Patterns
-
-1. **Indentation Errors**: Always use spaces, never tabs. Pick 2 or 4 spaces and be consistent.
-
-2. **Variable References**: 
-   - Check spelling
-   - Ensure variables are declared before use
-   - Use `$` prefix for variable references
-
-3. **Type Issues**:
-   - Match value types to declarations
-   - Check constraint ranges
-   - Use explicit types when inference fails
-
-4. **Dependencies**:
-   - Avoid circular references
-   - Structure variables as a DAG (Directed Acyclic Graph)
-   - Use base variables for shared values
-
-### Debugging Tips
-
-1. **Use verbose mode**:
-   ```bash
-   $ fct run document.facet --verbose
-   ```
-
-2. **Check syntax first**:
-   ```bash
-   $ fct parse document.facet
-   ```
-
-3. **Validate types**:
-   ```bash
-   $ fct validate document.facet
-   ```
-
-4. **Run with higher limits for testing**:
-   ```bash
-   $ fct run document.facet --budget 10000 --gas-limit 10000
-   ```
-
----
-
-## Error Code Quick Reference
-
-| Code | Category | Description |
-|------|----------|-------------|
-| F001 | Syntax | Invalid indentation |
-| F002 | Syntax | Tabs not allowed |
-| F003 | Syntax | Unclosed delimiter |
+| Code | Category | Meaning |
+|------|----------|---------|
+| F001 | Syntax | Invalid indentation (must be 2 spaces) |
+| F002 | Syntax | Tabs forbidden |
+| F003 | Syntax | Malformed syntax / invalid token |
+| F402 | Syntax | Attribute interpolation forbidden |
 | F401 | Semantic | Variable not found |
-| F402 | Semantic | Type inference failed |
-| F404 | Semantic | Forward reference |
-| F451 | Semantic | Type mismatch |
-| F452 | Semantic | Constraint violation |
-| F453 | Semantic | Input validation failed |
+| F405 | Semantic | Invalid variable path |
+| F451 | Type | Type mismatch |
+| F452 | Type/Semantic | Constraint violation / invalid construct |
+| F453 | Runtime Input | Input validation failed |
+| F454 | Policy | Deterministic policy deny |
+| F455 | Guard | Undecidable guard (fail-closed) |
+| F456 | Policy/Registry | Missing/invalid effect class |
 | F505 | Graph | Cyclic dependency |
-| F601 | Import | Import not found |
-| F602 | Import | Circular import |
-| F801 | Runtime | Lens execution failed |
+| F601 | Import | Import not found / disallowed path |
+| F602 | Import | Import cycle |
+| F801 | Runtime/Security | I/O prohibited or disallowed execution |
 | F802 | Runtime | Unknown lens |
-| F901 | Runtime | Budget exceeded |
+| F803 | Runtime/Pure | Cache-only miss |
+| F901 | Layout | Critical overflow |
 | F902 | Runtime | Gas exhausted |
 
 ## Next Steps
 
-🎯 **Error Resolution:**
-- **[06-cli.md](06-cli.html)** - CLI error handling
-- **[07-api-reference.md](07-api-reference.html)** - Programmatic error handling
-- **[09-testing.md](09-testing.html)** - Testing error conditions
-
-🔧 **System Components:**
-- **[13-import-system.md](13-import-system.html)** - Import-related errors (F601-F602)
-- **[08-lenses.md](08-lenses.html)** - Lens-related errors (F801-F802)
-- **[04-type-system.md](04-type-system.html)** - Type-related errors (F451-F453)
-
-📚 **Resources:**
-- **[faq.md](faq.html)** - Common error troubleshooting
-- **[test_example.facet](../examples/test_example.facet)** - Error testing examples
-
----
-
-For more information about specific errors, see the [FACET v2.1.3 Specification](https://github.com/rokoss21/facet-compiler/blob/master/FACET-v2.1.3-Production-Language-Specification.md).
-| F901 | Runtime | Budget exceeded |
-| F902 | Runtime | Gas exhausted |
-
-## Next Steps
-
-🎯 **Error Resolution:**
-- **[06-cli.md](06-cli.html)** - CLI error handling
-- **[07-api-reference.md](07-api-reference.html)** - Programmatic error handling
-- **[09-testing.md](09-testing.html)** - Testing error conditions
-
-🔧 **System Components:**
-- **[13-import-system.md](13-import-system.html)** - Import-related errors (F601-F602)
-- **[08-lenses.md](08-lenses.html)** - Lens-related errors (F801-F802)
-- **[04-type-system.md](04-type-system.html)** - Type-related errors (F451-F453)
-
-📚 **Resources:**
-- **[faq.md](faq.html)** - Common error troubleshooting
-- **[test_example.facet](../examples/test_example.facet)** - Error testing examples
-
----
-
-For more information about specific errors, see the [FACET v2.1.3 Specification](https://github.com/rokoss21/facet-compiler/blob/master/FACET-v2.1.3-Production-Language-Specification.md).
+- [06-cli.md](06-cli.html) - CLI error handling and exit behavior
+- [09-testing.md](09-testing.html) - Assertions for expected error paths
+- [11-security.md](11-security.html) - Guard and policy fail-closed model
+- [13-import-system.md](13-import-system.html) - Import sandbox and merge behavior
+- [FACET v2.1.3 specification](https://github.com/rokoss21/facet-compiler/blob/master/FACET-v2.1.3-Production-Language-Specification.md) - Normative source

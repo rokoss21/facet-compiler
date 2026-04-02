@@ -3,9 +3,9 @@ permalink: /faq.html
 ---
 
 # FACET v2.1.3 Frequently Asked Questions
-**Version:** 1.0
-**Last Updated:** 2025-12-09
-**Status:** Production Ready
+**Version:** 0.1.2
+**Last Updated:** 2026-04-02
+**Status:** Spec-aligned guidance
 
 ## Table of Contents
 
@@ -28,7 +28,7 @@ permalink: /faq.html
 
 **FACET** (Formal Agent Configuration & Execution Template) is a **Neural Architecture Description Language (NADL)** designed to define, validate, and execute AI agent behaviors in a deterministic, resource-bounded, and type-safe manner.
 
-Unlike traditional templating systems, FACET is a **compiled language** that produces mathematically stable behavior across all platforms.
+FACET is best understood as an execution control layer: it does not replace model inference, it constrains system behavior around model calls with deterministic compilation and explicit policy boundaries.
 
 ### How is FACET v2.1.3 different from v1.x?
 
@@ -38,7 +38,7 @@ Unlike traditional templating systems, FACET is a **compiled language** that pro
 | **Execution** | Runtime interpretation | Compile-time optimization |
 | **Type Safety** | None | Full static typing (FTS) |
 | **Performance** | Variable | Deterministic, optimized |
-| **Reproducibility** | Platform-dependent | Mathematically stable |
+| **Reproducibility** | Platform-dependent | Deterministic canonical assembly |
 | **Resource Control** | None | Token budgeting, gas limits |
 
 ### Why "Neural Architecture Description Language"?
@@ -60,8 +60,8 @@ Yes! FACET v2.1.3 is licensed under MIT OR Apache-2.0 and available on GitHub. T
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 # Clone and build
-git clone https://github.com/your-org/facet-fct.git
-cd facet-fct
+git clone https://github.com/rokoss21/facet-compiler
+cd facet-compiler
 cargo build --release
 
 # Add to PATH
@@ -142,12 +142,11 @@ Imports are resolved at compile time with cycle detection (F602).
   name: "Alice"
   age: 25
 
-  # Alternative syntax (same meaning)
-  name = "Alice"
-  age = 25
+  # Normative v2.1.3 style uses ':'
+  city: "Minsk"
 ```
 
-Both `:` and `=` are equivalent. Use whichever is more readable.
+In FACET v2.1.3 specification, map entries use `key: value`. Treat `:` as the canonical syntax.
 
 ### How do I write multi-line strings?
 
@@ -167,14 +166,10 @@ Multi-line strings preserve indentation and newlines.
 ```facet
 # This is a comment
 @system
-  role: "assistant"  # Inline comment
-
-  /* Multi-line
-     comment block */
-  model: "gpt-5.2"
+  content: "You are a helpful assistant."  # Inline comment
 ```
 
-FACET supports `#` for single-line and `/* */` for multi-line comments.
+FACET supports line comments with `#`.
 
 ---
 
@@ -217,12 +212,10 @@ Types are inferred from literals and propagated through pipelines.
 ### How do constraints work?
 
 ```facet
-@input
-  age: @input(type="int", min=0, max=150)
-  email: @input(type="string", pattern="^[\\w.-]+@[\\w.-]+\\.\\w+$")
-
 @vars
-  score: 85 |> clamp(min=0, max=100)  # Runtime constraint
+  age: @input(type="int", default=30)
+  email: @input(type="string")
+  score: 85
 ```
 
 Constraints are validated at compile time and runtime.
@@ -347,20 +340,20 @@ Yes! FACET uses:
 
 ### Is FACET secure?
 
-FACET implements **enterprise-grade security**:
+FACET provides deterministic control points for execution security:
 
 - **Zero-trust model** with defense-in-depth
-- **Deterministic execution** (no randomness)
+- **Deterministic compiler/runtime boundaries**
 - **Resource bounding** (token budgets, gas limits)
 - **Type safety** (prevents injection attacks)
-- **Hermetic execution** (no external access)
+- **Hermetic compile phases** and import sandboxing
 
 ### How does FACET prevent attacks?
 
 **Input Validation:**
 ```facet
-@input
-  query: @input(type="string", max_length=1000, pattern="^[a-zA-Z0-9\\s]+$")
+@vars
+  query: @input(type="string")
 ```
 
 **Resource Limits:**
@@ -394,10 +387,7 @@ Yes! FACET provides comprehensive audit trails:
 
 ### Is FACET compliant with regulations?
 
-FACET supports:
-- **GDPR**: Data minimization, audit trails
-- **SOC 2**: Security controls, continuous monitoring
-- **NIST**: Cybersecurity framework compliance
+FACET can provide technical evidence for audits (policy hash, execution artifacts, deterministic error surface), but compliance is determined at organization/system level, not by FACET alone.
 
 ---
 
@@ -431,9 +421,9 @@ let response = openai::chat::completions(&json).await?;
 
 Yes! FACET generates **canonical JSON** that works with:
 
-- **OpenAI**: GPT-3.5, GPT-4, GPT-4-turbo
-- **Anthropic**: Claude 1, 2, Instant
-- **Google**: PaLM, Gemini
+- **OpenAI**: GPT-5.2, GPT-5.2-chat-latest
+- **Anthropic**: Claude Sonnet 4.6
+- **Google**: Gemini family
 - **Meta**: Llama models
 - **Local models**: Via OpenAI-compatible APIs
 
@@ -564,8 +554,8 @@ fct run --input agent.facet --profile --profile-output profile.json
 
 **Code Contributions:**
 ```bash
-git clone https://github.com/your-org/facet-fct.git
-cd facet-fct
+git clone https://github.com/rokoss21/facet-compiler
+cd facet-compiler
 cargo test  # Ensure tests pass
 # Make your changes
 cargo test  # Run tests again
@@ -589,8 +579,8 @@ rustup install 1.70
 rustup default 1.70
 
 # Clone and setup
-git clone https://github.com/your-org/facet-fct.git
-cd facet-fct
+git clone https://github.com/rokoss21/facet-compiler
+cd facet-compiler
 
 # Run full test suite
 cargo test --all

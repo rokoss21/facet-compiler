@@ -1,0 +1,33 @@
+@meta
+  version: "2.1.3"
+  title: "Advanced Features"
+  "x.acme.build_id": "dev-001"
+
+@context
+  budget: 32000
+
+@var_types
+  retries: "int"
+  temperature: "float"
+  enabled: "bool"
+  note: "string | null"
+  tags: "list<string>"
+  cfg: "map<string, int>"
+  user: "struct { name: string, age: int }"
+  normalized_name: "string"
+
+@vars
+  retries: 3
+  temperature: 0.2
+  enabled: true
+  note: null
+  tags: ["facet", "rust", "spec-2.1.3"]
+  cfg: { primary: 1, secondary: 2 }
+  user: { name: "  Emil  ", age: 42 }
+  normalized_name: "  Emil  " |> trim() |> lowercase()
+
+@system
+  content: "You generate deterministic structured responses."
+
+@user
+  content: $normalized_name
