@@ -17,6 +17,7 @@ FACET keeps the original ideology: AI behavior must be engineered like software.
 
 - Language target: **FACET v2.1.3 REC-PROD**
 - Implementation: **Rust workspace** (`fct-*` crates)
+- Canonical spec: `FACET-v2.1.3-Production-Language-Specification.md`
 - Migration evidence/checklist: `docs/14-v2.1.3-migration-checklist.md`
 - Main local gate: `cargo test -q --workspace`
 
@@ -116,8 +117,8 @@ GitHub release workflow is tag-driven (`v*`).
 Example:
 
 ```bash
-git tag v0.1.1
-git push origin v0.1.1
+git tag v0.1.2
+git push origin v0.1.2
 ```
 
 ## License

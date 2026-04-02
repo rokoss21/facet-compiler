@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to **FACET v2.0 Compiler** will be documented in this file.
+All notable changes to **FACET Compiler (Rust)** will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/SemVer).
@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/SemVer
 
 ### Added
 - Initial release preparation
+
+## [0.1.2] - 2026-04-02
+
+### Added
+- Canonical FACET v2.1.3 specification published at `FACET-v2.1.3-Production-Language-Specification.md`.
+- Legacy docs path `docs/facet2-specification.md` updated to the same v2.1.3 content for compatibility.
+- CI spec scenario matrix job using `scripts/spec_matrix_examples.sh`.
+
+### Changed
+- Runtime/render role handling fixed for explicit custom message section IDs (preserves `system/user/assistant` role instead of falling back to `user`).
+- Spec example `07_policy_conditions` made deterministic for `tool_expose` behavior under policy.
+
+### Fixed
+- `scripts/spec_matrix_examples.sh` now strips host logs from stdout before `jq` assertions.
 
 ## [0.1.0] - 2025-12-09
 
@@ -364,5 +378,3 @@ For existing FACET v1.x users:
 **FACET v2.0 represents a fundamental advancement in AI agent behavior specification - from templates to compilation, from interpretation to optimization, from uncertainty to determinism.**
 
 *Released with absolute confidence in enterprise-grade quality and production readiness.*
-
-
