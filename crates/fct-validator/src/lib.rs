@@ -46,10 +46,10 @@
 //!
 //! ## Error Codes
 //!
-//! Validation errors use the F4xx and F6xx code ranges:
+//! Validation errors use FACET standard codes plus namespaced host diagnostics:
 //! - **F401**: Variable not found
-//! - **F402**: Type inference failed
-//! - **F404**: Forward reference detected
+//! - **X.validator.TYPE_INFERENCE**: Type inference failed
+//! - **X.validator.FORWARD_REFERENCE**: Forward reference detected
 //! - **F451**: Type mismatch
 //! - **F452**: Constraint violation
 //! - **F453**: Input validation failed
@@ -69,9 +69,11 @@ pub mod checker;
 
 // Re-export public API
 pub use errors::{ValidationError, ValidationResult};
-pub use types::{PrimitiveType, FacetType, MultimodalType, StructType, ListType, MapType, UnionType};
+pub use types::{
+    AudioType, EmbeddingType, FacetType, ImageType, MultimodalType, PrimitiveType, StructField,
+};
 pub use constraints::TypeConstraints;
-pub use checker::TypeChecker;
+pub use checker::{TypeChecker, ValidationProfile};
 
 // Variable type declarations
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -140,6 +142,14 @@ impl ValidatorConfig {
 /// ```
 pub fn validate_document(doc: &FacetDocument) -> ValidationResult<()> {
     let mut checker = TypeChecker::new();
+    checker.validate(doc)
+}
+
+pub fn validate_document_with_profile(
+    doc: &FacetDocument,
+    profile: ValidationProfile,
+) -> ValidationResult<()> {
+    let mut checker = TypeChecker::new().with_profile(profile);
     checker.validate(doc)
 }
 

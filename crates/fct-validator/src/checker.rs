@@ -6,7 +6,7 @@ use crate::constraints::TypeConstraints;
 use crate::errors::{ValidationError, ValidationResult};
 use crate::types::FacetType;
 use crate::VarTypeDecl;
-use fct_ast::types::{FacetType as AstFacetType, PrimitiveType as AstPrimitiveType};
+use fct_ast::types::FacetType as AstFacetType;
 use fct_ast::{
     BodyNode, FacetBlock, FacetDocument, FacetNode, KeyValueNode, LensSignatureProvider,
     LensSignatureRegistry, MapKeyKind, OrderedMap, ScalarValue, TypeNode, ValueNode,
@@ -405,12 +405,8 @@ impl<S: LensSignatureProvider> TypeChecker<S> {
                 ScalarValue::Bool(_) => Ok(FacetType::Primitive(crate::types::PrimitiveType::Bool)),
                 ScalarValue::Null => Ok(FacetType::Primitive(crate::types::PrimitiveType::Null)),
             },
-            ValueNode::List(_) => Ok(FacetType::List(crate::types::ListType {
-                element_type: Box::new(FacetType::Primitive(crate::types::PrimitiveType::Any)),
-            })),
-            ValueNode::Map(_) => Ok(FacetType::Map(crate::types::MapType {
-                value_type: Box::new(FacetType::Primitive(crate::types::PrimitiveType::Any)),
-            })),
+            ValueNode::List(_) => Ok(FacetType::List(Box::new(FacetType::Primitive(crate::types::PrimitiveType::Any)))),
+            ValueNode::Map(_) => Ok(FacetType::Map(Box::new(FacetType::Primitive(crate::types::PrimitiveType::Any)))),
             ValueNode::Variable(_) => Ok(FacetType::Primitive(crate::types::PrimitiveType::Any)),
             ValueNode::Pipeline(_) => Ok(FacetType::Primitive(crate::types::PrimitiveType::Any)),
             ValueNode::Directive(directive) => {
@@ -657,17 +653,13 @@ impl<S: LensSignatureProvider> TypeChecker<S> {
                 for item in items {
                     self.infer_pipeline_checked_type(item, location)?;
                 }
-                Ok(FacetType::List(crate::types::ListType {
-                    element_type: Box::new(FacetType::Primitive(crate::types::PrimitiveType::Any)),
-                }))
+                Ok(FacetType::List(Box::new(FacetType::Primitive(crate::types::PrimitiveType::Any))))
             }
             ValueNode::Map(map) => {
                 for nested in map.values() {
                     self.infer_pipeline_checked_type(nested, location)?;
                 }
-                Ok(FacetType::Map(crate::types::MapType {
-                    value_type: Box::new(FacetType::Primitive(crate::types::PrimitiveType::Any)),
-                }))
+                Ok(FacetType::Map(Box::new(FacetType::Primitive(crate::types::PrimitiveType::Any))))
             }
             ValueNode::Pipeline(pipeline) => {
                 let mut current = self.infer_pipeline_checked_type(&pipeline.initial, location)?;
@@ -716,70 +708,7 @@ impl<S: LensSignatureProvider> TypeChecker<S> {
     }
 
     fn ast_type_to_validator_type(ty: &AstFacetType) -> FacetType {
-        match ty {
-            AstFacetType::Any => FacetType::Primitive(crate::types::PrimitiveType::Any),
-            AstFacetType::Never => FacetType::Primitive(crate::types::PrimitiveType::Any),
-            AstFacetType::Primitive(primitive) => match primitive {
-                AstPrimitiveType::String => {
-                    FacetType::Primitive(crate::types::PrimitiveType::String)
-                }
-                AstPrimitiveType::Number => FacetType::Union(crate::types::UnionType {
-                    types: vec![
-                        FacetType::Primitive(crate::types::PrimitiveType::Int),
-                        FacetType::Primitive(crate::types::PrimitiveType::Float),
-                    ],
-                }),
-                AstPrimitiveType::Boolean => {
-                    FacetType::Primitive(crate::types::PrimitiveType::Bool)
-                }
-                AstPrimitiveType::Null => FacetType::Primitive(crate::types::PrimitiveType::Null),
-            },
-            AstFacetType::List(inner) => FacetType::List(crate::types::ListType {
-                element_type: Box::new(Self::ast_type_to_validator_type(inner)),
-            }),
-            AstFacetType::Map(inner) => FacetType::Map(crate::types::MapType {
-                value_type: Box::new(Self::ast_type_to_validator_type(inner)),
-            }),
-            AstFacetType::Struct(fields) => {
-                let mapped = fields
-                    .iter()
-                    .map(|field| {
-                        (
-                            field.name.clone(),
-                            Self::ast_type_to_validator_type(&field.field_type),
-                        )
-                    })
-                    .collect::<HashMap<_, _>>();
-                FacetType::Struct(crate::types::StructType { fields: mapped })
-            }
-            AstFacetType::Union(types) => FacetType::Union(crate::types::UnionType {
-                types: types
-                    .iter()
-                    .map(Self::ast_type_to_validator_type)
-                    .collect::<Vec<_>>(),
-            }),
-            AstFacetType::Function => FacetType::Primitive(crate::types::PrimitiveType::Any),
-            AstFacetType::Image { max_dim, format } => FacetType::Multimodal(
-                crate::types::MultimodalType::Image(crate::types::ImageType {
-                    max_dim: *max_dim,
-                    format: format.clone(),
-                }),
-            ),
-            AstFacetType::Audio {
-                max_duration,
-                format,
-            } => FacetType::Multimodal(crate::types::MultimodalType::Audio(
-                crate::types::AudioType {
-                    max_duration: *max_duration,
-                    format: format.clone(),
-                },
-            )),
-            AstFacetType::Embedding { size } => {
-                FacetType::Multimodal(crate::types::MultimodalType::Embedding(
-                    crate::types::EmbeddingType { size: *size },
-                ))
-            }
-        }
+        ty.clone()
     }
 
     /// Validate interface definitions
@@ -2101,8 +2030,8 @@ fn value_matches_expected_type<S: LensSignatureProvider>(
         return Ok(true);
     }
 
-    if let FacetType::Union(union) = expected_type {
-        for member in &union.types {
+    if let FacetType::Union(union_members) = expected_type {
+        for member in union_members {
             if value_matches_expected_type(value, member, checker)? {
                 return Ok(true);
             }
@@ -2134,7 +2063,7 @@ fn value_matches_expected_type<S: LensSignatureProvider>(
         ValueNode::List(items) => match expected_type {
             FacetType::List(list_ty) => {
                 for item in items {
-                    if !value_matches_expected_type(item, &list_ty.element_type, checker)? {
+                    if !value_matches_expected_type(item, list_ty.as_ref(), checker)? {
                         return Ok(false);
                     }
                 }
@@ -2156,11 +2085,12 @@ fn value_matches_expected_type<S: LensSignatureProvider>(
         },
         ValueNode::Map(map) => match expected_type {
             FacetType::Struct(struct_ty) => {
-                for (field_name, field_type) in &struct_ty.fields {
-                    let Some(field_value) = map.get(field_name) else {
-                        return Ok(false);
-                    };
-                    if !value_matches_expected_type(field_value, field_type, checker)? {
+                for field in struct_ty {
+                    if let Some(field_value) = map.get(&field.name) {
+                        if !value_matches_expected_type(field_value, &field.field_type, checker)? {
+                            return Ok(false);
+                        }
+                    } else if field.required {
                         return Ok(false);
                     }
                 }
@@ -2168,7 +2098,7 @@ fn value_matches_expected_type<S: LensSignatureProvider>(
             }
             FacetType::Map(map_ty) => {
                 for map_value in map.values() {
-                    if !value_matches_expected_type(map_value, &map_ty.value_type, checker)? {
+                    if !value_matches_expected_type(map_value, map_ty.as_ref(), checker)? {
                         return Ok(false);
                     }
                 }
@@ -2267,18 +2197,18 @@ fn resolve_variable_type<S: LensSignatureProvider>(
 
     for segment in segments {
         current = match current {
-            FacetType::Struct(struct_ty) => struct_ty.fields.get(segment).cloned()?,
-            FacetType::Map(map_ty) => (*map_ty.value_type).clone(),
+            FacetType::Struct(struct_ty) => struct_field_type(&struct_ty, segment)?,
+            FacetType::Map(map_ty) => (*map_ty).clone(),
             FacetType::Union(union_ty) => {
                 let mut next_variants = Vec::new();
-                for variant in union_ty.types {
+                for variant in union_ty {
                     match variant {
                         FacetType::Struct(struct_ty) => {
-                            if let Some(next_ty) = struct_ty.fields.get(segment) {
-                                next_variants.push(next_ty.clone());
+                            if let Some(next_ty) = struct_field_type(&struct_ty, segment) {
+                                next_variants.push(next_ty);
                             }
                         }
-                        FacetType::Map(map_ty) => next_variants.push((*map_ty.value_type).clone()),
+                        FacetType::Map(map_ty) => next_variants.push((*map_ty).clone()),
                         FacetType::Primitive(crate::types::PrimitiveType::Any) => {
                             return Some(FacetType::Primitive(crate::types::PrimitiveType::Any));
                         }
@@ -2291,9 +2221,7 @@ fn resolve_variable_type<S: LensSignatureProvider>(
                 if next_variants.len() == 1 {
                     next_variants.remove(0)
                 } else {
-                    FacetType::Union(crate::types::UnionType {
-                        types: next_variants,
-                    })
+                    FacetType::Union(next_variants)
                 }
             }
             FacetType::Primitive(crate::types::PrimitiveType::Any) => {
@@ -2304,6 +2232,13 @@ fn resolve_variable_type<S: LensSignatureProvider>(
     }
 
     Some(current)
+}
+
+fn struct_field_type(struct_fields: &[crate::types::StructField], name: &str) -> Option<FacetType> {
+    struct_fields
+        .iter()
+        .find(|field| field.name == name)
+        .map(|field| field.field_type.clone())
 }
 
 fn parse_type_expr(type_str: &str) -> ValidationResult<FacetType> {
@@ -2347,7 +2282,7 @@ impl<'a> TypeExprParser<'a> {
         if members.len() == 1 {
             Ok(members.remove(0))
         } else {
-            Ok(FacetType::Union(crate::types::UnionType { types: members }))
+            Ok(FacetType::Union(members))
         }
     }
 
@@ -2391,9 +2326,7 @@ impl<'a> TypeExprParser<'a> {
         let item_type = self.parse_type_expr()?;
         self.skip_ws();
         self.expect_char('>')?;
-        Ok(FacetType::List(crate::types::ListType {
-            element_type: Box::new(item_type),
-        }))
+        Ok(FacetType::List(Box::new(item_type)))
     }
 
     fn parse_map_type(&mut self) -> ValidationResult<FacetType> {
@@ -2413,16 +2346,14 @@ impl<'a> TypeExprParser<'a> {
         self.skip_ws();
         self.expect_char('>')?;
 
-        Ok(FacetType::Map(crate::types::MapType {
-            value_type: Box::new(value_type),
-        }))
+        Ok(FacetType::Map(Box::new(value_type)))
     }
 
     fn parse_struct_type(&mut self) -> ValidationResult<FacetType> {
         self.expect_keyword("struct")?;
         self.skip_ws();
         self.expect_char('{')?;
-        let mut fields = HashMap::new();
+        let mut fields: Vec<crate::types::StructField> = Vec::new();
 
         loop {
             self.skip_ws();
@@ -2434,7 +2365,16 @@ impl<'a> TypeExprParser<'a> {
             self.skip_ws();
             self.expect_char(':')?;
             let field_type = self.parse_type_expr()?;
-            fields.insert(field_name, field_type);
+            let next_field = crate::types::StructField {
+                name: field_name,
+                field_type,
+                required: true,
+            };
+            if let Some(existing) = fields.iter_mut().find(|field| field.name == next_field.name) {
+                *existing = next_field;
+            } else {
+                fields.push(next_field);
+            }
 
             self.skip_ws();
             if self.consume_char(',') {
@@ -2446,7 +2386,7 @@ impl<'a> TypeExprParser<'a> {
             return Err(self.err("Expected ',' or '}' in struct type"));
         }
 
-        Ok(FacetType::Struct(crate::types::StructType { fields }))
+        Ok(FacetType::Struct(fields))
     }
 
     fn parse_embedding_type(&mut self) -> ValidationResult<FacetType> {

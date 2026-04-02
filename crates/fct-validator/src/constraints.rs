@@ -5,6 +5,7 @@
 
 use crate::errors::ValidationError;
 use crate::types::PrimitiveType;
+use fct_ast::{ScalarValue, ValueNode};
 use regex::Regex;
 
 /// Type constraints for FACET types.
@@ -23,7 +24,7 @@ pub struct TypeConstraints {
     pub pattern: Option<String>,
 
     /// List of allowed values for enum-like validation
-    pub enum_values: Option<Vec<String>>,
+    pub enum_values: Option<Vec<ValueNode>>,
 }
 
 impl TypeConstraints {
@@ -39,6 +40,8 @@ impl TypeConstraints {
 
     /// Validate an integer value against constraints
     pub fn validate_int(&self, value: i64) -> Result<(), ValidationError> {
+        self.validate_enum_value(&ValueNode::Scalar(ScalarValue::Int(value)))?;
+
         if let Some(min) = self.min {
             if (value as f64) < min {
                 return Err(ValidationError::ConstraintViolation {
@@ -62,6 +65,8 @@ impl TypeConstraints {
 
     /// Validate a float value against constraints
     pub fn validate_float(&self, value: f64) -> Result<(), ValidationError> {
+        self.validate_enum_value(&ValueNode::Scalar(ScalarValue::Float(value)))?;
+
         if let Some(min) = self.min {
             if value < min {
                 return Err(ValidationError::ConstraintViolation {
@@ -85,15 +90,7 @@ impl TypeConstraints {
 
     /// Validate a string value against constraints
     pub fn validate_string(&self, value: &str) -> Result<(), ValidationError> {
-        // Check enum values first
-        if let Some(ref enum_vals) = self.enum_values {
-            if !enum_vals.contains(&value.to_string()) {
-                return Err(ValidationError::ConstraintViolation {
-                    constraint: format!("one of {:?}", enum_vals),
-                    value: value.to_string(),
-                });
-            }
-        }
+        self.validate_enum_value(&ValueNode::String(value.to_string()))?;
 
         // Check pattern
         if let Some(ref pattern_str) = self.pattern {
@@ -119,16 +116,41 @@ impl TypeConstraints {
         Ok(())
     }
 
+    /// Validate a bool value against enum constraints.
+    pub fn validate_bool(&self, value: bool) -> Result<(), ValidationError> {
+        self.validate_enum_value(&ValueNode::Scalar(ScalarValue::Bool(value)))
+    }
+
+    /// Validate null against enum constraints.
+    pub fn validate_null(&self) -> Result<(), ValidationError> {
+        self.validate_enum_value(&ValueNode::Scalar(ScalarValue::Null))
+    }
+
+    fn validate_enum_value(&self, value: &ValueNode) -> Result<(), ValidationError> {
+        if let Some(ref enum_vals) = self.enum_values {
+            if !enum_vals.iter().any(|v| v == value) {
+                return Err(ValidationError::ConstraintViolation {
+                    constraint: format!("one of {:?}", enum_vals),
+                    value: format!("{:?}", value),
+                });
+            }
+        }
+        Ok(())
+    }
+
     /// Check if constraints are applicable to a specific primitive type
     pub fn is_applicable_to(&self, primitive_type: &PrimitiveType) -> bool {
         match primitive_type {
-            PrimitiveType::Int | PrimitiveType::Float => {
-                self.min.is_some() || self.max.is_some()
+            PrimitiveType::Int | PrimitiveType::Float | PrimitiveType::Number => {
+                self.min.is_some() || self.max.is_some() || self.enum_values.is_some()
             }
             PrimitiveType::String => {
                 self.pattern.is_some() || self.enum_values.is_some()
             }
-            _ => false,
+            PrimitiveType::Bool | PrimitiveType::Boolean | PrimitiveType::Null => {
+                self.enum_values.is_some()
+            }
+            PrimitiveType::Any => false,
         }
     }
 }
