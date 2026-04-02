@@ -1,15 +1,19 @@
 [package]
 name = "facet-compiler"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 authors = ["Emil Rokossovskiy <ecsiar@gmail.com>"]
-description = "FACET v2.0 Compiler - First deterministic compiler for AI agent behavior architecture"
+description = "FACET v2.1.3 Rust compiler for deterministic AI architecture"
 repository = "https://github.com/rokoss21/facet-compiler"
 homepage = "https://rokoss21.tech/"
 documentation = "https://docs.rs/facet-compiler"
 keywords = ["ai", "agent", "compiler", "neural-architecture", "facet"]
 categories = ["compilers", "development-tools"]
+
+[[bin]]
+name = "facet-fct"
+path = "src/main.rs"
 
 [workspace]
 resolver = "2"
