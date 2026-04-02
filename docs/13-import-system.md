@@ -2,7 +2,7 @@
 ---
 # 13. FACET Import System Guide
 
-**Reading Time:** 20-25 minutes | **Difficulty:** Intermediate | **Previous:** [12-errors.md](12-errors.md) | **Next:** [faq.md](../faq.md)
+**Reading Time:** 20-25 minutes | **Difficulty:** Intermediate | **Previous:** [12-errors.md](12-errors.html) | **Next:** [faq.md](faq.html)
 
 **Version:** 0.1.0
 **Status:** Production Ready
@@ -695,27 +695,27 @@ Error: F602: Circular import detected
 ## Next Steps
 
 🎯 **Import Mastery:**
-- **[05-examples-guide.md](05-examples-guide.md)** - Import usage in examples
-- **[06-cli.md](06-cli.md)** - CLI import handling
-- **[faq.md](../faq.md)** - Import FAQs and troubleshooting
+- **[05-examples-guide.md](05-examples-guide.html)** - Import usage in examples
+- **[06-cli.md](06-cli.html)** - CLI import handling
+- **[faq.md](faq.html)** - Import FAQs and troubleshooting
 
 🔧 **Advanced Topics:**
-- **[03-architecture.md](03-architecture.md)** - Import system architecture
-- **[07-api-reference.md](07-api-reference.md)** - Import API
-- **[11-security.md](11-security.md)** - Import security
+- **[03-architecture.md](03-architecture.html)** - Import system architecture
+- **[07-api-reference.md](07-api-reference.html)** - Import API
+- **[11-security.md](11-security.html)** - Import security
 
 📚 **Resources:**
-- **[02-tutorial.md](02-tutorial.md)** - Import tutorial
-- **[12-errors.md](12-errors.md)** - Import errors (F601-F602)
+- **[02-tutorial.md](02-tutorial.html)** - Import tutorial
+- **[12-errors.md](12-errors.html)** - Import errors (F601-F602)
 
 ---
 
 **References:**
-- **[FACET v2.1.3 specification](../FACET-v2.1.3-Production-Language-Specification.md)** - Complete import specification
-- **[12-errors.md](12-errors.md)** - Import error codes
-- **[02-tutorial.md](02-tutorial.md)** - Import tutorial
-- **[03-architecture.md](03-architecture.md)** - Import architecture
-- **[04-type-system.md](04-type-system.md)** - Cross-file type checking
+- **[FACET v2.1.3 specification](https://github.com/rokoss21/facet-compiler/blob/master/FACET-v2.1.3-Production-Language-Specification.md)** - Complete import specification
+- **[12-errors.md](12-errors.html)** - Import error codes
+- **[02-tutorial.md](02-tutorial.html)** - Import tutorial
+- **[03-architecture.md](03-architecture.html)** - Import architecture
+- **[04-type-system.md](04-type-system.html)** - Cross-file type checking
 
 ---
 
@@ -723,20 +723,20 @@ Error: F602: Circular import detected
 **License:** MIT / Apache-2.0
 **Last Updated:** 2025-12-09
 
-- **[11-security.md](11-security.md)** - Import security
+- **[11-security.md](11-security.html)** - Import security
 
 📚 **Resources:**
-- **[02-tutorial.md](02-tutorial.md)** - Import tutorial
-- **[12-errors.md](12-errors.md)** - Import errors (F601-F602)
+- **[02-tutorial.md](02-tutorial.html)** - Import tutorial
+- **[12-errors.md](12-errors.html)** - Import errors (F601-F602)
 
 ---
 
 **References:**
-- **[FACET v2.1.3 specification](../FACET-v2.1.3-Production-Language-Specification.md)** - Complete import specification
-- **[12-errors.md](12-errors.md)** - Import error codes
-- **[02-tutorial.md](02-tutorial.md)** - Import tutorial
-- **[03-architecture.md](03-architecture.md)** - Import architecture
-- **[04-type-system.md](04-type-system.md)** - Cross-file type checking
+- **[FACET v2.1.3 specification](https://github.com/rokoss21/facet-compiler/blob/master/FACET-v2.1.3-Production-Language-Specification.md)** - Complete import specification
+- **[12-errors.md](12-errors.html)** - Import error codes
+- **[02-tutorial.md](02-tutorial.html)** - Import tutorial
+- **[03-architecture.md](03-architecture.html)** - Import architecture
+- **[04-type-system.md](04-type-system.html)** - Cross-file type checking
 
 ---
 

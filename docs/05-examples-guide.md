@@ -2,7 +2,7 @@
 ---
 # 05. FACET Examples Guide
 
-**Reading Time:** 45-60 minutes | **Difficulty:** Beginner → Advanced | **Previous:** [04-type-system.md](04-type-system.md) | **Next:** [06-cli.md](06-cli.md)
+**Reading Time:** 45-60 minutes | **Difficulty:** Beginner → Advanced | **Previous:** [04-type-system.md](04-type-system.html) | **Next:** [06-cli.md](06-cli.html)
 
 **Version:** 1.0
 **Last Updated:** 2025-12-09
@@ -943,19 +943,19 @@ Solution: Simplify pipelines or increase gas_limit
 ## Next Steps
 
 🎯 **Apply What You've Learned:**
-- **[06-cli.md](06-cli.md)** - Full command-line interface reference
-- **[07-api-reference.md](07-api-reference.md)** - Rust API for programmatic usage
-- **[08-lenses.md](08-lenses.md)** - Complete lens library reference
+- **[06-cli.md](06-cli.html)** - Full command-line interface reference
+- **[07-api-reference.md](07-api-reference.html)** - Rust API for programmatic usage
+- **[08-lenses.md](08-lenses.html)** - Complete lens library reference
 
 🔧 **Advanced Usage:**
-- **[09-testing.md](09-testing.md)** - Write robust @test blocks
-- **[10-performance.md](10-performance.md)** - Optimize for production
-- **[11-security.md](11-security.md)** - Secure deployment practices
+- **[09-testing.md](09-testing.html)** - Write robust @test blocks
+- **[10-performance.md](10-performance.html)** - Optimize for production
+- **[11-security.md](11-security.html)** - Secure deployment practices
 
 📚 **Resources:**
-- **[examples/README.md](../examples/README.md)** - Quick examples reference
-- **[faq.md](../faq.md)** - Common questions and answers
-- **[12-errors.md](12-errors.md)** - Troubleshooting guide
+- **[examples/README.md](https://github.com/rokoss21/facet-compiler/blob/master/examples/README.md)** - Quick examples reference
+- **[faq.md](faq.html)** - Common questions and answers
+- **[12-errors.md](12-errors.html)** - Troubleshooting guide
 
 ---
 
@@ -964,19 +964,19 @@ This guide covers all FACET examples with detailed explanations and runnable cod
 **Ready to create your own FACET files? Start with the examples and experiment!** 🚀
 
 🎯 **Apply What You've Learned:**
-- **[06-cli.md](06-cli.md)** - Full command-line interface reference
-- **[07-api-reference.md](07-api-reference.md)** - Rust API for programmatic usage
-- **[08-lenses.md](08-lenses.md)** - Complete lens library reference
+- **[06-cli.md](06-cli.html)** - Full command-line interface reference
+- **[07-api-reference.md](07-api-reference.html)** - Rust API for programmatic usage
+- **[08-lenses.md](08-lenses.html)** - Complete lens library reference
 
 🔧 **Advanced Usage:**
-- **[09-testing.md](09-testing.md)** - Write robust @test blocks
-- **[10-performance.md](10-performance.md)** - Optimize for production
-- **[11-security.md](11-security.md)** - Secure deployment practices
+- **[09-testing.md](09-testing.html)** - Write robust @test blocks
+- **[10-performance.md](10-performance.html)** - Optimize for production
+- **[11-security.md](11-security.html)** - Secure deployment practices
 
 📚 **Resources:**
-- **[examples/README.md](../examples/README.md)** - Quick examples reference
-- **[faq.md](../faq.md)** - Common questions and answers
-- **[12-errors.md](12-errors.md)** - Troubleshooting guide
+- **[examples/README.md](https://github.com/rokoss21/facet-compiler/blob/master/examples/README.md)** - Quick examples reference
+- **[faq.md](faq.html)** - Common questions and answers
+- **[12-errors.md](12-errors.html)** - Troubleshooting guide
 
 ---
 

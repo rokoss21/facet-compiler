@@ -2,7 +2,7 @@
 ---
 # 08. FACET Standard Lens Library Reference
 
-**Reading Time:** 20-25 minutes | **Difficulty:** Intermediate | **Previous:** [07-api-reference.md](07-api-reference.md) | **Next:** [09-testing.md](09-testing.md)
+**Reading Time:** 20-25 minutes | **Difficulty:** Intermediate | **Previous:** [07-api-reference.md](07-api-reference.html) | **Next:** [09-testing.md](09-testing.html)
 
 Complete reference for all built-in lens functions in FACET v2.1.3.
 
@@ -1420,19 +1420,19 @@ Planned additions to the lens library:
 ## Next Steps
 
 🎯 **Apply Lens Knowledge:**
-- **[05-examples-guide.md](05-examples-guide.md)** - Lens usage in examples
-- **[09-testing.md](09-testing.md)** - Testing lens pipelines
-- **[10-performance.md](10-performance.md)** - Lens performance optimization
+- **[05-examples-guide.md](05-examples-guide.html)** - Lens usage in examples
+- **[09-testing.md](09-testing.html)** - Testing lens pipelines
+- **[10-performance.md](10-performance.html)** - Lens performance optimization
 
 🔧 **Advanced Usage:**
-- **[07-api-reference.md](07-api-reference.md)** - Custom lens implementation
-- **[04-type-system.md](04-type-system.md)** - Type system interactions
-- **[12-errors.md](12-errors.md)** - Lens-related errors (F801-F802)
+- **[07-api-reference.md](07-api-reference.html)** - Custom lens implementation
+- **[04-type-system.md](04-type-system.html)** - Type system interactions
+- **[12-errors.md](12-errors.html)** - Lens-related errors (F801-F802)
 
 📚 **References:**
-- **[06-cli.md](06-cli.md)** - CLI lens usage
-- **[02-tutorial.md](02-tutorial.md)** - Lens tutorial
-- **[examples/README.md](../examples/README.md)** - Practical examples
+- **[06-cli.md](06-cli.html)** - CLI lens usage
+- **[02-tutorial.md](02-tutorial.html)** - Lens tutorial
+- **[examples/README.md](https://github.com/rokoss21/facet-compiler/blob/master/examples/README.md)** - Practical examples
 
 ---
 
@@ -1449,10 +1449,10 @@ Planned additions to the lens library:
 
 ## See Also
 
-- **[06-cli.md](06-cli.md)** - CLI reference
-- **[01-quickstart.md](01-quickstart.md)** - Getting started tutorial
+- **[06-cli.md](06-cli.html)** - CLI reference
+- **[01-quickstart.md](01-quickstart.html)** - Getting started tutorial
 - **[examples/](../examples/)** - Example FACET files
-- **[FACET v2.1.3 specification](../FACET-v2.1.3-Production-Language-Specification.md)** - Full language specification
+- **[FACET v2.1.3 specification](https://github.com/rokoss21/facet-compiler/blob/master/FACET-v2.1.3-Production-Language-Specification.md)** - Full language specification
 
 
 ## Future Enhancements
@@ -1494,19 +1494,19 @@ Planned additions to the lens library:
 ## Next Steps
 
 🎯 **Apply Lens Knowledge:**
-- **[05-examples-guide.md](05-examples-guide.md)** - Lens usage in examples
-- **[09-testing.md](09-testing.md)** - Testing lens pipelines
-- **[10-performance.md](10-performance.md)** - Lens performance optimization
+- **[05-examples-guide.md](05-examples-guide.html)** - Lens usage in examples
+- **[09-testing.md](09-testing.html)** - Testing lens pipelines
+- **[10-performance.md](10-performance.html)** - Lens performance optimization
 
 🔧 **Advanced Usage:**
-- **[07-api-reference.md](07-api-reference.md)** - Custom lens implementation
-- **[04-type-system.md](04-type-system.md)** - Type system interactions
-- **[12-errors.md](12-errors.md)** - Lens-related errors (F801-F802)
+- **[07-api-reference.md](07-api-reference.html)** - Custom lens implementation
+- **[04-type-system.md](04-type-system.html)** - Type system interactions
+- **[12-errors.md](12-errors.html)** - Lens-related errors (F801-F802)
 
 📚 **References:**
-- **[06-cli.md](06-cli.md)** - CLI lens usage
-- **[02-tutorial.md](02-tutorial.md)** - Lens tutorial
-- **[examples/README.md](../examples/README.md)** - Practical examples
+- **[06-cli.md](06-cli.html)** - CLI lens usage
+- **[02-tutorial.md](02-tutorial.html)** - Lens tutorial
+- **[examples/README.md](https://github.com/rokoss21/facet-compiler/blob/master/examples/README.md)** - Practical examples
 
 ---
 
@@ -1523,7 +1523,7 @@ Planned additions to the lens library:
 
 ## See Also
 
-- **[06-cli.md](06-cli.md)** - CLI reference
-- **[01-quickstart.md](01-quickstart.md)** - Getting started tutorial
+- **[06-cli.md](06-cli.html)** - CLI reference
+- **[01-quickstart.md](01-quickstart.html)** - Getting started tutorial
 - **[examples/](../examples/)** - Example FACET files
-- **[FACET v2.1.3 specification](../FACET-v2.1.3-Production-Language-Specification.md)** - Full language specification
+- **[FACET v2.1.3 specification](https://github.com/rokoss21/facet-compiler/blob/master/FACET-v2.1.3-Production-Language-Specification.md)** - Full language specification

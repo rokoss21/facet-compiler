@@ -2,7 +2,7 @@
 ---
 # 04. FACET Type System (FTS) Reference
 
-**Reading Time:** 25-35 minutes | **Difficulty:** Intermediate | **Previous:** [03-architecture.md](03-architecture.md) | **Next:** [05-examples-guide.md](05-examples-guide.md)
+**Reading Time:** 25-35 minutes | **Difficulty:** Intermediate | **Previous:** [03-architecture.md](03-architecture.html) | **Next:** [05-examples-guide.md](05-examples-guide.html)
 
 **Version:** 0.1.0
 **Status:** Production Ready
@@ -829,26 +829,26 @@ type B = {name: string, age: int, email: string}
 
 ## References
 
-- [FACET v2.1.3 Specification](../FACET-v2.1.3-Production-Language-Specification.md)
-- [Error Reference](errors.md)
-- [02-tutorial.md](02-tutorial.md) - Complete learning tutorial
-- [03-architecture.md](03-architecture.md) - System architecture overview
+- [FACET v2.1.3 Specification](https://github.com/rokoss21/facet-compiler/blob/master/FACET-v2.1.3-Production-Language-Specification.md)
+- [Error Reference](12-errors.html)
+- [02-tutorial.md](02-tutorial.html) - Complete learning tutorial
+- [03-architecture.md](03-architecture.html) - System architecture overview
 
 ## Next Steps
 
 🎯 **Apply Your Knowledge:**
-- **[05-examples-guide.md](05-examples-guide.md)** - Type system in practice
-- **[08-lenses.md](08-lenses.md)** - Lens transformations with types
-- **[09-testing.md](09-testing.md)** - Type-safe testing
+- **[05-examples-guide.md](05-examples-guide.html)** - Type system in practice
+- **[08-lenses.md](08-lenses.html)** - Lens transformations with types
+- **[09-testing.md](09-testing.html)** - Type-safe testing
 
 🔧 **Advanced Topics:**
-- **[10-performance.md](10-performance.md)** - Type system performance characteristics
-- **[12-errors.md](12-errors.md)** - Type-related error codes (F451-F453)
-- **[07-api-reference.md](07-api-reference.md)** - Type system Rust API
+- **[10-performance.md](10-performance.html)** - Type system performance characteristics
+- **[12-errors.md](12-errors.html)** - Type-related error codes (F451-F453)
+- **[07-api-reference.md](07-api-reference.html)** - Type system Rust API
 
 📚 **References:**
-- **[FACET v2.1.3 specification](../FACET-v2.1.3-Production-Language-Specification.md)** - Complete FTS specification
-- **[faq.md](../faq.md)** - Type system FAQs
+- **[FACET v2.1.3 specification](https://github.com/rokoss21/facet-compiler/blob/master/FACET-v2.1.3-Production-Language-Specification.md)** - Complete FTS specification
+- **[faq.md](faq.html)** - Type system FAQs
 
 ---
 
@@ -856,17 +856,17 @@ type B = {name: string, age: int, email: string}
 **License:** MIT / Apache-2.0
 **Last Updated:** 2025-12-09
 
-- **[08-lenses.md](08-lenses.md)** - Lens transformations with types
-- **[09-testing.md](09-testing.md)** - Type-safe testing
+- **[08-lenses.md](08-lenses.html)** - Lens transformations with types
+- **[09-testing.md](09-testing.html)** - Type-safe testing
 
 🔧 **Advanced Topics:**
-- **[10-performance.md](10-performance.md)** - Type system performance characteristics
-- **[12-errors.md](12-errors.md)** - Type-related error codes (F451-F453)
-- **[07-api-reference.md](07-api-reference.md)** - Type system Rust API
+- **[10-performance.md](10-performance.html)** - Type system performance characteristics
+- **[12-errors.md](12-errors.html)** - Type-related error codes (F451-F453)
+- **[07-api-reference.md](07-api-reference.html)** - Type system Rust API
 
 📚 **References:**
-- **[FACET v2.1.3 specification](../FACET-v2.1.3-Production-Language-Specification.md)** - Complete FTS specification
-- **[faq.md](../faq.md)** - Type system FAQs
+- **[FACET v2.1.3 specification](https://github.com/rokoss21/facet-compiler/blob/master/FACET-v2.1.3-Production-Language-Specification.md)** - Complete FTS specification
+- **[faq.md](faq.html)** - Type system FAQs
 
 ---
 

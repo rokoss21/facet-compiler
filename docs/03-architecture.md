@@ -2,7 +2,7 @@
 ---
 # 03. FACET v2.1.3 Architecture Guide
 
-**Reading Time:** 20-30 minutes | **Difficulty:** Intermediate | **Previous:** [02-tutorial.md](02-tutorial.md) | **Next:** [04-type-system.md](04-type-system.md)
+**Reading Time:** 20-30 minutes | **Difficulty:** Intermediate | **Previous:** [02-tutorial.md](02-tutorial.html) | **Next:** [04-type-system.md](04-type-system.html)
 
 **Last Updated:** 2025-12-09
 **Version:** 0.1.0
@@ -766,28 +766,28 @@ Compile to WebAssembly for browser/Node.js
 
 ## References
 
-- [FACET v2.1.3 Specification](../FACET-v2.1.3-Production-Language-Specification.md)
-- [Error Reference](errors.md)
-- [Lens Reference](lenses.md)
-- [Testing Guide](testing.md)
-- [CLI Reference](cli.md)
+- [FACET v2.1.3 Specification](https://github.com/rokoss21/facet-compiler/blob/master/FACET-v2.1.3-Production-Language-Specification.md)
+- [Error Reference](12-errors.html)
+- [Lens Reference](08-lenses.html)
+- [Testing Guide](09-testing.html)
+- [CLI Reference](06-cli.html)
 
 ## Next Steps
 
 🎯 **Continue Learning:**
-- **[04-type-system.md](04-type-system.md)** - Facet Type System (FTS) deep dive
-- **[05-examples-guide.md](05-examples-guide.md)** - Practical examples explained
-- **[07-api-reference.md](07-api-reference.md)** - Rust API documentation
+- **[04-type-system.md](04-type-system.html)** - Facet Type System (FTS) deep dive
+- **[05-examples-guide.md](05-examples-guide.html)** - Practical examples explained
+- **[07-api-reference.md](07-api-reference.html)** - Rust API documentation
 
 🔧 **Implementation Details:**
-- **[08-lenses.md](08-lenses.md)** - Lens library and transformations
-- **[09-testing.md](09-testing.md)** - @test blocks and validation
-- **[10-performance.md](10-performance.md)** - Optimization and scaling
+- **[08-lenses.md](08-lenses.html)** - Lens library and transformations
+- **[09-testing.md](09-testing.html)** - @test blocks and validation
+- **[10-performance.md](10-performance.html)** - Optimization and scaling
 
 📚 **References:**
-- **[FACET v2.1.3 specification](../FACET-v2.1.3-Production-Language-Specification.md)** - Complete technical specification
+- **[FACET v2.1.3 specification](https://github.com/rokoss21/facet-compiler/blob/master/FACET-v2.1.3-Production-Language-Specification.md)** - Complete technical specification
 - **[PRD](../facetparcer.prd)** - Product requirements document
-- **[README.md](../README.md)** - Project overview
+- **[README.md](https://github.com/rokoss21/facet-compiler/blob/master/README.md)** - Project overview
 
 ---
 
@@ -795,18 +795,18 @@ Compile to WebAssembly for browser/Node.js
 **License:** MIT / Apache-2.0
 **Last Updated:** 2025-12-09
 
-- **[05-examples-guide.md](05-examples-guide.md)** - Practical examples explained
-- **[07-api-reference.md](07-api-reference.md)** - Rust API documentation
+- **[05-examples-guide.md](05-examples-guide.html)** - Practical examples explained
+- **[07-api-reference.md](07-api-reference.html)** - Rust API documentation
 
 🔧 **Implementation Details:**
-- **[08-lenses.md](08-lenses.md)** - Lens library and transformations
-- **[09-testing.md](09-testing.md)** - @test blocks and validation
-- **[10-performance.md](10-performance.md)** - Optimization and scaling
+- **[08-lenses.md](08-lenses.html)** - Lens library and transformations
+- **[09-testing.md](09-testing.html)** - @test blocks and validation
+- **[10-performance.md](10-performance.html)** - Optimization and scaling
 
 📚 **References:**
-- **[FACET v2.1.3 specification](../FACET-v2.1.3-Production-Language-Specification.md)** - Complete technical specification
+- **[FACET v2.1.3 specification](https://github.com/rokoss21/facet-compiler/blob/master/FACET-v2.1.3-Production-Language-Specification.md)** - Complete technical specification
 - **[PRD](../facetparcer.prd)** - Product requirements document
-- **[README.md](../README.md)** - Project overview
+- **[README.md](https://github.com/rokoss21/facet-compiler/blob/master/README.md)** - Project overview
 
 ---
 

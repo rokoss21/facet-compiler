@@ -2,7 +2,7 @@
 ---
 # 01. FACET v2.1.3 Quick Start Guide
 
-**Reading Time:** 5 minutes | **Difficulty:** Beginner | **Next:** [02-tutorial.md](02-tutorial.md)
+**Reading Time:** 5 minutes | **Difficulty:** Beginner | **Next:** [02-tutorial.md](02-tutorial.html)
 
 Get up and running with FACET in 5 minutes.
 
@@ -135,7 +135,7 @@ Variables are declared in `@vars` and can use transformation pipelines:
 
 **Pipeline operator:** `|>` chains transformations left-to-right
 
-**Available lenses:** See [lenses.md](./lenses.md) for all 14 built-in functions
+**Available lenses:** See [lenses.md](08-lenses.html) for all 14 built-in functions
 
 ### 3. Data Types
 
@@ -357,9 +357,9 @@ Error: F002: Tab characters forbidden (use 2 spaces)
 ## Next Steps
 
 ### Learn More
-- 📖 [CLI Reference](./cli.md) - Complete command documentation
-- 📖 [Lens Reference](./lenses.md) - All 14 built-in transformations
-- 📖 [Language Spec](../FACET-v2.1.3-Production-Language-Specification.md) - Full FACET specification
+- 📖 [CLI Reference](06-cli.html) - Complete command documentation
+- 📖 [Lens Reference](08-lenses.html) - All 14 built-in transformations
+- 📖 [Language Spec](https://github.com/rokoss21/facet-compiler/blob/master/FACET-v2.1.3-Production-Language-Specification.md) - Full FACET specification
 
 ### Explore Examples
 - 🔍 [Basic Prompt](../examples/basic_prompt.facet) - Simple assistant
@@ -470,19 +470,19 @@ run     --input FILE           # Execute
 ## Next Steps
 
 🎯 **Continue Learning:**
-- **[02-tutorial.md](02-tutorial.md)** - Complete step-by-step tutorial
-- **[05-examples-guide.md](05-examples-guide.md)** - Practical examples with explanations
-- **[06-cli.md](06-cli.md)** - Full command-line reference
+- **[02-tutorial.md](02-tutorial.html)** - Complete step-by-step tutorial
+- **[05-examples-guide.md](05-examples-guide.html)** - Practical examples with explanations
+- **[06-cli.md](06-cli.html)** - Full command-line reference
 
 🔧 **Deep Dives:**
-- **[03-architecture.md](03-architecture.md)** - System architecture overview
-- **[04-type-system.md](04-type-system.md)** - Type system reference
-- **[07-api-reference.md](07-api-reference.md)** - Rust API documentation
+- **[03-architecture.md](03-architecture.html)** - System architecture overview
+- **[04-type-system.md](04-type-system.html)** - Type system reference
+- **[07-api-reference.md](07-api-reference.html)** - Rust API documentation
 
 📚 **Resources:**
-- **[faq.md](../faq.md)** - Frequently asked questions
-- **[12-errors.md](12-errors.md)** - Error codes and troubleshooting
-- **[README.md](../README.md)** - Project overview and status
+- **[faq.md](faq.html)** - Frequently asked questions
+- **[12-errors.md](12-errors.html)** - Error codes and troubleshooting
+- **[README.md](https://github.com/rokoss21/facet-compiler/blob/master/README.md)** - Project overview and status
 
 ---
 
@@ -501,19 +501,19 @@ run     --input FILE           # Execute
 ## Next Steps
 
 🎯 **Continue Learning:**
-- **[02-tutorial.md](02-tutorial.md)** - Complete step-by-step tutorial
-- **[05-examples-guide.md](05-examples-guide.md)** - Practical examples with explanations
-- **[06-cli.md](06-cli.md)** - Full command-line reference
+- **[02-tutorial.md](02-tutorial.html)** - Complete step-by-step tutorial
+- **[05-examples-guide.md](05-examples-guide.html)** - Practical examples with explanations
+- **[06-cli.md](06-cli.html)** - Full command-line reference
 
 🔧 **Deep Dives:**
-- **[03-architecture.md](03-architecture.md)** - System architecture overview
-- **[04-type-system.md](04-type-system.md)** - Type system reference
-- **[07-api-reference.md](07-api-reference.md)** - Rust API documentation
+- **[03-architecture.md](03-architecture.html)** - System architecture overview
+- **[04-type-system.md](04-type-system.html)** - Type system reference
+- **[07-api-reference.md](07-api-reference.html)** - Rust API documentation
 
 📚 **Resources:**
-- **[faq.md](../faq.md)** - Frequently asked questions
-- **[12-errors.md](12-errors.md)** - Error codes and troubleshooting
-- **[README.md](../README.md)** - Project overview and status
+- **[faq.md](faq.html)** - Frequently asked questions
+- **[12-errors.md](12-errors.html)** - Error codes and troubleshooting
+- **[README.md](https://github.com/rokoss21/facet-compiler/blob/master/README.md)** - Project overview and status
 
 ---
 

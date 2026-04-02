@@ -2,7 +2,7 @@
 ---
 # 07. FACET v2.1.3 Rust API Reference
 
-**Reading Time:** 30-40 minutes | **Difficulty:** Advanced | **Previous:** [06-cli.md](06-cli.md) | **Next:** [08-lenses.md](08-lenses.md)
+**Reading Time:** 30-40 minutes | **Difficulty:** Advanced | **Previous:** [06-cli.md](06-cli.html) | **Next:** [08-lenses.md](08-lenses.html)
 
 **Version:** 0.1.0
 **Last Updated:** 2025-12-09
@@ -690,38 +690,38 @@ fn compile_with_error_handling(source: &str) -> Result<serde_json::Value, String
 ## Next Steps
 
 🎯 **Implementation Guides:**
-- **[08-lenses.md](08-lenses.md)** - Lens library usage
-- **[09-testing.md](09-testing.md)** - Testing frameworks
-- **[13-import-system.md](13-import-system.md)** - Import system internals
+- **[08-lenses.md](08-lenses.html)** - Lens library usage
+- **[09-testing.md](09-testing.html)** - Testing frameworks
+- **[13-import-system.md](13-import-system.html)** - Import system internals
 
 🔧 **Performance & Security:**
-- **[10-performance.md](10-performance.md)** - API performance characteristics
-- **[11-security.md](11-security.md)** - Secure API usage
-- **[12-errors.md](12-errors.md)** - Error handling in Rust
+- **[10-performance.md](10-performance.html)** - API performance characteristics
+- **[11-security.md](11-security.html)** - Secure API usage
+- **[12-errors.md](12-errors.html)** - Error handling in Rust
 
 📚 **Resources:**
-- **[FACET v2.1.3 specification](../FACET-v2.1.3-Production-Language-Specification.md)** - Complete specification
+- **[FACET v2.1.3 specification](https://github.com/rokoss21/facet-compiler/blob/master/FACET-v2.1.3-Production-Language-Specification.md)** - Complete specification
 - **[PRD](../facetparcer.prd)** - Architecture requirements
-- **[README.md](../README.md)** - Integration examples
+- **[README.md](https://github.com/rokoss21/facet-compiler/blob/master/README.md)** - Integration examples
 
 ---
 
 This API reference provides comprehensive coverage of FACET v2.1.3's Rust interfaces. All crates follow Rust's stability guarantees and semantic versioning. For the latest documentation, see [docs.rs](https://docs.rs) or the inline code documentation.
 
 🎯 **Implementation Guides:**
-- **[08-lenses.md](08-lenses.md)** - Lens library usage
-- **[09-testing.md](09-testing.md)** - Testing frameworks
-- **[13-import-system.md](13-import-system.md)** - Import system internals
+- **[08-lenses.md](08-lenses.html)** - Lens library usage
+- **[09-testing.md](09-testing.html)** - Testing frameworks
+- **[13-import-system.md](13-import-system.html)** - Import system internals
 
 🔧 **Performance & Security:**
-- **[10-performance.md](10-performance.md)** - API performance characteristics
-- **[11-security.md](11-security.md)** - Secure API usage
-- **[12-errors.md](12-errors.md)** - Error handling in Rust
+- **[10-performance.md](10-performance.html)** - API performance characteristics
+- **[11-security.md](11-security.html)** - Secure API usage
+- **[12-errors.md](12-errors.html)** - Error handling in Rust
 
 📚 **Resources:**
-- **[FACET v2.1.3 specification](../FACET-v2.1.3-Production-Language-Specification.md)** - Complete specification
+- **[FACET v2.1.3 specification](https://github.com/rokoss21/facet-compiler/blob/master/FACET-v2.1.3-Production-Language-Specification.md)** - Complete specification
 - **[PRD](../facetparcer.prd)** - Architecture requirements
-- **[README.md](../README.md)** - Integration examples
+- **[README.md](https://github.com/rokoss21/facet-compiler/blob/master/README.md)** - Integration examples
 
 ---
 

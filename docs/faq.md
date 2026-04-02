@@ -632,25 +632,25 @@ cargo fmt --check
 
 ## Still Have Questions?
 
-- 📖 **Read the docs**: [02-tutorial.md](02-tutorial.md), [03-architecture.md](03-architecture.md)
-- 🔍 **Check examples**: [05-examples-guide.md](05-examples-guide.md)
+- 📖 **Read the docs**: [02-tutorial.md](02-tutorial.html), [03-architecture.md](03-architecture.html)
+- 🔍 **Check examples**: [05-examples-guide.md](05-examples-guide.html)
 - 🧪 **Run tests**: `cargo test` to see working code
 - 💬 **Open an issue**: GitHub Issues for questions
 - 📧 **Community**: (Coming soon)
 
 **Complete Documentation Map:**
-- **[01-quickstart.md](01-quickstart.md)** - Get started in 5 minutes
-- **[02-tutorial.md](02-tutorial.md)** - Complete learning path
-- **[03-architecture.md](03-architecture.md)** - System architecture
-- **[04-type-system.md](04-type-system.md)** - Type system reference
-- **[05-examples-guide.md](05-examples-guide.md)** - Practical examples
-- **[06-cli.md](06-cli.md)** - Command-line interface
-- **[07-api-reference.md](07-api-reference.md)** - Rust API documentation
-- **[08-lenses.md](08-lenses.md)** - Lens library reference
-- **[09-testing.md](09-testing.md)** - Testing framework
-- **[10-performance.md](10-performance.md)** - Performance optimization
-- **[11-security.md](11-security.md)** - Security best practices
-- **[12-errors.md](12-errors.md)** - Error codes and troubleshooting
-- **[13-import-system.md](13-import-system.md)** - Import system guide
+- **[01-quickstart.md](01-quickstart.html)** - Get started in 5 minutes
+- **[02-tutorial.md](02-tutorial.html)** - Complete learning path
+- **[03-architecture.md](03-architecture.html)** - System architecture
+- **[04-type-system.md](04-type-system.html)** - Type system reference
+- **[05-examples-guide.md](05-examples-guide.html)** - Practical examples
+- **[06-cli.md](06-cli.html)** - Command-line interface
+- **[07-api-reference.md](07-api-reference.html)** - Rust API documentation
+- **[08-lenses.md](08-lenses.html)** - Lens library reference
+- **[09-testing.md](09-testing.html)** - Testing framework
+- **[10-performance.md](10-performance.html)** - Performance optimization
+- **[11-security.md](11-security.html)** - Security best practices
+- **[12-errors.md](12-errors.html)** - Error codes and troubleshooting
+- **[13-import-system.md](13-import-system.html)** - Import system guide
 
 **FACET v2.1.3 is designed to be approachable yet powerful. Don't hesitate to experiment!** 🚀

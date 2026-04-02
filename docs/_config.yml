@@ -15,4 +15,4 @@ defaults:
       type: "pages"
     values:
       layout: "default"
-      permalink: "/:basename.md"
+      permalink: "/:basename.html"

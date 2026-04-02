@@ -2,7 +2,7 @@
 ---
 # 12. FACET v2.1.3 Error Codes Reference
 
-**Reading Time:** 15-20 minutes | **Difficulty:** Intermediate | **Previous:** [11-security.md](11-security.md) | **Next:** [13-import-system.md](13-import-system.md)
+**Reading Time:** 15-20 minutes | **Difficulty:** Intermediate | **Previous:** [11-security.md](11-security.html) | **Next:** [13-import-system.md](13-import-system.html)
 
 This document provides a comprehensive reference for all error codes in FACET v2.1.3, including examples and troubleshooting guidance.
 
@@ -408,41 +408,41 @@ $ fct run document.facet --gas-limit 1000  # ✅
 ## Next Steps
 
 🎯 **Error Resolution:**
-- **[06-cli.md](06-cli.md)** - CLI error handling
-- **[07-api-reference.md](07-api-reference.md)** - Programmatic error handling
-- **[09-testing.md](09-testing.md)** - Testing error conditions
+- **[06-cli.md](06-cli.html)** - CLI error handling
+- **[07-api-reference.md](07-api-reference.html)** - Programmatic error handling
+- **[09-testing.md](09-testing.html)** - Testing error conditions
 
 🔧 **System Components:**
-- **[13-import-system.md](13-import-system.md)** - Import-related errors (F601-F602)
-- **[08-lenses.md](08-lenses.md)** - Lens-related errors (F801-F802)
-- **[04-type-system.md](04-type-system.md)** - Type-related errors (F451-F453)
+- **[13-import-system.md](13-import-system.html)** - Import-related errors (F601-F602)
+- **[08-lenses.md](08-lenses.html)** - Lens-related errors (F801-F802)
+- **[04-type-system.md](04-type-system.html)** - Type-related errors (F451-F453)
 
 📚 **Resources:**
-- **[faq.md](../faq.md)** - Common error troubleshooting
+- **[faq.md](faq.html)** - Common error troubleshooting
 - **[test_example.facet](../examples/test_example.facet)** - Error testing examples
 
 ---
 
-For more information about specific errors, see the [FACET v2.1.3 Specification](../FACET-v2.1.3-Production-Language-Specification.md).
+For more information about specific errors, see the [FACET v2.1.3 Specification](https://github.com/rokoss21/facet-compiler/blob/master/FACET-v2.1.3-Production-Language-Specification.md).
 | F901 | Runtime | Budget exceeded |
 | F902 | Runtime | Gas exhausted |
 
 ## Next Steps
 
 🎯 **Error Resolution:**
-- **[06-cli.md](06-cli.md)** - CLI error handling
-- **[07-api-reference.md](07-api-reference.md)** - Programmatic error handling
-- **[09-testing.md](09-testing.md)** - Testing error conditions
+- **[06-cli.md](06-cli.html)** - CLI error handling
+- **[07-api-reference.md](07-api-reference.html)** - Programmatic error handling
+- **[09-testing.md](09-testing.html)** - Testing error conditions
 
 🔧 **System Components:**
-- **[13-import-system.md](13-import-system.md)** - Import-related errors (F601-F602)
-- **[08-lenses.md](08-lenses.md)** - Lens-related errors (F801-F802)
-- **[04-type-system.md](04-type-system.md)** - Type-related errors (F451-F453)
+- **[13-import-system.md](13-import-system.html)** - Import-related errors (F601-F602)
+- **[08-lenses.md](08-lenses.html)** - Lens-related errors (F801-F802)
+- **[04-type-system.md](04-type-system.html)** - Type-related errors (F451-F453)
 
 📚 **Resources:**
-- **[faq.md](../faq.md)** - Common error troubleshooting
+- **[faq.md](faq.html)** - Common error troubleshooting
 - **[test_example.facet](../examples/test_example.facet)** - Error testing examples
 
 ---
 
-For more information about specific errors, see the [FACET v2.1.3 Specification](../FACET-v2.1.3-Production-Language-Specification.md).
+For more information about specific errors, see the [FACET v2.1.3 Specification](https://github.com/rokoss21/facet-compiler/blob/master/FACET-v2.1.3-Production-Language-Specification.md).

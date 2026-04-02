@@ -2,7 +2,7 @@
 ---
 # 09. FACET v2.1.3 Testing Guide
 
-**Reading Time:** 15-20 minutes | **Difficulty:** Intermediate | **Previous:** [08-lenses.md](08-lenses.md) | **Next:** [10-performance.md](10-performance.md)
+**Reading Time:** 15-20 minutes | **Difficulty:** Intermediate | **Previous:** [08-lenses.md](08-lenses.html) | **Next:** [10-performance.md](10-performance.html)
 
 **Specification Compliance:** Implements FACET v2.1.3 specification Section 13 (@test blocks) with extended features.
 
@@ -293,24 +293,24 @@ Summary: 2/2 passed
 ## Next Steps
 
 🎯 **Testing in Practice:**
-- **[05-examples-guide.md](05-examples-guide.md)** - Complete testing example
-- **[07-api-reference.md](07-api-reference.md)** - TestRunner API
-- **[10-performance.md](10-performance.md)** - Testing performance
+- **[05-examples-guide.md](05-examples-guide.html)** - Complete testing example
+- **[07-api-reference.md](07-api-reference.html)** - TestRunner API
+- **[10-performance.md](10-performance.html)** - Testing performance
 
 🔧 **Advanced Testing:**
-- **[11-security.md](11-security.md)** - Security testing
-- **[12-errors.md](12-errors.md)** - Test-related errors
-- **[13-import-system.md](13-import-system.md)** - Testing imported modules
+- **[11-security.md](11-security.html)** - Security testing
+- **[12-errors.md](12-errors.html)** - Test-related errors
+- **[13-import-system.md](13-import-system.html)** - Testing imported modules
 
 📚 **Resources:**
 - **[test_example.facet](../examples/test_example.facet)** - Complete test example
-- **[faq.md](../faq.md)** - Testing FAQs
+- **[faq.md](faq.html)** - Testing FAQs
 
 ---
 
 ## Reference
 
-See [FACET v2.1.3 Specification](../FACET-v2.1.3-Production-Language-Specification.md) for complete details on:
+See [FACET v2.1.3 Specification](https://github.com/rokoss21/facet-compiler/blob/master/FACET-v2.1.3-Production-Language-Specification.md) for complete details on:
 - [Section 13: Testing (@test)](../FACET-v2.1.3-Production-Language-Specification.md#13-testing-test)
 - [Error Codes](../FACET-v2.1.3-Production-Language-Specification.md#appendix-c-normative-error-code-catalog)
 - [Execution Model](../FACET-v2.1.3-Production-Language-Specification.md#7-execution-model)
@@ -330,24 +330,24 @@ See [FACET v2.1.3 Specification](../FACET-v2.1.3-Production-Language-Specificati
 ## Next Steps
 
 🎯 **Testing in Practice:**
-- **[05-examples-guide.md](05-examples-guide.md)** - Complete testing example
-- **[07-api-reference.md](07-api-reference.md)** - TestRunner API
-- **[10-performance.md](10-performance.md)** - Testing performance
+- **[05-examples-guide.md](05-examples-guide.html)** - Complete testing example
+- **[07-api-reference.md](07-api-reference.html)** - TestRunner API
+- **[10-performance.md](10-performance.html)** - Testing performance
 
 🔧 **Advanced Testing:**
-- **[11-security.md](11-security.md)** - Security testing
-- **[12-errors.md](12-errors.md)** - Test-related errors
-- **[13-import-system.md](13-import-system.md)** - Testing imported modules
+- **[11-security.md](11-security.html)** - Security testing
+- **[12-errors.md](12-errors.html)** - Test-related errors
+- **[13-import-system.md](13-import-system.html)** - Testing imported modules
 
 📚 **Resources:**
 - **[test_example.facet](../examples/test_example.facet)** - Complete test example
-- **[faq.md](../faq.md)** - Testing FAQs
+- **[faq.md](faq.html)** - Testing FAQs
 
 ---
 
 ## Reference
 
-See [FACET v2.1.3 Specification](../FACET-v2.1.3-Production-Language-Specification.md) for complete details on:
+See [FACET v2.1.3 Specification](https://github.com/rokoss21/facet-compiler/blob/master/FACET-v2.1.3-Production-Language-Specification.md) for complete details on:
 - [Section 13: Testing (@test)](../FACET-v2.1.3-Production-Language-Specification.md#13-testing-test)
 - [Error Codes](../FACET-v2.1.3-Production-Language-Specification.md#appendix-c-normative-error-code-catalog)
 - [Execution Model](../FACET-v2.1.3-Production-Language-Specification.md#7-execution-model)

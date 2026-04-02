@@ -2,7 +2,7 @@
 ---
 # 11. FACET Security Model & Best Practices
 
-**Reading Time:** 20-25 minutes | **Difficulty:** Intermediate | **Previous:** [10-performance.md](10-performance.md) | **Next:** [12-errors.md](12-errors.md)
+**Reading Time:** 20-25 minutes | **Difficulty:** Intermediate | **Previous:** [10-performance.md](10-performance.html) | **Next:** [12-errors.md](12-errors.html)
 
 **Version:** 1.0
 **Last Updated:** 2025-12-09
@@ -459,36 +459,36 @@ EXPOSE 8080
 ## Next Steps
 
 🎯 **Secure Implementation:**
-- **[06-cli.md](06-cli.md)** - Secure CLI usage
-- **[07-api-reference.md](07-api-reference.md)** - Secure API programming
-- **[12-errors.md](12-errors.md)** - Security-related error codes
+- **[06-cli.md](06-cli.html)** - Secure CLI usage
+- **[07-api-reference.md](07-api-reference.html)** - Secure API programming
+- **[12-errors.md](12-errors.html)** - Security-related error codes
 
 🔧 **Compliance & Deployment:**
-- **[13-import-system.md](13-import-system.md)** - Secure import validation
-- **[10-performance.md](10-performance.md)** - Security vs performance trade-offs
-- **[09-testing.md](09-testing.md)** - Security testing practices
+- **[13-import-system.md](13-import-system.html)** - Secure import validation
+- **[10-performance.md](10-performance.html)** - Security vs performance trade-offs
+- **[09-testing.md](09-testing.html)** - Security testing practices
 
 📚 **Resources:**
 - **[PRD](../facetparcer.prd)** - Security requirements
-- **[FACET v2.1.3 specification](../FACET-v2.1.3-Production-Language-Specification.md)** - Security model specification
+- **[FACET v2.1.3 specification](https://github.com/rokoss21/facet-compiler/blob/master/FACET-v2.1.3-Production-Language-Specification.md)** - Security model specification
 
 ---
 
 *This security model ensures FACET can be safely deployed in enterprise environments handling sensitive AI workloads with full compliance and audit capabilities.* 🔒✨
 
 🎯 **Secure Implementation:**
-- **[06-cli.md](06-cli.md)** - Secure CLI usage
-- **[07-api-reference.md](07-api-reference.md)** - Secure API programming
-- **[12-errors.md](12-errors.md)** - Security-related error codes
+- **[06-cli.md](06-cli.html)** - Secure CLI usage
+- **[07-api-reference.md](07-api-reference.html)** - Secure API programming
+- **[12-errors.md](12-errors.html)** - Security-related error codes
 
 🔧 **Compliance & Deployment:**
-- **[13-import-system.md](13-import-system.md)** - Secure import validation
-- **[10-performance.md](10-performance.md)** - Security vs performance trade-offs
-- **[09-testing.md](09-testing.md)** - Security testing practices
+- **[13-import-system.md](13-import-system.html)** - Secure import validation
+- **[10-performance.md](10-performance.html)** - Security vs performance trade-offs
+- **[09-testing.md](09-testing.html)** - Security testing practices
 
 📚 **Resources:**
 - **[PRD](../facetparcer.prd)** - Security requirements
-- **[FACET v2.1.3 specification](../FACET-v2.1.3-Production-Language-Specification.md)** - Security model specification
+- **[FACET v2.1.3 specification](https://github.com/rokoss21/facet-compiler/blob/master/FACET-v2.1.3-Production-Language-Specification.md)** - Security model specification
 
 ---
 

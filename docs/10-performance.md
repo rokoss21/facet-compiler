@@ -2,7 +2,7 @@
 ---
 # 10. FACET Performance Guide
 
-**Reading Time:** 25-30 minutes | **Difficulty:** Intermediate | **Previous:** [09-testing.md](09-testing.md) | **Next:** [11-security.md](11-security.md)
+**Reading Time:** 25-30 minutes | **Difficulty:** Intermediate | **Previous:** [09-testing.md](09-testing.html) | **Next:** [11-security.md](11-security.html)
 
 **Version:** 1.0
 **Last Updated:** 2025-12-09
@@ -514,17 +514,17 @@ FACET v2.1.3 delivers **enterprise-grade performance** with:
 ## Next Steps
 
 🎯 **Performance Optimization:**
-- **[11-security.md](11-security.md)** - Security vs performance trade-offs
-- **[07-api-reference.md](07-api-reference.md)** - Performance-focused API usage
-- **[08-lenses.md](08-lenses.md)** - Lens performance characteristics
+- **[11-security.md](11-security.html)** - Security vs performance trade-offs
+- **[07-api-reference.md](07-api-reference.html)** - Performance-focused API usage
+- **[08-lenses.md](08-lenses.html)** - Lens performance characteristics
 
 🔧 **Production Deployment:**
-- **[06-cli.md](06-cli.md)** - CLI performance flags
-- **[13-import-system.md](13-import-system.md)** - Import caching strategies
-- **[12-errors.md](12-errors.md)** - Performance-related errors
+- **[06-cli.md](06-cli.html)** - CLI performance flags
+- **[13-import-system.md](13-import-system.html)** - Import caching strategies
+- **[12-errors.md](12-errors.html)** - Performance-related errors
 
 📚 **Resources:**
-- **[FACET v2.1.3 specification](../FACET-v2.1.3-Production-Language-Specification.md)** - Performance requirements in PRD
+- **[FACET v2.1.3 specification](https://github.com/rokoss21/facet-compiler/blob/master/FACET-v2.1.3-Production-Language-Specification.md)** - Performance requirements in PRD
 - **[PRD](../facetparcer.prd)** - Performance specifications
 
 ---
@@ -534,17 +534,17 @@ The architecture is optimized for **high-throughput AI agent compilation** with 
 *Performance benchmarks validated on production workloads with 99.9% uptime and <100ms P95 compilation times.* ⚡📊
 
 🎯 **Performance Optimization:**
-- **[11-security.md](11-security.md)** - Security vs performance trade-offs
-- **[07-api-reference.md](07-api-reference.md)** - Performance-focused API usage
-- **[08-lenses.md](08-lenses.md)** - Lens performance characteristics
+- **[11-security.md](11-security.html)** - Security vs performance trade-offs
+- **[07-api-reference.md](07-api-reference.html)** - Performance-focused API usage
+- **[08-lenses.md](08-lenses.html)** - Lens performance characteristics
 
 🔧 **Production Deployment:**
-- **[06-cli.md](06-cli.md)** - CLI performance flags
-- **[13-import-system.md](13-import-system.md)** - Import caching strategies
-- **[12-errors.md](12-errors.md)** - Performance-related errors
+- **[06-cli.md](06-cli.html)** - CLI performance flags
+- **[13-import-system.md](13-import-system.html)** - Import caching strategies
+- **[12-errors.md](12-errors.html)** - Performance-related errors
 
 📚 **Resources:**
-- **[FACET v2.1.3 specification](../FACET-v2.1.3-Production-Language-Specification.md)** - Performance requirements in PRD
+- **[FACET v2.1.3 specification](https://github.com/rokoss21/facet-compiler/blob/master/FACET-v2.1.3-Production-Language-Specification.md)** - Performance requirements in PRD
 - **[PRD](../facetparcer.prd)** - Performance specifications
 
 ---

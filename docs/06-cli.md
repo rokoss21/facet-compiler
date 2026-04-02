@@ -2,7 +2,7 @@
 ---
 # 06. FACET CLI Reference
 
-**Reading Time:** 15-20 minutes | **Difficulty:** Beginner | **Previous:** [05-examples-guide.md](05-examples-guide.md) | **Next:** [07-api-reference.md](07-api-reference.md)
+**Reading Time:** 15-20 minutes | **Difficulty:** Beginner | **Previous:** [05-examples-guide.md](05-examples-guide.html) | **Next:** [07-api-reference.md](07-api-reference.html)
 
 Complete command-line interface documentation for the FACET v2.1.3 Compiler (`fct`).
 
@@ -646,19 +646,19 @@ fct run --input myfile.facet --budget 8192
 ## Next Steps
 
 🎯 **Continue Learning:**
-- **[07-api-reference.md](07-api-reference.md)** - Rust API for programmatic usage
-- **[08-lenses.md](08-lenses.md)** - Lens functions reference
-- **[09-testing.md](09-testing.md)** - @test blocks usage
+- **[07-api-reference.md](07-api-reference.html)** - Rust API for programmatic usage
+- **[08-lenses.md](08-lenses.html)** - Lens functions reference
+- **[09-testing.md](09-testing.html)** - @test blocks usage
 
 🔧 **Advanced Topics:**
-- **[10-performance.md](10-performance.md)** - CLI performance optimization
-- **[11-security.md](11-security.md)** - Secure CLI usage
-- **[13-import-system.md](13-import-system.md)** - Import system details
+- **[10-performance.md](10-performance.html)** - CLI performance optimization
+- **[11-security.md](11-security.html)** - Secure CLI usage
+- **[13-import-system.md](13-import-system.html)** - Import system details
 
 📚 **References:**
-- **[01-quickstart.md](01-quickstart.md)** - Quick start guide
-- **[05-examples-guide.md](05-examples-guide.md)** - Practical examples
-- **[12-errors.md](12-errors.md)** - CLI error codes
+- **[01-quickstart.md](01-quickstart.html)** - Quick start guide
+- **[05-examples-guide.md](05-examples-guide.html)** - Practical examples
+- **[12-errors.md](12-errors.html)** - CLI error codes
 
 ---
 
@@ -674,10 +674,10 @@ fct run --input myfile.facet --budget 8192
 ---
 
 **Related Documentation:**
-- **[08-lenses.md](08-lenses.md)** - Available lens functions
-- **[01-quickstart.md](01-quickstart.md)** - Getting started tutorial
-- **[FACET v2.1.3 specification](../FACET-v2.1.3-Production-Language-Specification.md)** - Full language specification
-- **[examples/README.md](../examples/README.md)** - Example files
+- **[08-lenses.md](08-lenses.html)** - Available lens functions
+- **[01-quickstart.md](01-quickstart.html)** - Getting started tutorial
+- **[FACET v2.1.3 specification](https://github.com/rokoss21/facet-compiler/blob/master/FACET-v2.1.3-Production-Language-Specification.md)** - Full language specification
+- **[examples/README.md](https://github.com/rokoss21/facet-compiler/blob/master/examples/README.md)** - Example files
 
 fct run --input myfile.facet --budget 8192
 ```
@@ -697,19 +697,19 @@ fct run --input myfile.facet --budget 8192
 ## Next Steps
 
 🎯 **Continue Learning:**
-- **[07-api-reference.md](07-api-reference.md)** - Rust API for programmatic usage
-- **[08-lenses.md](08-lenses.md)** - Lens functions reference
-- **[09-testing.md](09-testing.md)** - @test blocks usage
+- **[07-api-reference.md](07-api-reference.html)** - Rust API for programmatic usage
+- **[08-lenses.md](08-lenses.html)** - Lens functions reference
+- **[09-testing.md](09-testing.html)** - @test blocks usage
 
 🔧 **Advanced Topics:**
-- **[10-performance.md](10-performance.md)** - CLI performance optimization
-- **[11-security.md](11-security.md)** - Secure CLI usage
-- **[13-import-system.md](13-import-system.md)** - Import system details
+- **[10-performance.md](10-performance.html)** - CLI performance optimization
+- **[11-security.md](11-security.html)** - Secure CLI usage
+- **[13-import-system.md](13-import-system.html)** - Import system details
 
 📚 **References:**
-- **[01-quickstart.md](01-quickstart.md)** - Quick start guide
-- **[05-examples-guide.md](05-examples-guide.md)** - Practical examples
-- **[12-errors.md](12-errors.md)** - CLI error codes
+- **[01-quickstart.md](01-quickstart.html)** - Quick start guide
+- **[05-examples-guide.md](05-examples-guide.html)** - Practical examples
+- **[12-errors.md](12-errors.html)** - CLI error codes
 
 ---
 
@@ -725,7 +725,7 @@ fct run --input myfile.facet --budget 8192
 ---
 
 **Related Documentation:**
-- **[08-lenses.md](08-lenses.md)** - Available lens functions
-- **[01-quickstart.md](01-quickstart.md)** - Getting started tutorial
-- **[FACET v2.1.3 specification](../FACET-v2.1.3-Production-Language-Specification.md)** - Full language specification
-- **[examples/README.md](../examples/README.md)** - Example files
+- **[08-lenses.md](08-lenses.html)** - Available lens functions
+- **[01-quickstart.md](01-quickstart.html)** - Getting started tutorial
+- **[FACET v2.1.3 specification](https://github.com/rokoss21/facet-compiler/blob/master/FACET-v2.1.3-Production-Language-Specification.md)** - Full language specification
+- **[examples/README.md](https://github.com/rokoss21/facet-compiler/blob/master/examples/README.md)** - Example files

@@ -2,7 +2,7 @@
 ---
 # 02. FACET v2.1.3 Complete Tutorial
 
-**Reading Time:** 30-60 minutes | **Difficulty:** Beginner → Advanced | **Previous:** [01-quickstart.md](01-quickstart.md) | **Next:** [03-architecture.md](03-architecture.md)
+**Reading Time:** 30-60 minutes | **Difficulty:** Beginner → Advanced | **Previous:** [01-quickstart.md](01-quickstart.html) | **Next:** [03-architecture.md](03-architecture.html)
 
 **Learning Path:** Beginner → Intermediate → Advanced
 **Prerequisites:** Basic programming knowledge
@@ -724,11 +724,11 @@ $ fct test --input example.facet
 
 ### Continue Learning:
 
-1. **[Error Reference](errors.md)** - All error codes explained
-2. **[Lens Reference](lenses.md)** - Complete lens documentation
-3. **[Type System](type-system.md)** - Deep dive into FTS
-4. **[Architecture](architecture.md)** - Compiler internals
-5. **[CLI Reference](cli.md)** - All commands and options
+1. **[Error Reference](12-errors.html)** - All error codes explained
+2. **[Lens Reference](08-lenses.html)** - Complete lens documentation
+3. **[Type System](04-type-system.html)** - Deep dive into FTS
+4. **[Architecture](03-architecture.html)** - Compiler internals
+5. **[CLI Reference](06-cli.html)** - All commands and options
 
 ### Build Something:
 
@@ -741,30 +741,30 @@ $ fct test --input example.facet
 
 - [GitHub Repository](https://github.com/yourorg/facet)
 - [Issue Tracker](https://github.com/yourorg/facet/issues)
-- [Contributing Guide](../CONTRIBUTING.md)
+- [Contributing Guide](https://github.com/rokoss21/facet-compiler/blob/master/CONTRIBUTING.md)
 
 ---
 
 ## Next Steps
 
 🎯 **Continue Learning:**
-- **[03-architecture.md](03-architecture.md)** - System architecture and design
-- **[04-type-system.md](04-type-system.md)** - Deep dive into FTS
-- **[05-examples-guide.md](05-examples-guide.md)** - All examples explained
+- **[03-architecture.md](03-architecture.html)** - System architecture and design
+- **[04-type-system.md](04-type-system.html)** - Deep dive into FTS
+- **[05-examples-guide.md](05-examples-guide.html)** - All examples explained
 
 🔧 **Reference Materials:**
-- **[06-cli.md](06-cli.md)** - Command-line interface
-- **[07-api-reference.md](07-api-reference.md)** - Rust API documentation
-- **[08-lenses.md](08-lenses.md)** - Lens library reference
+- **[06-cli.md](06-cli.html)** - Command-line interface
+- **[07-api-reference.md](07-api-reference.html)** - Rust API documentation
+- **[08-lenses.md](08-lenses.html)** - Lens library reference
 
 📚 **Advanced Topics:**
-- **[09-testing.md](09-testing.md)** - @test blocks and mocking
-- **[10-performance.md](10-performance.md)** - Optimization and benchmarking
-- **[11-security.md](11-security.md)** - Security best practices
+- **[09-testing.md](09-testing.html)** - @test blocks and mocking
+- **[10-performance.md](10-performance.html)** - Optimization and benchmarking
+- **[11-security.md](11-security.html)** - Security best practices
 
 🆘 **Help & Troubleshooting:**
-- **[faq.md](../faq.md)** - Frequently asked questions
-- **[12-errors.md](12-errors.md)** - Error codes and fixes
+- **[faq.md](faq.html)** - Frequently asked questions
+- **[12-errors.md](12-errors.html)** - Error codes and fixes
 
 ---
 
@@ -777,18 +777,18 @@ $ fct test --input example.facet
 **Last Updated:** 2025-12-09
 
 🔧 **Reference Materials:**
-- **[06-cli.md](06-cli.md)** - Command-line interface
-- **[07-api-reference.md](07-api-reference.md)** - Rust API documentation
-- **[08-lenses.md](08-lenses.md)** - Lens library reference
+- **[06-cli.md](06-cli.html)** - Command-line interface
+- **[07-api-reference.md](07-api-reference.html)** - Rust API documentation
+- **[08-lenses.md](08-lenses.html)** - Lens library reference
 
 📚 **Advanced Topics:**
-- **[09-testing.md](09-testing.md)** - @test blocks and mocking
-- **[10-performance.md](10-performance.md)** - Optimization and benchmarking
-- **[11-security.md](11-security.md)** - Security best practices
+- **[09-testing.md](09-testing.html)** - @test blocks and mocking
+- **[10-performance.md](10-performance.html)** - Optimization and benchmarking
+- **[11-security.md](11-security.html)** - Security best practices
 
 🆘 **Help & Troubleshooting:**
-- **[faq.md](../faq.md)** - Frequently asked questions
-- **[12-errors.md](12-errors.md)** - Error codes and fixes
+- **[faq.md](faq.html)** - Frequently asked questions
+- **[12-errors.md](12-errors.html)** - Error codes and fixes
 
 ---
 
