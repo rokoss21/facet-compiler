@@ -23,7 +23,7 @@ pub mod policy;
 /// Main CLI structure using clap for argument parsing
 #[derive(Parser)]
 #[command(name = "fct")]
-#[command(about = "FACET v2.0 Compiler - Deterministic AI Agent Compiler", long_about = None)]
+#[command(about = "FACET v2.1.3 Compiler - Deterministic AI Agent Compiler", long_about = None)]
 #[command(version)]
 pub struct Cli {
     /// Enable verbose output

@@ -1,4 +1,4 @@
-//! # FACET v2.0 Compiler Main Entry Point
+//! # FACET v2.1.3 Compiler Main Entry Point
 //!
 //! This is the main entry point for the FACET compiler. It provides a CLI interface
 //! for building, running, and testing FACET documents.
@@ -30,18 +30,69 @@ fn main() -> anyhow::Result<()> {
         Commands::Build { input } => {
             commands::build::execute_build(input, cli.verbose, cli.no_progress, &rate_limiter)
         }
-        Commands::Inspect { input } => {
-            commands::inspect::execute_inspect(input, &rate_limiter)
-        }
-        Commands::Run { input, budget, context_budget, format } => {
-            commands::run::execute_run(input, budget, context_budget, format, cli.no_progress, &rate_limiter)
-        }
-        Commands::Test { input, filter, output, budget, gas_limit } => {
-            commands::test::execute_test(input, filter, output, budget, gas_limit, &rate_limiter)
-        }
-        Commands::Codegen { input, output, language, name } => {
-            commands::codegen::execute_codegen(input, output, language, name, &rate_limiter)
-        }
+        Commands::Inspect {
+            input,
+            ast,
+            dag,
+            layout,
+            policy,
+            budget,
+            pure,
+            exec,
+        } => commands::inspect::execute_inspect(
+            input,
+            ast,
+            dag,
+            layout,
+            policy,
+            budget,
+            pure,
+            exec,
+            &rate_limiter,
+        ),
+        Commands::Run {
+            input,
+            runtime_input,
+            budget,
+            context_budget,
+            format,
+            pure,
+            exec,
+        } => commands::run::execute_run(
+            input,
+            runtime_input,
+            budget,
+            context_budget,
+            format,
+            pure,
+            exec,
+            cli.no_progress,
+            &rate_limiter,
+        ),
+        Commands::Test {
+            input,
+            filter,
+            output,
+            budget,
+            gas_limit,
+            pure,
+            exec,
+        } => commands::test::execute_test(
+            input,
+            filter,
+            output,
+            budget,
+            gas_limit,
+            pure,
+            exec,
+            &rate_limiter,
+        ),
+        Commands::Codegen {
+            input,
+            output,
+            language,
+            name,
+        } => commands::codegen::execute_codegen(input, output, language, name, &rate_limiter),
     }
 }
 
@@ -72,6 +123,6 @@ fn setup_logging(cli: &Cli) {
 /// Setup rate limiting for CLI commands
 fn setup_rate_limiter() -> DefaultRateLimiter {
     RateLimiter::direct(
-        Quota::per_second(nonzero!(10u32)) // Allow 10 requests per second
+        Quota::per_second(nonzero!(10u32)), // Allow 10 requests per second
     )
 }
