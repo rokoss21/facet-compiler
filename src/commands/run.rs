@@ -1026,6 +1026,41 @@ mod tests {
     }
 
     #[test]
+    fn execute_run_pure_mode_rejects_bounded_lens_with_f803() {
+        let nonce = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("clock")
+            .as_nanos();
+        let test_dir = std::env::temp_dir().join(format!("facet-run-f803-pure-{}", nonce));
+        std::fs::create_dir_all(&test_dir).expect("create temp dir");
+
+        let input_path = test_dir.join("input.facet");
+        let source = r#"
+@vars
+  out: "hello" |> llm_call()
+"#;
+        std::fs::write(&input_path, source).expect("write facet file");
+
+        let limiter = RateLimiter::direct(Quota::per_second(nonzero!(10u32)));
+        let err = execute_run(
+            input_path.clone(),
+            None,
+            1024,
+            2048,
+            "json".to_string(),
+            true,
+            false,
+            true,
+            &limiter,
+        )
+        .expect_err("pure mode bounded lens must require cache hit");
+        let text = err.to_string();
+        assert!(text.contains("F803"), "expected F803, got: {text}");
+
+        let _ = std::fs::remove_dir_all(&test_dir);
+    }
+
+    #[test]
     fn execution_artifact_metadata_has_required_fields() {
         let payload = sample_payload();
         let artifact = build_execution_artifact(&payload, &[]).expect("artifact must build");
