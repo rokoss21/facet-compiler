@@ -1,5 +1,5 @@
 #[allow(unused_imports)]
-use fct_ast::{ValueNode};
+use fct_ast::ValueNode;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use thiserror::Error;
@@ -37,6 +37,14 @@ pub enum TrustLevel {
     Volatile = 2,
 }
 
+/// Determinism class used by runtime policy/layout checks.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum DeterminismClass {
+    Pure,
+    Bounded,
+    Volatile,
+}
+
 /// Lens signature for type checking
 #[derive(Debug, Clone)]
 pub struct LensSignature {
@@ -45,6 +53,26 @@ pub struct LensSignature {
     pub output_type: String,
     pub trust_level: TrustLevel,
     pub deterministic: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct LensMetadata {
+    pub name: String,
+    pub version: String,
+    pub input_type: String,
+    pub output_type: String,
+    pub trust_level: TrustLevel,
+    pub determinism_class: DeterminismClass,
+}
+
+impl LensSignature {
+    pub fn determinism_class(&self) -> DeterminismClass {
+        match self.trust_level {
+            TrustLevel::Pure => DeterminismClass::Pure,
+            TrustLevel::Bounded => DeterminismClass::Bounded,
+            TrustLevel::Volatile => DeterminismClass::Volatile,
+        }
+    }
 }
 
 /// Lens execution context
@@ -83,6 +111,28 @@ pub trait Lens: Send + Sync {
 
     /// Get lens signature for type checking
     fn signature(&self) -> LensSignature;
+
+    /// Semantic lens implementation version for cache-keying and provenance.
+    /// Implementations should bump this when behavior changes.
+    fn version(&self) -> &'static str {
+        "1"
+    }
+
+    /// Deterministic gas-cost estimator for this lens call.
+    fn gas_cost(
+        &self,
+        _input: &ValueNode,
+        _args: &[ValueNode],
+        _kwargs: &HashMap<String, ValueNode>,
+    ) -> usize {
+        1
+    }
+
+    /// Optional effect class for policy/guard classification.
+    /// Level-1/2 lenses are expected to override this.
+    fn effect_class(&self) -> Option<&'static str> {
+        None
+    }
 }
 
 // ============================================================================
@@ -103,7 +153,9 @@ pub use lenses::{
         CapitalizeLens, IndentLens, LowercaseLens, ReplaceLens, ReverseLens, SplitLens,
         SubstringLens, TrimLens, UppercaseLens,
     },
-    utility::{DefaultLens, HashLens, JsonLens, JsonParseLens, TemplateLens, UrlDecodeLens, UrlEncodeLens},
+    utility::{
+        DefaultLens, HashLens, JsonLens, JsonParseLens, TemplateLens, UrlDecodeLens, UrlEncodeLens,
+    },
 };
 
 // ============================================================================
@@ -177,6 +229,29 @@ impl LensRegistry {
 
     pub fn get_signature(&self, name: &str) -> Option<LensSignature> {
         self.lenses.get(name).map(|lens| lens.signature())
+    }
+
+    pub fn get_metadata(&self, name: &str) -> Option<LensMetadata> {
+        let lens = self.lenses.get(name)?;
+        let sig = lens.signature();
+        Some(LensMetadata {
+            name: sig.name.clone(),
+            version: lens.version().to_string(),
+            input_type: sig.input_type.clone(),
+            output_type: sig.output_type.clone(),
+            trust_level: sig.trust_level,
+            determinism_class: sig.determinism_class(),
+        })
+    }
+
+    pub fn list_metadata(&self) -> Vec<LensMetadata> {
+        let mut items = self
+            .lenses
+            .keys()
+            .filter_map(|name| self.get_metadata(name))
+            .collect::<Vec<_>>();
+        items.sort_by(|a, b| a.name.cmp(&b.name));
+        items
     }
 
     pub fn list_lenses(&self) -> Vec<String> {
@@ -257,6 +332,22 @@ mod tests {
     }
 
     #[test]
+    fn test_replace_lens_treats_pattern_as_literal_not_regex() {
+        let lens = ReplaceLens;
+        let input = ValueNode::String("abc".to_string());
+        let args = vec![
+            ValueNode::String(".".to_string()), // regex wildcard if interpreted as regex
+            ValueNode::String("-".to_string()),
+        ];
+        let result = lens
+            .execute(input, args, HashMap::new(), &LensContext::new())
+            .unwrap();
+
+        // Literal semantics: "." is replaced only if present as a literal dot.
+        assert_eq!(result, ValueNode::String("abc".to_string()));
+    }
+
+    #[test]
     fn test_default_lens() {
         let lens = DefaultLens;
 
@@ -296,7 +387,7 @@ mod tests {
             variables: HashMap::new(),
         };
 
-        let mut map = HashMap::new();
+        let mut map = fct_ast::OrderedMap::new();
         map.insert("name".to_string(), ValueNode::String("Alice".to_string()));
         map.insert("age".to_string(), ValueNode::Scalar(ScalarValue::Int(30)));
 
@@ -321,7 +412,7 @@ mod tests {
             variables: HashMap::new(),
         };
 
-        let mut map = HashMap::new();
+        let mut map = fct_ast::OrderedMap::new();
         map.insert("name".to_string(), ValueNode::String("Bob".to_string()));
         map.insert("age".to_string(), ValueNode::Scalar(ScalarValue::Int(25)));
 
@@ -375,7 +466,7 @@ mod tests {
             variables: HashMap::new(),
         };
 
-        let mut map = HashMap::new();
+        let mut map = fct_ast::OrderedMap::new();
         map.insert("key".to_string(), ValueNode::String("value".to_string()));
         map.insert("num".to_string(), ValueNode::Scalar(ScalarValue::Int(42)));
 
@@ -885,9 +976,7 @@ mod tests {
         assert_eq!(result, ValueNode::String("hello, world, test".to_string()));
 
         // Test with no separator (default empty string)
-        let result2 = lens
-            .execute(input, vec![], HashMap::new(), &ctx)
-            .unwrap();
+        let result2 = lens.execute(input, vec![], HashMap::new(), &ctx).unwrap();
         assert_eq!(result2, ValueNode::String("helloworldtest".to_string()));
 
         // Test with mixed types
@@ -921,8 +1010,14 @@ mod tests {
 
         match result {
             ValueNode::Map(map) => {
-                assert_eq!(map.get("name"), Some(&ValueNode::String("Alice".to_string())));
-                assert_eq!(map.get("age"), Some(&ValueNode::Scalar(ScalarValue::Int(30))));
+                assert_eq!(
+                    map.get("name"),
+                    Some(&ValueNode::String("Alice".to_string()))
+                );
+                assert_eq!(
+                    map.get("age"),
+                    Some(&ValueNode::Scalar(ScalarValue::Int(30)))
+                );
             }
             _ => panic!("Expected map"),
         }
@@ -948,17 +1043,13 @@ mod tests {
 
         // Test encoding special characters
         let input = ValueNode::String("hello world!".to_string());
-        let result = lens
-            .execute(input, vec![], HashMap::new(), &ctx)
-            .unwrap();
+        let result = lens.execute(input, vec![], HashMap::new(), &ctx).unwrap();
 
         assert_eq!(result, ValueNode::String("hello%20world%21".to_string()));
 
         // Test encoding with more complex characters
         let input2 = ValueNode::String("a+b=c&d".to_string());
-        let result2 = lens
-            .execute(input2, vec![], HashMap::new(), &ctx)
-            .unwrap();
+        let result2 = lens.execute(input2, vec![], HashMap::new(), &ctx).unwrap();
 
         match result2 {
             ValueNode::String(s) => {
@@ -975,17 +1066,13 @@ mod tests {
 
         // Test decoding
         let input = ValueNode::String("hello%20world%21".to_string());
-        let result = lens
-            .execute(input, vec![], HashMap::new(), &ctx)
-            .unwrap();
+        let result = lens.execute(input, vec![], HashMap::new(), &ctx).unwrap();
 
         assert_eq!(result, ValueNode::String("hello world!".to_string()));
 
         // Test decoding plus sign
         let input2 = ValueNode::String("hello+world".to_string());
-        let result2 = lens
-            .execute(input2, vec![], HashMap::new(), &ctx)
-            .unwrap();
+        let result2 = lens.execute(input2, vec![], HashMap::new(), &ctx).unwrap();
 
         assert_eq!(result2, ValueNode::String("hello+world".to_string()));
     }
@@ -1063,7 +1150,8 @@ mod tests {
         assert_eq!(result, ValueNode::String("Hello, Alice!".to_string()));
 
         // Test multiple substitutions
-        let input2 = ValueNode::String("{{greeting}}, {{name}}! You are {{age}} years old.".to_string());
+        let input2 =
+            ValueNode::String("{{greeting}}, {{name}}! You are {{age}} years old.".to_string());
         let mut kwargs2 = HashMap::new();
         kwargs2.insert("greeting".to_string(), ValueNode::String("Hi".to_string()));
         kwargs2.insert("name".to_string(), ValueNode::String("Bob".to_string()));
@@ -1159,7 +1247,7 @@ mod tests {
         match result {
             ValueNode::List(items) => {
                 assert_eq!(items.len(), 10); // Stub returns 10 floats
-                // Verify all items are floats
+                                             // Verify all items are floats
                 for item in items {
                     match item {
                         ValueNode::Scalar(ScalarValue::Float(_)) => {}
@@ -1212,7 +1300,7 @@ mod tests {
         match result {
             ValueNode::List(items) => {
                 assert_eq!(items.len(), 5); // Default top_k=5
-                // Verify each result is a map with content and score
+                                            // Verify each result is a map with content and score
                 for item in items {
                     match item {
                         ValueNode::Map(m) => {
@@ -1249,6 +1337,29 @@ mod tests {
         // Verify trust level is Bounded
         assert_eq!(lens.signature().trust_level, TrustLevel::Bounded);
         assert!(!lens.signature().deterministic);
+    }
+
+    #[test]
+    fn test_registry_metadata_has_version_and_determinism_class() {
+        let registry = LensRegistry::new();
+        let trim_meta = registry
+            .get_metadata("trim")
+            .expect("trim metadata should exist");
+
+        assert_eq!(trim_meta.name, "trim");
+        assert!(!trim_meta.version.is_empty());
+        assert_eq!(trim_meta.trust_level, TrustLevel::Pure);
+        assert_eq!(trim_meta.determinism_class, DeterminismClass::Pure);
+    }
+
+    #[test]
+    fn test_registry_metadata_listing_is_sorted_and_populated() {
+        let registry = LensRegistry::new();
+        let metadata = registry.list_metadata();
+
+        assert!(!metadata.is_empty());
+        assert!(metadata.windows(2).all(|w| w[0].name <= w[1].name));
+        assert!(metadata.iter().all(|m| !m.version.is_empty()));
     }
 }
 

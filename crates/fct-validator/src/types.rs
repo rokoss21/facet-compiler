@@ -196,11 +196,57 @@ impl FacetType {
             // Any accepts everything
             (_, FacetType::Primitive(PrimitiveType::Any)) => true,
 
-            // Primitive type compatibility
+            // Primitive types must match exactly (except Any above)
+            (FacetType::Primitive(a), FacetType::Primitive(b)) => a == b,
+
+            // Multimodal assignability with constraint satisfaction
             (
-                FacetType::Primitive(PrimitiveType::Int),
-                FacetType::Primitive(PrimitiveType::Float),
-            ) => true,
+                FacetType::Multimodal(MultimodalType::Image(actual)),
+                FacetType::Multimodal(MultimodalType::Image(expected)),
+            ) => {
+                let format_ok = match (&actual.format, &expected.format) {
+                    (_, None) => true,
+                    (Some(a), Some(e)) => a == e,
+                    (None, Some(_)) => false,
+                };
+                let dim_ok = match (actual.max_dim, expected.max_dim) {
+                    (_, None) => true,
+                    (Some(a), Some(e)) => a <= e,
+                    (None, Some(_)) => false,
+                };
+                format_ok && dim_ok
+            }
+            (
+                FacetType::Multimodal(MultimodalType::Audio(actual)),
+                FacetType::Multimodal(MultimodalType::Audio(expected)),
+            ) => {
+                let format_ok = match (&actual.format, &expected.format) {
+                    (_, None) => true,
+                    (Some(a), Some(e)) => a == e,
+                    (None, Some(_)) => false,
+                };
+                let duration_ok = match (actual.max_duration, expected.max_duration) {
+                    (_, None) => true,
+                    (Some(a), Some(e)) => a <= e,
+                    (None, Some(_)) => false,
+                };
+                format_ok && duration_ok
+            }
+            (
+                FacetType::Multimodal(MultimodalType::Embedding(actual)),
+                FacetType::Multimodal(MultimodalType::Embedding(expected)),
+            ) => actual.size == expected.size,
+
+            // Struct assignability: all required fields of expected must exist in actual.
+            (FacetType::Struct(actual), FacetType::Struct(expected)) => {
+                expected.fields.iter().all(|(field, expected_ty)| {
+                    actual
+                        .fields
+                        .get(field)
+                        .map(|actual_ty| actual_ty.is_assignable_to(expected_ty))
+                        .unwrap_or(false)
+                })
+            }
 
             // List element type compatibility
             (FacetType::List(l1), FacetType::List(l2)) => {
@@ -214,8 +260,110 @@ impl FacetType {
 
             // Union types
             (t, FacetType::Union(union)) => union.types.iter().any(|ut| t.is_assignable_to(ut)),
+            (FacetType::Union(union), t) => union.types.iter().all(|ut| ut.is_assignable_to(t)),
 
             _ => false,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{
+        AudioType, EmbeddingType, FacetType, ImageType, MultimodalType, PrimitiveType, StructType,
+        UnionType,
+    };
+    use std::collections::HashMap;
+
+    #[test]
+    fn primitive_assignability_is_exact_except_any_target() {
+        let int_ty = FacetType::Primitive(PrimitiveType::Int);
+        let float_ty = FacetType::Primitive(PrimitiveType::Float);
+        let any_ty = FacetType::Primitive(PrimitiveType::Any);
+
+        assert!(!int_ty.is_assignable_to(&float_ty));
+        assert!(int_ty.is_assignable_to(&any_ty));
+    }
+
+    #[test]
+    fn struct_assignability_requires_expected_fields_only() {
+        let mut actual_fields = HashMap::new();
+        actual_fields.insert(
+            "name".to_string(),
+            FacetType::Primitive(PrimitiveType::String),
+        );
+        actual_fields.insert("age".to_string(), FacetType::Primitive(PrimitiveType::Int));
+        actual_fields.insert(
+            "city".to_string(),
+            FacetType::Primitive(PrimitiveType::String),
+        );
+
+        let mut expected_fields = HashMap::new();
+        expected_fields.insert(
+            "name".to_string(),
+            FacetType::Primitive(PrimitiveType::String),
+        );
+        expected_fields.insert("age".to_string(), FacetType::Primitive(PrimitiveType::Int));
+
+        let actual = FacetType::Struct(StructType {
+            fields: actual_fields,
+        });
+        let expected = FacetType::Struct(StructType {
+            fields: expected_fields,
+        });
+
+        assert!(actual.is_assignable_to(&expected));
+    }
+
+    #[test]
+    fn multimodal_constraints_are_checked_during_assignability() {
+        let actual = FacetType::Multimodal(MultimodalType::Image(ImageType {
+            max_dim: Some(512),
+            format: Some("jpeg".to_string()),
+        }));
+        let expected = FacetType::Multimodal(MultimodalType::Image(ImageType {
+            max_dim: Some(1024),
+            format: Some("jpeg".to_string()),
+        }));
+        let wrong_format = FacetType::Multimodal(MultimodalType::Image(ImageType {
+            max_dim: Some(1024),
+            format: Some("png".to_string()),
+        }));
+
+        assert!(actual.is_assignable_to(&expected));
+        assert!(!actual.is_assignable_to(&wrong_format));
+    }
+
+    #[test]
+    fn union_assignability_works_for_left_and_right_unions() {
+        let string_or_null = FacetType::Union(UnionType {
+            types: vec![
+                FacetType::Primitive(PrimitiveType::String),
+                FacetType::Primitive(PrimitiveType::Null),
+            ],
+        });
+        let any_ty = FacetType::Primitive(PrimitiveType::Any);
+        let string_ty = FacetType::Primitive(PrimitiveType::String);
+
+        assert!(string_ty.is_assignable_to(&string_or_null));
+        assert!(string_or_null.is_assignable_to(&any_ty));
+        assert!(!string_or_null.is_assignable_to(&string_ty));
+    }
+
+    #[test]
+    fn embedding_and_audio_assignability_require_matching_constraints() {
+        let emb_3 = FacetType::Multimodal(MultimodalType::Embedding(EmbeddingType { size: 3 }));
+        let emb_4 = FacetType::Multimodal(MultimodalType::Embedding(EmbeddingType { size: 4 }));
+        assert!(!emb_3.is_assignable_to(&emb_4));
+
+        let short_audio = FacetType::Multimodal(MultimodalType::Audio(AudioType {
+            max_duration: Some(3.0),
+            format: Some("wav".to_string()),
+        }));
+        let long_audio = FacetType::Multimodal(MultimodalType::Audio(AudioType {
+            max_duration: Some(10.0),
+            format: Some("wav".to_string()),
+        }));
+        assert!(short_audio.is_assignable_to(&long_audio));
     }
 }

@@ -1,3 +1,24 @@
+# FACET Compiler (Rust) — FACET v2.1.3 Migration Track
+
+> Current branch focus: production alignment with **FACET v2.1.3 (REC‑PROD)**.
+> Primary status and evidence are tracked in
+> [`docs/14-v2.1.3-migration-checklist.md`](docs/14-v2.1.3-migration-checklist.md).
+
+## Rust Migration Status (v2.1.3)
+
+- Parser/Resolver/Validator/Engine/Render pipelines are active in Rust.
+- `cargo test -q --workspace` is the release gate command for local verification.
+- Conformance work is tracked iteratively in the migration checklist with file/test evidence.
+
+Quick commands:
+
+```bash
+cargo test -q --workspace
+cargo run -- build <file.facet>
+cargo run -- run <file.facet> --exec
+cargo run -- inspect <file.facet>
+```
+
 # FACET v2.0 — Deterministic AI Architecture Compiler
 
 <div align="center">
