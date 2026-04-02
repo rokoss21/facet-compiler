@@ -239,7 +239,28 @@ struct ResolverContext {
 }
 
 impl ResolverContext {
-    fn new(config: ResolverConfig) -> Self {
+    fn new(mut config: ResolverConfig) -> Self {
+        if let Ok(base_dir) = config.base_dir.canonicalize() {
+            config.base_dir = base_dir;
+        } else if !config.base_dir.is_absolute() {
+            if let Ok(cwd) = std::env::current_dir() {
+                config.base_dir = cwd.join(&config.base_dir);
+            }
+        }
+
+        config.allowed_roots = config
+            .allowed_roots
+            .into_iter()
+            .map(|root| {
+                if root.is_absolute() {
+                    root.canonicalize().unwrap_or(root)
+                } else {
+                    let joined = config.base_dir.join(root);
+                    joined.canonicalize().unwrap_or(joined)
+                }
+            })
+            .collect();
+
         Self {
             config,
             import_stack: Vec::new(),
@@ -2020,6 +2041,28 @@ mod tests {
             }
             assert!(result.is_ok(), "Safe path should work: {}", path);
         }
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn test_windows_non_canonical_allowed_root_is_accepted() {
+        use std::fs;
+        use tempfile::TempDir;
+
+        let temp_dir = TempDir::new().unwrap();
+        fs::write(temp_dir.path().join("inside.facet"), "@vars\n  ok: true\n").unwrap();
+
+        let context = ResolverContext::new(ResolverConfig {
+            base_dir: temp_dir.path().to_path_buf(),
+            allowed_roots: vec![temp_dir.path().to_path_buf()],
+        });
+
+        let result = context.resolve_path("inside.facet");
+        assert!(
+            result.is_ok(),
+            "expected file inside allowed root to resolve, got: {:?}",
+            result.err()
+        );
     }
 
     // ========================================================================
