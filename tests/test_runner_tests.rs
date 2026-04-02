@@ -247,6 +247,44 @@ fn test_runner_with_mocks() {
 
     let test_result = result.unwrap();
     assert_eq!(test_result.name, "mock test");
+    let execution_raw = test_result
+        .execution_output
+        .as_ref()
+        .expect("execution output must be present");
+    let execution: serde_json::Value =
+        serde_json::from_str(execution_raw).expect("execution output must be valid JSON");
+    let first_event = execution
+        .get("provenance")
+        .and_then(|p| p.get("events"))
+        .and_then(|v| v.as_array())
+        .and_then(|arr| arr.first())
+        .cloned()
+        .expect("expected first guard decision event");
+    assert_eq!(
+        first_event.get("op").and_then(|v| v.as_str()),
+        Some("tool_call")
+    );
+    assert_eq!(
+        first_event.get("name").and_then(|v| v.as_str()),
+        Some("WeatherAPI.get_current")
+    );
+    assert_eq!(
+        first_event.get("effect_class").and_then(|v| v.as_str()),
+        Some("read")
+    );
+    assert_eq!(first_event.get("mode").and_then(|v| v.as_str()), Some("exec"));
+    assert_eq!(
+        first_event.get("decision").and_then(|v| v.as_str()),
+        Some("allowed")
+    );
+    assert!(
+        first_event
+            .get("input_hash")
+            .and_then(|v| v.as_str())
+            .unwrap_or_default()
+            .starts_with("sha256:"),
+        "tool_call decision must carry deterministic input_hash"
+    );
 }
 
 #[test]
@@ -405,6 +443,32 @@ fn test_runner_mock_tool_call_in_pure_mode_is_f801() {
     let result = runner.run_test(&doc, &test_block).unwrap();
     assert!(!result.passed);
     assert!(result.error.as_deref().unwrap_or_default().contains("F801"));
+    let execution_raw = result
+        .execution_output
+        .as_ref()
+        .expect("execution output must be present on failure");
+    let execution: serde_json::Value =
+        serde_json::from_str(execution_raw).expect("execution output must be valid JSON");
+    let first_event = execution
+        .get("provenance")
+        .and_then(|p| p.get("events"))
+        .and_then(|v| v.as_array())
+        .and_then(|arr| arr.first())
+        .cloned()
+        .expect("expected first guard decision event");
+    assert_eq!(
+        first_event.get("op").and_then(|v| v.as_str()),
+        Some("tool_call")
+    );
+    assert_eq!(
+        first_event.get("decision").and_then(|v| v.as_str()),
+        Some("denied")
+    );
+    assert_eq!(
+        first_event.get("error_code").and_then(|v| v.as_str()),
+        Some("F801")
+    );
+    assert_eq!(first_event.get("mode").and_then(|v| v.as_str()), Some("pure"));
 }
 
 #[test]

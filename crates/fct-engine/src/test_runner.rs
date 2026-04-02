@@ -408,12 +408,6 @@ impl TestRunner {
         let host_profile_id = ctx.execution_ctx.host_profile_id.clone();
 
         for (target, return_value) in &ctx.mock_registry.interface_mocks {
-            if ctx.execution_ctx.mode == crate::ExecutionMode::Pure {
-                return Err(EngineError::LensExecutionFailed {
-                    message: format!("Runtime I/O prohibited in pure mode: tool_call {}", target),
-                });
-            }
-
             let mut executor = ToolExecutor::new();
             executor.register_tool(ToolDefinition {
                 name: target.clone(),
@@ -432,7 +426,7 @@ impl TestRunner {
                 invocation_id: None,
             };
 
-            let decision = executor.evaluate_tool_call_guard(
+            let mut decision = executor.evaluate_tool_call_guard(
                 &invocation,
                 policy.as_ref(),
                 Some(&ctx.execution_ctx.variables),
@@ -440,6 +434,17 @@ impl TestRunner {
                 &host_profile_id,
                 effect_by_tool.get(target).map(String::as_str),
             )?;
+
+            if ctx.execution_ctx.mode == crate::ExecutionMode::Pure {
+                decision.decision = "denied".to_string();
+                decision.policy_rule_id = None;
+                decision.error_code = Some("F801".to_string());
+                ctx.execution_ctx.record_guard_decision(decision);
+                return Err(EngineError::LensExecutionFailed {
+                    message: format!("Runtime I/O prohibited in pure mode: tool_call {}", target),
+                });
+            }
+
             ctx.execution_ctx.record_guard_decision(decision.clone());
 
             if decision.error_code.as_deref() == Some("F455") {
