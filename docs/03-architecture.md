@@ -554,7 +554,7 @@ Total: 25 tokens (fits in budget)
 
 ```json
 {
-  "model": "gpt-4",
+  "model": "gpt-5.2",
   "messages": [
     {
       "role": "system",

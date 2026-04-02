@@ -1077,7 +1077,7 @@ string |> llm_call(model?: string, temperature?: float, max_tokens?: int) → st
 ```
 
 **Parameters:**
-- `model` (optional) - LLM model name (default: "gpt-3.5-turbo")
+- `model` (optional) - LLM model name (default: "gpt-5.2-chat-latest")
 - `temperature` (optional) - Sampling temperature 0.0-1.0 (default: 0.7)
 - `max_tokens` (optional) - Maximum tokens to generate (default: 1000)
 

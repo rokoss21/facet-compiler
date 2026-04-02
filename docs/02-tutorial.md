@@ -54,7 +54,7 @@ $ fct run --input hello.facet --format pretty
 
 ```json
 {
-  "model": "gpt-4",
+  "model": "gpt-5.2",
   "messages": [
     {
       "role": "system",
@@ -424,7 +424,7 @@ FACET provides **deterministic token allocation** using the Token Box Model.
 
 ```facet
 @meta
-  model: "gpt-4"
+  model: "gpt-5.2"
   budget: 4096
 
 @system (priority=100, shrink=0)

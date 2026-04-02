@@ -104,7 +104,7 @@ rustup default 1.70
 ```facet
 @system
   role: "assistant"
-  model: "gpt-4"
+  model: "gpt-5.2"
   temperature: 0.7
 
 @user
@@ -171,7 +171,7 @@ Multi-line strings preserve indentation and newlines.
 
   /* Multi-line
      comment block */
-  model: "gpt-4"
+  model: "gpt-5.2"
 ```
 
 FACET supports `#` for single-line and `/* */` for multi-line comments.
@@ -412,7 +412,7 @@ use serde_json::json;
 let facet_source = r#"
 @system
   role: "assistant"
-  model: "gpt-4"
+  model: "gpt-5.2"
 
 @user
   query: "Hello!"

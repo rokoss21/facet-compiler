@@ -53,7 +53,7 @@ Create `hello.facet`:
 ```facet
 @system
   role: "assistant"
-  model: "gpt-4"
+  model: "gpt-5.2"
   instructions: "You are a helpful assistant."
 
 @user
@@ -82,7 +82,7 @@ cargo run -- run --input hello.facet --format pretty
   "system": [
     {
       "role": "system",
-      "content": "{\"role\":\"assistant\",\"model\":\"gpt-4\",...}",
+      "content": "{\"role\":\"assistant\",\"model\":\"gpt-5.2\",...}",
       "tokens": 89
     }
   ],
@@ -183,7 +183,7 @@ FACET supports standard types:
 # ✅ Correct
 @system
   role: "assistant"
-  model: "gpt-4"
+  model: "gpt-5.2"
 
 # ❌ Wrong (4 spaces)
 @system
@@ -225,7 +225,7 @@ FACET supports standard types:
 
 @system
   role: "assistant"
-  model: "gpt-4"
+  model: "gpt-5.2"
   temperature: 0.7
   instructions: "You are a customer support agent for Acme Corp. Be helpful and professional."
 
@@ -259,7 +259,7 @@ cargo run -- run --input support_bot.facet --budget 8192
 
 @system
   role: "assistant"
-  model: "gpt-4"
+  model: "gpt-5.2"
   temperature: 0.3
   instructions: "Answer based on provided context. Cite sources."
 

@@ -496,7 +496,7 @@ Error: F602: Circular import detected: file_b.facet
 
 @vars
   provider: "openai"
-  model: "gpt-4"
+  model: "gpt-5.2"
 ```
 
 **File:** `anthropic_agent.facet`
@@ -506,7 +506,7 @@ Error: F602: Circular import detected: file_b.facet
 
 @vars
   provider: "anthropic"
-  model: "claude-3"
+  model: "claude-sonnet-4-6"
 ```
 
 ---

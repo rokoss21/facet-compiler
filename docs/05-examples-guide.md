@@ -107,7 +107,7 @@ fct test --input examples/test_example.facet
 ```facet
 @system
   role: "assistant"
-  model: "gpt-4"
+  model: "gpt-5.2"
 
 @user
   name: "User"
@@ -126,7 +126,7 @@ This is the simplest possible FACET file that defines:
 {
   "system": {
     "role": "assistant",
-    "model": "gpt-4"
+    "model": "gpt-5.2"
   },
   "user": {
     "name": "User",
@@ -181,7 +181,7 @@ fct inspect --input examples/basic.facet
 
 @system
   role: "assistant"
-  model: "gpt-4"
+  model: "gpt-5.2"
   temperature: 0.7
   instructions: "You are a helpful AI assistant. Be concise and friendly."
 
@@ -215,7 +215,7 @@ Variables are resolved in dependency order:
 {
   "system": {
     "role": "assistant",
-    "model": "gpt-4",
+    "model": "gpt-5.2",
     "temperature": 0.7,
     "instructions": "You are a helpful AI assistant. Be concise and friendly."
   },
@@ -258,7 +258,7 @@ fct run --input examples/basic_prompt.facet --format pretty
 ```facet
 @system
   role: "assistant"
-  model: "gpt-4"
+  model: "gpt-5.2"
 
 @vars
   username: "Alice"
@@ -289,7 +289,7 @@ fct run --input examples/basic_prompt.facet --format pretty
 {
   "system": {
     "role": "assistant",
-    "model": "gpt-4"
+    "model": "gpt-5.2"
   },
   "user": {
     "query": "Test pipeline",
@@ -345,7 +345,7 @@ fct run --input examples/pipeline_test.facet --format pretty
 
 @system
   role: "assistant"
-  model: "gpt-4"
+  model: "gpt-5.2"
 
 @user
   query: "Hello"
@@ -376,7 +376,7 @@ fct run --input examples/pipeline_test.facet --format pretty
 {
   "system": {
     "role": "assistant",
-    "model": "gpt-4"
+    "model": "gpt-5.2"
   },
   "user": {
     "query": "Hello"
@@ -445,7 +445,7 @@ fct build --input examples/types_test.facet
 
 @system
   role: "assistant"
-  model: "gpt-4"
+  model: "gpt-5.2"
   temperature: 0.3
   max_tokens: 500
   instructions: "You are a knowledgeable assistant. Answer questions based on the provided context. If information is not in the context, say so."
@@ -495,7 +495,7 @@ fct build --input examples/types_test.facet
 {
   "system": {
     "role": "assistant",
-    "model": "gpt-4",
+    "model": "gpt-5.2",
     "temperature": 0.3,
     "max_tokens": 500,
     "instructions": "You are a knowledgeable assistant..."
@@ -562,7 +562,7 @@ fct run --input examples/rag_pipeline.facet --format pretty
   processed: $raw_input |> trim() |> uppercase()
 
   # List literals
-  supported_models: ["gpt-4", "gpt-3.5-turbo", "claude-3"]
+  supported_models: ["gpt-5.2", "gpt-5.2-chat-latest", "claude-sonnet-4-6"]
   retry_delays: [1, 2, 5, 10]
 
   # Nested map
@@ -580,7 +580,7 @@ fct run --input examples/rag_pipeline.facet --format pretty
 
 @system
   role: "assistant"
-  model: "gpt-4"
+  model: "gpt-5.2"
   temperature: 0.7
   max_tokens: 2000
   capabilities: ["Text generation", "Code analysis", "Data processing"]
@@ -841,7 +841,7 @@ fct test --input examples/test_example.facet --output verbose
 
    @system
      role: "assistant"
-     model: "gpt-4"
+     model: "gpt-5.2"
 
    @user
      query: "Your prompt here"
