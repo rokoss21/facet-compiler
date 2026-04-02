@@ -1,5 +1,6 @@
 ---
 permalink: /05-examples-guide.html
+title: Examples
 ---
 
 # 05. FACET Examples Guide

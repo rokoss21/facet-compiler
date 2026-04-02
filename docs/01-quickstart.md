@@ -1,5 +1,6 @@
 ---
 permalink: /01-quickstart.html
+title: Quick Start
 ---
 
 # 01. FACET v2.1.3 Quick Start Guide

@@ -1,5 +1,6 @@
 ---
 permalink: /06-cli.html
+title: CLI
 ---
 
 # 06. FACET CLI Reference

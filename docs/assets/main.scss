@@ -45,16 +45,28 @@ body {
   background: transparent;
 }
 
+.site-header {
+  padding-top: 0.75rem;
+  margin-bottom: 0.65rem;
+}
+
+.site-header .wrapper {
+  display: grid;
+  gap: 0.65rem;
+}
+
 .site-title,
 .site-title:visited {
   color: var(--ink);
   text-decoration: none;
   font-weight: 700;
+  font-size: clamp(1.25rem, 2.2vw, 1.9rem);
+  line-height: 1.2;
   letter-spacing: 0.01em;
 }
 
 .site-nav {
-  float: right;
+  float: none;
 }
 
 .site-nav .nav-trigger {
@@ -68,25 +80,40 @@ body {
 .site-nav .trigger {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.45rem;
-  justify-content: flex-end;
-  margin-top: 0.5rem;
+  gap: 0.42rem;
+  align-items: center;
+  padding: 0.45rem;
+  border: 1px solid #d2dfea;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #f8fcff 0%, #eef5fb 100%);
+  box-shadow: 0 6px 16px rgba(19, 43, 64, 0.08);
 }
 
 .site-nav .page-link,
 .site-nav .page-link:visited {
   display: inline-block;
-  padding: 0.42rem 0.72rem;
+  padding: 0.4rem 0.68rem;
+  border: 1px solid transparent;
   border-radius: 999px;
   color: var(--ink-soft);
   text-decoration: none;
-  font-size: 0.92rem;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  font-size: 0.86rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.25;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
 .site-nav .page-link:hover {
-  background: #dff0f3;
+  border-color: #c3d9e9;
+  background: #ffffff;
   color: var(--brand-strong);
+}
+
+.site-nav .page-link[aria-current="page"] {
+  border-color: #b8d2e7;
+  background: #ffffff;
+  color: #12394f;
 }
 
 .page-content {
@@ -220,13 +247,20 @@ tr:nth-child(even) td {
 }
 
 @media (max-width: 860px) {
-  .site-nav {
-    float: none;
-    margin-top: 0.6rem;
+  .site-header {
+    padding-top: 0.55rem;
   }
 
   .site-nav .trigger {
-    justify-content: flex-start;
+    justify-content: center;
+    border-radius: 12px;
+    padding: 0.4rem;
+  }
+
+  .site-nav .page-link,
+  .site-nav .page-link:visited {
+    font-size: 0.84rem;
+    padding: 0.36rem 0.58rem;
   }
 
   .page-content .wrapper {
