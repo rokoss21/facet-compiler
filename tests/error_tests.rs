@@ -2,10 +2,10 @@
 // Tests all error codes from F001 to F902
 
 use fct_ast::{FacetDocument, FacetNode, ValueNode};
-use fct_engine::{RDagEngine, ExecutionContext, TokenBoxModel, Section};
+use fct_engine::{ExecutionContext, RDagEngine, Section, TokenBoxModel};
 use fct_parser::parse_document;
-use fct_validator::TypeChecker;
 use fct_std::LensRegistry;
+use fct_validator::TypeChecker;
 
 // ============================================================================
 // HELPER FUNCTIONS
@@ -19,8 +19,7 @@ fn parse_and_validate(source: &str) -> Result<FacetDocument, String> {
     let doc = parse_document(source)?;
 
     let mut validator = TypeChecker::new();
-    validator.validate(&doc)
-        .map_err(|e| e.to_string())?;
+    validator.validate(&doc).map_err(|e| e.to_string())?;
 
     Ok(doc)
 }
@@ -29,19 +28,15 @@ fn build_and_execute(source: &str, gas_limit: usize) -> Result<(), String> {
     let doc = parse_document(source)?;
 
     let mut validator = TypeChecker::new();
-    validator.validate(&doc)
-        .map_err(|e| e.to_string())?;
+    validator.validate(&doc).map_err(|e| e.to_string())?;
 
     let mut engine = RDagEngine::new();
-    engine.build(&doc)
-        .map_err(|e| e.to_string())?;
+    engine.build(&doc).map_err(|e| e.to_string())?;
 
-    engine.validate()
-        .map_err(|e| e.to_string())?;
+    engine.validate().map_err(|e| e.to_string())?;
 
     let mut ctx = ExecutionContext::new(gas_limit);
-    engine.execute(&mut ctx)
-        .map_err(|e| e.to_string())?;
+    engine.execute(&mut ctx).map_err(|e| e.to_string())?;
 
     Ok(())
 }
@@ -56,7 +51,7 @@ fn test_f001_invalid_indentation_three_spaces() {
 @system
    role: "assistant"  // 3 spaces instead of 2 or 4
 "#;
-    
+
     let result = parse_only(source);
     assert!(result.is_err());
     let error_msg = result.unwrap_err();
@@ -70,7 +65,7 @@ fn test_f001_invalid_indentation_one_space() {
 @system
  role: "assistant"  // 1 space instead of 2 or 4
 "#;
-    
+
     let result = parse_only(source);
     assert!(result.is_err());
     let error_msg = result.unwrap_err();
@@ -79,8 +74,8 @@ fn test_f001_invalid_indentation_one_space() {
 
 #[test]
 fn test_f002_tabs_not_allowed() {
-    let source = "@system\n\trole: \"assistant\"\n";  // Tab character
-    
+    let source = "@system\n\trole: \"assistant\"\n"; // Tab character
+
     let result = parse_only(source);
     assert!(result.is_err());
     let error_msg = result.unwrap_err();
@@ -90,8 +85,8 @@ fn test_f002_tabs_not_allowed() {
 
 #[test]
 fn test_f002_mixed_tabs_and_spaces() {
-    let source = "@system\n\t  role: \"assistant\"\n";  // Tab + spaces
-    
+    let source = "@system\n\t  role: \"assistant\"\n"; // Tab + spaces
+
     let result = parse_only(source);
     assert!(result.is_err());
     let error_msg = result.unwrap_err();
@@ -104,7 +99,7 @@ fn test_f003_unclosed_bracket() {
 @vars
   list: [1, 2, 3  # Missing closing bracket
 "#;
-    
+
     let result = parse_only(source);
     assert!(result.is_err());
     let error_msg = result.unwrap_err();
@@ -118,7 +113,7 @@ fn test_f003_unclosed_brace() {
 @vars
   map: {"key": "value"  # Missing closing brace
 "#;
-    
+
     let result = parse_only(source);
     assert!(result.is_err());
     let error_msg = result.unwrap_err();
@@ -131,7 +126,7 @@ fn test_f003_unclosed_string() {
 @vars
   text: "unclosed string
 "#;
-    
+
     let result = parse_only(source);
     assert!(result.is_err());
     let error_msg = result.unwrap_err();
@@ -156,7 +151,7 @@ fn test_f401_variable_not_found() {
     assert!(doc.is_ok());
 
     // Execution fails with variable not found
-    let result = build_and_execute(&source, 1000);
+    let result = build_and_execute(source, 1000);
     assert!(result.is_err());
     let error_msg = result.unwrap_err();
     assert!(error_msg.contains("F401"));
@@ -173,13 +168,19 @@ fn test_f401_variable_nested_not_found() {
   display: $user.profile.name
 "#;
 
-    let result = build_and_execute(&source, 1000);
-    assert!(result.is_err(), "Should fail at runtime accessing undefined field");
+    let result = build_and_execute(source, 1000);
+    assert!(
+        result.is_err(),
+        "Should fail at runtime accessing undefined field"
+    );
     let error_msg = result.unwrap_err();
     // Runtime error when accessing undefined field - may not be F401, could be engine error
     eprintln!("Nested field ERROR: {}", error_msg);
-    assert!(error_msg.contains("F") || error_msg.contains("error"),
-            "Expected error, got: {}", error_msg);
+    assert!(
+        error_msg.contains("F") || error_msg.contains("error"),
+        "Expected error, got: {}",
+        error_msg
+    );
 }
 
 // NOTE: In FACET with R-DAG, declaration order doesn't matter in @vars block
@@ -242,7 +243,11 @@ fn test_f451_type_mismatch_string_to_int() {
     assert!(result.is_err());
     let error_msg = result.unwrap_err();
     eprintln!("F451 string->int ERROR: {}", error_msg);
-    assert!(error_msg.contains("F451"), "Expected F451, got: {}", error_msg);
+    assert!(
+        error_msg.contains("F451"),
+        "Expected F451, got: {}",
+        error_msg
+    );
     assert!(error_msg.contains("Type mismatch"));
 }
 
@@ -260,7 +265,11 @@ fn test_f451_type_mismatch_bool_to_float() {
     assert!(result.is_err());
     let error_msg = result.unwrap_err();
     eprintln!("F451 bool->float ERROR: {}", error_msg);
-    assert!(error_msg.contains("F451"), "Expected F451, got: {}", error_msg);
+    assert!(
+        error_msg.contains("F451"),
+        "Expected F451, got: {}",
+        error_msg
+    );
 }
 
 #[test]
@@ -281,7 +290,11 @@ fn test_f452_constraint_range_violation() {
     assert!(result.is_err());
     let error_msg = result.unwrap_err();
     eprintln!("F452 range ERROR: {}", error_msg);
-    assert!(error_msg.contains("F452"), "Expected F452, got: {}", error_msg);
+    assert!(
+        error_msg.contains("F452"),
+        "Expected F452, got: {}",
+        error_msg
+    );
     assert!(error_msg.contains("Constraint"));
 }
 
@@ -302,7 +315,11 @@ fn test_f452_constraint_pattern_violation() {
     assert!(result.is_err());
     let error_msg = result.unwrap_err();
     eprintln!("F452 pattern ERROR: {}", error_msg);
-    assert!(error_msg.contains("F452"), "Expected F452, got: {}", error_msg);
+    assert!(
+        error_msg.contains("F452"),
+        "Expected F452, got: {}",
+        error_msg
+    );
 }
 
 #[test]
@@ -322,7 +339,11 @@ fn test_f452_constraint_enum_violation() {
     assert!(result.is_err());
     let error_msg = result.unwrap_err();
     eprintln!("F452 enum ERROR: {}", error_msg);
-    assert!(error_msg.contains("F452"), "Expected F452, got: {}", error_msg);
+    assert!(
+        error_msg.contains("F452"),
+        "Expected F452, got: {}",
+        error_msg
+    );
 }
 
 #[test]
@@ -342,7 +363,11 @@ fn test_f452_constraint_enum_non_atom_item() {
     assert!(result.is_err());
     let error_msg = result.unwrap_err();
     eprintln!("F452 enum non-atom ERROR: {}", error_msg);
-    assert!(error_msg.contains("F452"), "Expected F452, got: {}", error_msg);
+    assert!(
+        error_msg.contains("F452"),
+        "Expected F452, got: {}",
+        error_msg
+    );
 }
 
 #[test]
@@ -357,7 +382,11 @@ fn test_f452_input_missing_type_attr() {
     assert!(result.is_err());
     let error_msg = result.unwrap_err();
     eprintln!("F452 input ERROR: {}", error_msg);
-    assert!(error_msg.contains("F452"), "Expected F452, got: {}", error_msg);
+    assert!(
+        error_msg.contains("F452"),
+        "Expected F452, got: {}",
+        error_msg
+    );
     assert!(
         error_msg.contains("@input(...) requires 'type'") || error_msg.contains("Constraint"),
         "Expected missing-type detail, got: {}",
@@ -376,11 +405,15 @@ fn test_f505_direct_cycle_a_b_a() {
   a: $b
   b: $a
 "#;
-    
-    let result = build_and_execute(&source, 1000);
+
+    let result = build_and_execute(source, 1000);
     assert!(result.is_err());
     let error_msg = result.unwrap_err();
-    assert!(error_msg.contains("F505"), "Expected F505 (cycle), got: {}", error_msg);
+    assert!(
+        error_msg.contains("F505"),
+        "Expected F505 (cycle), got: {}",
+        error_msg
+    );
     assert!(error_msg.contains("Cyclic dependency"));
 }
 
@@ -392,8 +425,8 @@ fn test_f505_transitive_cycle_a_b_c_a() {
   b: $c
   c: $a
 "#;
-    
-    let result = build_and_execute(&source, 1000);
+
+    let result = build_and_execute(source, 1000);
     assert!(result.is_err());
     let error_msg = result.unwrap_err();
     assert!(error_msg.contains("F505"));
@@ -406,10 +439,14 @@ fn test_f505_self_reference() {
   value: $value
 "#;
 
-    let result = build_and_execute(&source, 1000);
+    let result = build_and_execute(source, 1000);
     assert!(result.is_err());
     let error_msg = result.unwrap_err();
-    assert!(error_msg.contains("F505"), "Expected F505 (self-cycle), got: {}", error_msg);
+    assert!(
+        error_msg.contains("F505"),
+        "Expected F505 (self-cycle), got: {}",
+        error_msg
+    );
 }
 
 // ============================================================================
@@ -448,8 +485,11 @@ fn test_f602_circular_import() {
     assert!(result.is_err());
     let error_msg = result.unwrap_err();
     eprintln!("F602 circular ERROR: {}", error_msg);
-    assert!(error_msg.contains("F602") || error_msg.contains("F601"),
-            "Expected F602 or F601, got: {}", error_msg);
+    assert!(
+        error_msg.contains("F602") || error_msg.contains("F601"),
+        "Expected F602 or F601, got: {}",
+        error_msg
+    );
 }
 
 // ============================================================================
@@ -463,8 +503,8 @@ fn test_f801_lens_execution_failed() {
   text: "hello"
   result: $text |> split(",")  // split expects string delimiter
 "#;
-    
-    let result = build_and_execute(&source, 1000);
+
+    let _result = build_and_execute(source, 1000);
     // This might succeed or fail depending on lens implementation
     // The test documents expected behavior
 }
@@ -476,7 +516,7 @@ fn test_f802_unknown_lens() {
   text: "hello"
   result: $text |> nonexistent_lens()
 "#;
-    
+
     let result = parse_and_validate(source);
     assert!(result.is_err());
     let error_msg = result.unwrap_err();
@@ -518,7 +558,11 @@ fn test_f901_budget_exceeded() {
 
     assert!(result.is_err());
     let error_msg = result.unwrap_err().to_string();
-    assert!(error_msg.contains("F901"), "Expected F901 error, got: {}", error_msg);
+    assert!(
+        error_msg.contains("F901"),
+        "Expected F901 error, got: {}",
+        error_msg
+    );
 }
 
 #[test]
@@ -533,9 +577,9 @@ fn test_f902_gas_exhausted() {
   step4: $step3 |> trim()
   step5: $step4 |> trim()
 "#;
-    
+
     // Execute with insufficient gas
-    let result = build_and_execute(&source, 3);
+    let result = build_and_execute(source, 3);
     assert!(result.is_err());
     let error_msg = result.unwrap_err();
     assert!(error_msg.contains("F902"));
@@ -573,11 +617,15 @@ fn test_error_with_unicode_content() {
   link: $undefined_var
 "#;
 
-    let result = build_and_execute(&source, 1000);
+    let result = build_and_execute(source, 1000);
     assert!(result.is_err());
     let error_msg = result.unwrap_err();
     eprintln!("F401 ERROR: {}", error_msg);
-    assert!(error_msg.contains("F401"), "Expected F401 (variable not found), got: {}", error_msg);
+    assert!(
+        error_msg.contains("F401"),
+        "Expected F401 (variable not found), got: {}",
+        error_msg
+    );
 }
 
 #[test]
@@ -594,11 +642,11 @@ fn test_error_recovery_continues() {
 @user
   content: "message"
 "#;
-    
+
     let result = parse_only(source);
     // Parse should succeed, but validation/execution should fail
     assert!(result.is_ok());
-    
+
     let doc = result.unwrap();
     assert_eq!(doc.blocks.len(), 3); // All blocks parsed
 }

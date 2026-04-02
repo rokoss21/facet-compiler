@@ -3,13 +3,15 @@
 //! This module implements the run command for the FACET compiler.
 //! The run command executes the full pipeline: parse, resolve, validate, compute, and render.
 
+use crate::commands::mode_profile::resolve_execution_mode;
 use anyhow::{Context, Result};
 use console::style;
-use crate::commands::mode_profile::resolve_execution_mode;
-use fct_ast::{BodyNode, FacetDocument, FacetNode, OrderedMap, PipelineNode, ScalarValue, ValueNode};
+use fct_ast::{
+    BodyNode, FacetDocument, FacetNode, OrderedMap, PipelineNode, ScalarValue, ValueNode,
+};
 use fct_engine::{
     count_facet_units_in_value, derive_message_section_id, ExecutionContext,
-    ExecutionGuardDecision, ExecutionMode, RDagEngine, Section, TokenBoxModel,
+    ExecutionGuardDecision, RDagEngine, Section, TokenBoxModel,
 };
 use fct_parser::parse_document;
 use fct_render::{
@@ -24,6 +26,7 @@ use std::fs;
 use tracing::info;
 
 /// Run command handler
+#[allow(clippy::too_many_arguments)]
 pub fn execute_run(
     input: std::path::PathBuf,
     runtime_input: Option<std::path::PathBuf>,
@@ -86,7 +89,7 @@ pub fn execute_run(
 
     let effective_budget = effective_layout_budget(&resolved, budget);
     let lens_registry = LensRegistry::new();
-    let sections = doc_to_sections(&resolved, &exec_ctx.variables, &lens_registry, execution_mode)?;
+    let sections = doc_to_sections(&resolved, &exec_ctx.variables, &lens_registry)?;
     let box_model = TokenBoxModel::new(effective_budget);
     let allocation = box_model.allocate_with_mode(sections, &lens_registry, execution_mode)?;
 
@@ -207,7 +210,6 @@ fn doc_to_sections(
     doc: &FacetDocument,
     computed_vars: &HashMap<String, ValueNode>,
     lens_registry: &LensRegistry,
-    mode: ExecutionMode,
 ) -> Result<Vec<Section>> {
     let mut sections = Vec::new();
     let defaults = context_layout_defaults_from_doc(doc);
@@ -237,7 +239,7 @@ fn doc_to_sections(
         }
 
         let layout = resolve_section_layout(body, &defaults, &derived_id);
-        let content = block_content_or_default(body, computed_vars, lens_registry, mode)?;
+        let content = block_content_or_default(body, computed_vars, lens_registry)?;
         let base_size = count_facet_units_in_value(&content);
         let mut section = Section::new(layout.id, content, base_size)
             .with_priority(layout.priority)
@@ -431,12 +433,11 @@ fn block_content_or_default(
     block: &fct_ast::FacetBlock,
     computed_vars: &HashMap<String, ValueNode>,
     lens_registry: &LensRegistry,
-    mode: ExecutionMode,
 ) -> Result<ValueNode> {
     for body in &block.body {
         if let BodyNode::KeyValue(kv) = body {
             if kv.key == "content" {
-                return resolve_message_value(&kv.value, computed_vars, lens_registry, mode);
+                return resolve_message_value(&kv.value, computed_vars, lens_registry);
             }
         }
     }
@@ -447,14 +448,13 @@ fn resolve_message_value(
     value: &ValueNode,
     computed_vars: &HashMap<String, ValueNode>,
     lens_registry: &LensRegistry,
-    mode: ExecutionMode,
 ) -> Result<ValueNode> {
     match value {
         ValueNode::Variable(var_ref) => resolve_variable_ref(var_ref, computed_vars),
         ValueNode::List(items) => {
             let mut out = Vec::with_capacity(items.len());
             for item in items {
-                out.push(resolve_message_value(item, computed_vars, lens_registry, mode)?);
+                out.push(resolve_message_value(item, computed_vars, lens_registry)?);
             }
             Ok(ValueNode::List(out))
         }
@@ -463,14 +463,14 @@ fn resolve_message_value(
             for (k, v) in map {
                 out.insert(
                     k.clone(),
-                    resolve_message_value(v, computed_vars, lens_registry, mode)?,
+                    resolve_message_value(v, computed_vars, lens_registry)?,
                 );
             }
             Ok(ValueNode::Map(out))
         }
         ValueNode::Pipeline(pipeline) => {
             let mut current =
-                resolve_message_value(&pipeline.initial, computed_vars, lens_registry, mode)?;
+                resolve_message_value(&pipeline.initial, computed_vars, lens_registry)?;
             let ctx = LensContext {
                 variables: computed_vars.clone(),
             };
@@ -489,24 +489,21 @@ fn resolve_message_value(
 
                 let mut resolved_args = Vec::with_capacity(lens_call.args.len());
                 for arg in &lens_call.args {
-                    resolved_args.push(resolve_message_value(
-                        arg,
-                        computed_vars,
-                        lens_registry,
-                        mode,
-                    )?);
+                    resolved_args.push(resolve_message_value(arg, computed_vars, lens_registry)?);
                 }
                 let mut resolved_kwargs = HashMap::with_capacity(lens_call.kwargs.len());
                 for (k, v) in &lens_call.kwargs {
                     resolved_kwargs.insert(
                         k.clone(),
-                        resolve_message_value(v, computed_vars, lens_registry, mode)?,
+                        resolve_message_value(v, computed_vars, lens_registry)?,
                     );
                 }
 
                 current = lens
                     .execute(current, resolved_args, resolved_kwargs, &ctx)
-                    .map_err(|e| anyhow::anyhow!("F801: Message content lens execution failed: {}", e))?;
+                    .map_err(|e| {
+                        anyhow::anyhow!("F801: Message content lens execution failed: {}", e)
+                    })?;
             }
             Ok(current)
         }
@@ -562,6 +559,7 @@ fn build_execution_artifact(
     crate::commands::artifact::build_execution_artifact(payload, decisions)
 }
 
+#[allow(dead_code)]
 fn build_execution_artifact_with_attestation(
     payload: &CanonicalPayload,
     decisions: &[GuardDecision],
@@ -631,15 +629,12 @@ mod tests {
                 column: 1,
             },
         });
-        let computed_vars = HashMap::from([(
-            "name".to_string(),
-            ValueNode::String("world".to_string()),
-        )]);
+        let computed_vars =
+            HashMap::from([("name".to_string(), ValueNode::String("world".to_string()))]);
         let lens_registry = LensRegistry::new();
 
-        let resolved =
-            resolve_message_value(&value, &computed_vars, &lens_registry, ExecutionMode::Exec)
-                .expect("message pipeline should resolve");
+        let resolved = resolve_message_value(&value, &computed_vars, &lens_registry)
+            .expect("message pipeline should resolve");
         assert_eq!(resolved, ValueNode::String("WORLD".to_string()));
     }
 
@@ -668,7 +663,7 @@ mod tests {
         let computed_vars = HashMap::new();
         let lens_registry = LensRegistry::new();
 
-        let err = resolve_message_value(&value, &computed_vars, &lens_registry, ExecutionMode::Exec)
+        let err = resolve_message_value(&value, &computed_vars, &lens_registry)
             .expect_err("non-pure message lens must be rejected");
         let text = err.to_string();
         assert!(text.contains("F801"));
@@ -718,13 +713,8 @@ mod tests {
   content: "second"
 "#;
         let doc = parse_document(source).expect("doc should parse");
-        let sections = doc_to_sections(
-            &doc,
-            &HashMap::new(),
-            &LensRegistry::new(),
-            ExecutionMode::Exec,
-        )
-        .expect("sections should build");
+        let sections = doc_to_sections(&doc, &HashMap::new(), &LensRegistry::new())
+            .expect("sections should build");
 
         assert_eq!(sections.len(), 2);
         assert_eq!(sections[0].id, "user#1");
@@ -753,13 +743,8 @@ mod tests {
   content: "visible"
 "#;
         let doc = parse_document(source).expect("doc should parse");
-        let sections = doc_to_sections(
-            &doc,
-            &HashMap::new(),
-            &LensRegistry::new(),
-            ExecutionMode::Exec,
-        )
-        .expect("sections should build");
+        let sections = doc_to_sections(&doc, &HashMap::new(), &LensRegistry::new())
+            .expect("sections should build");
 
         assert_eq!(sections.len(), 1);
         assert_eq!(sections[0].id, "user#2");
@@ -804,7 +789,10 @@ mod tests {
         let artifact = std::fs::read_to_string(&artifact_path).expect("read execution.json");
         let parsed: serde_json::Value = serde_json::from_str(&artifact).expect("valid JSON");
         assert!(parsed.get("metadata").is_some(), "metadata section missing");
-        assert!(parsed.get("provenance").is_some(), "provenance section missing");
+        assert!(
+            parsed.get("provenance").is_some(),
+            "provenance section missing"
+        );
         assert!(
             parsed
                 .get("provenance")
@@ -940,7 +928,11 @@ mod tests {
         assert_eq!(md.get("document_hash").unwrap(), "sha256:abc");
         assert_eq!(md.get("policy_hash").unwrap(), "sha256:def");
         assert_eq!(md.get("policy_version").unwrap(), "1");
-        assert_eq!(md.len(), 5, "metadata should contain only Appendix F fields");
+        assert_eq!(
+            md.len(),
+            5,
+            "metadata should contain only Appendix F fields"
+        );
     }
 
     #[test]
@@ -1019,7 +1011,11 @@ mod tests {
         ];
 
         for key in required {
-            assert!(event.contains_key(key), "missing required event key '{}'", key);
+            assert!(
+                event.contains_key(key),
+                "missing required event key '{}'",
+                key
+            );
         }
     }
 
@@ -1090,7 +1086,12 @@ mod tests {
             .collect();
         assert_eq!(
             hashes,
-            vec!["sha256:tool", "sha256:lens", "sha256:expose", "sha256:message"]
+            vec![
+                "sha256:tool",
+                "sha256:lens",
+                "sha256:expose",
+                "sha256:message"
+            ]
         );
     }
 

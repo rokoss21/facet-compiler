@@ -20,9 +20,9 @@ use fct_validator::TypeChecker;
 const TEST_EMOJI: Emoji = Emoji("🧪 ", "");
 const PASS_EMOJI: Emoji = Emoji("✅ ", "");
 const FAIL_EMOJI: Emoji = Emoji("❌ ", "");
-const SKIP_EMOJI: Emoji = Emoji("⏭️ ", "");
 
 /// Test command handler
+#[allow(clippy::too_many_arguments)]
 pub fn execute_test(
     input: std::path::PathBuf,
     filter: Option<String>,
@@ -252,8 +252,8 @@ pub fn execute_test(
 /// Generate JSON output using TestReporter
 fn generate_json_output(
     test_results: &[fct_engine::TestResult],
-    input_file: &Path,
-    total_duration: std::time::Duration,
+    _input_file: &Path,
+    _total_duration: std::time::Duration,
 ) -> Result<()> {
     let reporter = TestReporter {
         format: ReportFormat::Json,
@@ -267,8 +267,8 @@ fn generate_json_output(
 /// Generate JUnit XML output
 fn generate_junit_output(
     test_results: &[fct_engine::TestResult],
-    input_file: &Path,
-    total_duration: std::time::Duration,
+    _input_file: &Path,
+    _total_duration: std::time::Duration,
 ) -> Result<()> {
     let reporter = TestReporter {
         format: ReportFormat::JUnit,
@@ -291,7 +291,6 @@ fn generate_summary_output(
     println!("{}", style("─".repeat(50)).dim());
 
     // Overall summary
-    let total_count = passed_count + failed_count;
     let status = if failed_count == 0 {
         style(format!("PASSED ({} passed)", passed_count)).green()
     } else {

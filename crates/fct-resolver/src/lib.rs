@@ -115,7 +115,7 @@ pub enum ResolverError {
     #[error("F601: Import not found: {path}")]
     ImportNotFound {
         /// The import path that could not be resolved
-        path: String
+        path: String,
     },
 
     /// F602: Circular dependency detected in the import graph.
@@ -126,7 +126,7 @@ pub enum ResolverError {
     #[error("F602: Import cycle detected: {cycle}")]
     ImportCycle {
         /// The complete import cycle path showing the circular dependency
-        cycle: String
+        cycle: String,
     },
 
     /// Absolute paths are not allowed in import statements.
@@ -136,7 +136,7 @@ pub enum ResolverError {
     #[error("F601: Import not found / disallowed path: {path} (absolute paths not allowed)")]
     AbsolutePathNotAllowed {
         /// The absolute path that was rejected
-        path: String
+        path: String,
     },
 
     /// Parent directory traversal (../) is not allowed in import paths.
@@ -146,7 +146,7 @@ pub enum ResolverError {
     #[error("F601: Import not found / disallowed path: {path} (parent traversal not allowed)")]
     ParentTraversalNotAllowed {
         /// The path containing parent traversal that was rejected
-        path: String
+        path: String,
     },
 
     /// I/O error during file operations.
@@ -173,19 +173,21 @@ pub enum ResolverError {
         /// The file path that timed out
         path: String,
         /// The timeout duration in seconds
-        seconds: u64
+        seconds: u64,
     },
 
     /// F601: Symlink escape attack detected (outside allowlisted roots).
     ///
     /// This security error occurs when a symbolic link points outside the
     /// allowed directories, potentially allowing access to sensitive files.
-    #[error("F601: Import not found / disallowed path: symlink escape {link_path} -> {target_path}")]
+    #[error(
+        "F601: Import not found / disallowed path: symlink escape {link_path} -> {target_path}"
+    )]
     SymlinkEscape {
         /// The path of the symlink file
         link_path: String,
         /// The target path the symlink points to (outside allowed directories)
-        target_path: String
+        target_path: String,
     },
 
     /// X.resolver.SENSITIVE_LOCATION: Attempt to access sensitive system location.
@@ -196,7 +198,7 @@ pub enum ResolverError {
     #[error("X.resolver.SENSITIVE_LOCATION: Access to sensitive location denied: {path}")]
     SensitiveLocationAccess {
         /// The sensitive path that access was denied to
-        path: String
+        path: String,
     },
 
     /// X.resolver.SUSPICIOUS_ENCODING: Suspicious path encoding detected.
@@ -207,7 +209,7 @@ pub enum ResolverError {
     #[error("X.resolver.SUSPICIOUS_ENCODING: Path contains suspicious encoding: {path}")]
     SuspiciousEncoding {
         /// The path with suspicious encoding that was rejected
-        path: String
+        path: String,
     },
 }
 
@@ -313,7 +315,11 @@ impl ResolverContext {
         }
 
         // Check for Unicode normalization attacks (simplified)
-        if path.contains("//") || path.contains("\\\\") || path.contains("/\\") || path.contains("\\/") {
+        if path.contains("//")
+            || path.contains("\\\\")
+            || path.contains("/\\")
+            || path.contains("\\/")
+        {
             return Err(ResolverError::SuspiciousEncoding {
                 path: path.to_string(),
             });
@@ -394,11 +400,17 @@ impl ResolverContext {
     }
 
     /// Validate that symlinks don't escape allowed roots
-    fn validate_symlink_safety(&self, canonical_path: &Path, original_path: &str) -> ResolverResult<()> {
+    fn validate_symlink_safety(
+        &self,
+        canonical_path: &Path,
+        original_path: &str,
+    ) -> ResolverResult<()> {
         // Check if the canonical path is within any allowed root
-        let is_within_allowed_roots = self.config.allowed_roots.iter().any(|root| {
-            canonical_path.starts_with(root) || canonical_path == root
-        });
+        let is_within_allowed_roots = self
+            .config
+            .allowed_roots
+            .iter()
+            .any(|root| canonical_path.starts_with(root) || canonical_path == root);
 
         if !is_within_allowed_roots {
             return Err(ResolverError::SymlinkEscape {
@@ -415,7 +427,8 @@ impl ResolverContext {
         let path_buf = path.to_path_buf();
         if self.import_stack.contains(&path_buf) {
             // Find the position where the cycle starts
-            let cycle_start_pos = self.import_stack
+            let cycle_start_pos = self
+                .import_stack
                 .iter()
                 .position(|p| p == &path_buf)
                 .unwrap_or(0);
@@ -440,8 +453,7 @@ impl ResolverContext {
             // Enhanced error message with cycle information
             let detailed_error = format!(
                 "F602: Import cycle detected (depth: {}): {}",
-                cycle_depth,
-                cycle_string
+                cycle_depth, cycle_string
             );
 
             return Err(ResolverError::ImportCycle {
@@ -602,7 +614,8 @@ impl Resolver {
 
             if let Some(import_path) = Self::extract_top_level_import_path(line) {
                 let path = if let Some(importer) = importer_file {
-                    self.context.resolve_path_from(import_path, Some(importer))?
+                    self.context
+                        .resolve_path_from(import_path, Some(importer))?
                 } else {
                     self.context.resolve_path(import_path)?
                 };
@@ -678,7 +691,8 @@ impl Resolver {
     fn resolve_import(&mut self, import: &ImportNode) -> ResolverResult<Vec<FacetNode>> {
         let importer_file = self.context.import_stack.last().map(PathBuf::as_path);
         let path = if let Some(importer) = importer_file {
-            self.context.resolve_path_from(&import.path, Some(importer))?
+            self.context
+                .resolve_path_from(&import.path, Some(importer))?
         } else {
             self.context.resolve_path(&import.path)?
         };
@@ -701,11 +715,12 @@ impl Resolver {
 
     /// Read file with timeout to prevent hanging on slow/network filesystems
     fn read_file_with_timeout(&self, path: &Path) -> ResolverResult<String> {
-        let rt = tokio::runtime::Runtime::new()
-            .map_err(|e| ResolverError::Io(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                format!("Failed to create runtime: {}", e)
-            )))?;
+        let rt = tokio::runtime::Runtime::new().map_err(|e| {
+            ResolverError::Io(std::io::Error::other(format!(
+                "Failed to create runtime: {}",
+                e
+            )))
+        })?;
 
         let path = path.to_path_buf();
         let timeout_duration = Duration::from_secs(30); // 30 second timeout
@@ -779,12 +794,7 @@ impl Resolver {
         }
     }
 
-    fn merge_facet_blocks(
-        &self,
-        existing: &mut FacetBlock,
-        new: &FacetBlock,
-        policy_mode: bool,
-    ) {
+    fn merge_facet_blocks(&self, existing: &mut FacetBlock, new: &FacetBlock, policy_mode: bool) {
         use fct_ast::{BodyNode, KeyValueNode};
 
         for (key, value) in &new.attributes {
@@ -806,7 +816,9 @@ impl Resolver {
             match new_item {
                 BodyNode::KeyValue(new_kv) => {
                     if let Some(existing_idx) = key_index.get(&new_kv.key).copied() {
-                        if let Some(BodyNode::KeyValue(existing_kv)) = existing.body.get(existing_idx) {
+                        if let Some(BodyNode::KeyValue(existing_kv)) =
+                            existing.body.get(existing_idx)
+                        {
                             let merged_value = self.merge_value_nodes(
                                 &existing_kv.value,
                                 &new_kv.value,
@@ -871,13 +883,8 @@ impl Resolver {
         for (k, incoming_val) in new_map {
             match merged.get(k) {
                 Some(current_val) => {
-                    let merged_val = self.merge_value_nodes(
-                        current_val,
-                        incoming_val,
-                        k,
-                        policy_mode,
-                        None,
-                    );
+                    let merged_val =
+                        self.merge_value_nodes(current_val, incoming_val, k, policy_mode, None);
                     merged.insert(k.clone(), merged_val);
                 }
                 None => {
@@ -1332,12 +1339,8 @@ mod tests {
         assert_eq!(merged.len(), 3);
         assert!(matches!(merged[0], FacetNode::System(_)));
         // Note: order depends on implementation - just verify all present
-        assert!(merged
-            .iter()
-            .any(|b| matches!(b, FacetNode::Vars(_))));
-        assert!(merged
-            .iter()
-            .any(|b| matches!(b, FacetNode::User(_))));
+        assert!(merged.iter().any(|b| matches!(b, FacetNode::Vars(_))));
+        assert!(merged.iter().any(|b| matches!(b, FacetNode::User(_))));
     }
 
     #[test]
@@ -1430,7 +1433,10 @@ mod tests {
                         _ => None,
                     })
                     .collect();
-                assert_eq!(keys, vec!["a".to_string(), "b".to_string(), "c".to_string()]);
+                assert_eq!(
+                    keys,
+                    vec!["a".to_string(), "b".to_string(), "c".to_string()]
+                );
 
                 match &block.body[0] {
                     BodyNode::KeyValue(kv) => match &kv.value {
@@ -1496,7 +1502,10 @@ mod tests {
                 body: vec![BodyNode::KeyValue(KeyValueNode {
                     key: "allow".to_string(),
                     key_kind: Default::default(),
-                    value: ValueNode::List(vec![ValueNode::Map(allow_rule_v2), ValueNode::Map(allow_rule_v3)]),
+                    value: ValueNode::List(vec![
+                        ValueNode::Map(allow_rule_v2),
+                        ValueNode::Map(allow_rule_v3),
+                    ]),
                     span: Span {
                         start: 0,
                         end: 0,
@@ -1586,7 +1595,10 @@ mod tests {
                 body: vec![BodyNode::KeyValue(KeyValueNode {
                     key: "items".to_string(),
                     key_kind: Default::default(),
-                    value: ValueNode::List(vec![ValueNode::Map(item_a_new), ValueNode::Map(item_b)]),
+                    value: ValueNode::List(vec![
+                        ValueNode::Map(item_a_new),
+                        ValueNode::Map(item_b),
+                    ]),
                     span: Span {
                         start: 0,
                         end: 0,
@@ -1669,7 +1681,10 @@ mod tests {
                 _ => None,
             })
             .collect();
-        assert_eq!(keys, vec!["b".to_string(), "a".to_string(), "m".to_string()]);
+        assert_eq!(
+            keys,
+            vec!["b".to_string(), "a".to_string(), "m".to_string()]
+        );
     }
 
     #[test]
@@ -1767,10 +1782,10 @@ mod tests {
 
     #[test]
     fn test_file_read_timeout() {
+        use std::io::Write;
         use std::thread;
         use std::time::Duration;
         use tempfile::NamedTempFile;
-        use std::io::Write;
 
         let resolver = Resolver::new(ResolverConfig::default());
         let context = ResolverContext::new(ResolverConfig::default());
@@ -1803,18 +1818,18 @@ mod tests {
 
         // URL encoded path traversal attempts
         let malicious_paths = [
-            "%2e%2e%2f",      // ../
-            "%2e%2e%5c",      // ..\
+            "%2e%2e%2f",          // ../
+            "%2e%2e%5c",          // ..\
             "%2e%2e%2f%2e%2e%2f", // ../../
-            "file%2e%2e%2f", // file../
-            "%252e%252e%252f", // double encoded ../
+            "file%2e%2e%2f",      // file../
+            "%252e%252e%252f",    // double encoded ../
         ];
 
         for path in &malicious_paths {
             let result = context.resolve_path(path);
             assert!(result.is_err(), "Should reject URL encoded path: {}", path);
             match result.err().unwrap() {
-                ResolverError::SuspiciousEncoding { .. } => {},
+                ResolverError::SuspiciousEncoding { .. } => {}
                 _ => panic!("Expected SuspiciousEncoding error for path: {}", path),
             }
         }
@@ -1835,9 +1850,13 @@ mod tests {
 
         for path in &malicious_paths {
             let result = context.resolve_path(path);
-            assert!(result.is_err(), "Should reject suspicious unicode: {}", path);
+            assert!(
+                result.is_err(),
+                "Should reject suspicious unicode: {}",
+                path
+            );
             match result.err().unwrap() {
-                ResolverError::SuspiciousEncoding { .. } => {},
+                ResolverError::SuspiciousEncoding { .. } => {}
                 _ => panic!("Expected SuspiciousEncoding error for path: {}", path),
             }
         }
@@ -1864,8 +1883,8 @@ mod tests {
                 let result = context.resolve_path(path);
                 assert!(result.is_err(), "Should reject sensitive path: {}", path);
                 match result.err().unwrap() {
-                    ResolverError::SensitiveLocationAccess { .. } => {},
-                    ResolverError::AbsolutePathNotAllowed { .. } => {},
+                    ResolverError::SensitiveLocationAccess { .. } => {}
+                    ResolverError::AbsolutePathNotAllowed { .. } => {}
                     _ => panic!("Expected security error for sensitive path: {}", path),
                 }
             }
@@ -1885,8 +1904,8 @@ mod tests {
                 let result = context.resolve_path(path);
                 assert!(result.is_err(), "Should reject sensitive path: {}", path);
                 match result.err().unwrap() {
-                    ResolverError::SensitiveLocationAccess { .. } => {},
-                    ResolverError::ParentTraversalNotAllowed { .. } => {},
+                    ResolverError::SensitiveLocationAccess { .. } => {}
+                    ResolverError::ParentTraversalNotAllowed { .. } => {}
                     _ => panic!("Expected security error for sensitive path: {}", path),
                 }
             }
@@ -1914,7 +1933,8 @@ mod tests {
         let symlink_created = std::os::unix::fs::symlink(&target_path, &symlink_path).is_ok();
 
         #[cfg(not(unix))]
-        let symlink_created = std::os::windows::fs::symlink_file(&target_path, &symlink_path).is_ok();
+        let symlink_created =
+            std::os::windows::fs::symlink_file(&target_path, &symlink_path).is_ok();
 
         if !symlink_created {
             // Skip test if we can't create symlinks
@@ -1934,7 +1954,7 @@ mod tests {
         // Should detect symlink escape
         assert!(result.is_err(), "Should detect symlink escape");
         match result.err().unwrap() {
-            ResolverError::SymlinkEscape { .. } => {},
+            ResolverError::SymlinkEscape { .. } => {}
             _ => panic!("Expected SymlinkEscape error"),
         }
     }
@@ -1945,10 +1965,10 @@ mod tests {
 
         // Combined attacks that try multiple bypass techniques
         let advanced_attacks = [
-            "normal%2e%2e%2fetc%2fpasswd",      // URL encoding + sensitive location
-            "..//..//system32//cmd.exe",        // Unicode + sensitive location
-            "%2e%2e%5c%2e%2e%5cwindows",        // Double URL encoding + sensitive location
-            "..\\\\..\\\\proc\\\\version",     // Unicode bypass + sensitive location
+            "normal%2e%2e%2fetc%2fpasswd", // URL encoding + sensitive location
+            "..//..//system32//cmd.exe",   // Unicode + sensitive location
+            "%2e%2e%5c%2e%2e%5cwindows",   // Double URL encoding + sensitive location
+            "..\\\\..\\\\proc\\\\version", // Unicode bypass + sensitive location
         ];
 
         for attack in &advanced_attacks {
@@ -1957,10 +1977,10 @@ mod tests {
 
             // Should be caught by one of our security layers
             match result.err().unwrap() {
-                ResolverError::SuspiciousEncoding { .. } |
-                ResolverError::SensitiveLocationAccess { .. } |
-                ResolverError::ParentTraversalNotAllowed { .. } |
-                ResolverError::AbsolutePathNotAllowed { .. } => {},
+                ResolverError::SuspiciousEncoding { .. }
+                | ResolverError::SensitiveLocationAccess { .. }
+                | ResolverError::ParentTraversalNotAllowed { .. }
+                | ResolverError::AbsolutePathNotAllowed { .. } => {}
                 other => panic!("Unexpected error type for attack '{}': {:?}", attack, other),
             }
         }
@@ -1968,8 +1988,8 @@ mod tests {
 
     #[test]
     fn test_safe_paths_still_work() {
-        use tempfile::TempDir;
         use std::fs;
+        use tempfile::TempDir;
 
         // Create temp directory with allowed structure
         let temp_dir = TempDir::new().unwrap();
@@ -1985,17 +2005,17 @@ mod tests {
         fs::write(temp_dir.path().join("subdir/file.txt"), "content").unwrap();
 
         // These should all work - but skip if canonicalize fails due to temp dirs
-        let safe_paths = [
-            "test.txt",
-            "subdir/file.txt",
-        ];
+        let safe_paths = ["test.txt", "subdir/file.txt"];
 
         for path in &safe_paths {
             let result = context.resolve_path(path);
             // In some environments, temp directories might not canonicalize properly
             // This is OK for our security testing purposes
             if result.is_err() {
-                println!("Skipping path test for {} due to canonicalization issue", path);
+                println!(
+                    "Skipping path test for {} due to canonicalization issue",
+                    path
+                );
                 continue;
             }
             assert!(result.is_ok(), "Safe path should work: {}", path);
@@ -2019,7 +2039,10 @@ mod tests {
 
         // Test 1: Check that empty import stack has no cycle
         let file_a = temp_dir.join("test.facet");
-        assert!(context.check_cycle(&file_a).is_ok(), "Empty stack should not detect cycle");
+        assert!(
+            context.check_cycle(&file_a).is_ok(),
+            "Empty stack should not detect cycle"
+        );
 
         // Test 2: Check that same file added to stack detects cycle
         // Simulate having file_a already in import stack by modifying context directly
@@ -2033,7 +2056,10 @@ mod tests {
         ];
 
         // Verify cycle detection would work for these paths
-        assert!(!simple_paths.contains(&file_a), "Test path should be unique");
+        assert!(
+            !simple_paths.contains(&file_a),
+            "Test path should be unique"
+        );
 
         println!("✅ Cycle detection functionality test passed");
         println!("✅ Enhanced error messages include F602 error code and cycle depth");
@@ -2045,9 +2071,7 @@ mod tests {
             path: "a.facet".to_string(),
             seconds: 1,
         };
-        assert!(timeout
-            .to_string()
-            .starts_with("X.resolver.FILE_TIMEOUT"));
+        assert!(timeout.to_string().starts_with("X.resolver.FILE_TIMEOUT"));
 
         let sensitive = ResolverError::SensitiveLocationAccess {
             path: "/etc".to_string(),

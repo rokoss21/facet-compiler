@@ -62,18 +62,18 @@
 use fct_ast::FacetDocument;
 
 // Module declarations
+pub mod checker;
+pub mod constraints;
 pub mod errors;
 pub mod types;
-pub mod constraints;
-pub mod checker;
 
 // Re-export public API
+pub use checker::{TypeChecker, ValidationProfile};
+pub use constraints::TypeConstraints;
 pub use errors::{ValidationError, ValidationResult};
 pub use types::{
     AudioType, EmbeddingType, FacetType, ImageType, MultimodalType, PrimitiveType, StructField,
 };
-pub use constraints::TypeConstraints;
-pub use checker::{TypeChecker, ValidationProfile};
 
 // Variable type declarations
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -183,7 +183,10 @@ pub fn validate_document_with_profile(
 ///     Err(e) => println!("Strict validation failed: {}", e),
 /// }
 /// ```
-pub fn validate_document_with_config(doc: &FacetDocument, _config: &ValidatorConfig) -> ValidationResult<()> {
+pub fn validate_document_with_config(
+    doc: &FacetDocument,
+    _config: &ValidatorConfig,
+) -> ValidationResult<()> {
     // For now, just call the standard validation
     // In the future, this could use config to enable/disable certain checks
     validate_document(doc)

@@ -134,9 +134,10 @@ mod tests {
         fs::write(&outside_path, "@vars\n  x: \"outside\"\n").expect("write outside file");
 
         let input_path = root_dir.join("input.facet");
+        let outside_path_for_import = outside_path.to_string_lossy().replace('\\', "/");
         fs::write(
             &input_path,
-            format!("@import \"{}\"\n", outside_path.display()),
+            format!("@import \"{}\"\n", outside_path_for_import),
         )
         .expect("write input");
 
@@ -144,7 +145,10 @@ mod tests {
         let err = execute_build(input_path, false, true, &limiter)
             .expect_err("build must reject import outside allowed root");
         let text = err.to_string();
-        assert!(text.contains("Resolution error"), "unexpected error: {text}");
+        assert!(
+            text.contains("Resolution error"),
+            "unexpected error: {text}"
+        );
         assert!(text.contains("F601"), "expected F601, got: {text}");
 
         let _ = fs::remove_dir_all(root_dir);

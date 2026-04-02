@@ -9,16 +9,16 @@ use std::path::PathBuf;
 
 pub type DefaultRateLimiter = RateLimiter<NotKeyed, InMemoryState, DefaultClock>;
 
-pub mod build;
-pub mod codegen;
-pub mod inspect;
-pub mod run;
-pub mod test;
 pub mod artifact;
+pub mod build;
 pub mod canonical;
+pub mod codegen;
 pub mod guard;
+pub mod inspect;
 pub mod mode_profile;
 pub mod policy;
+pub mod run;
+pub mod test;
 
 /// Main CLI structure using clap for argument parsing
 #[derive(Parser)]

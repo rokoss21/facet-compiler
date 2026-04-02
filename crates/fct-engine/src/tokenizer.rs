@@ -36,9 +36,7 @@ impl Tokenizer {
         }
 
         let mut token_count = 0;
-        let mut chars = text.chars().peekable();
-
-        while let Some(ch) = chars.next() {
+        for ch in text.chars() {
             match ch {
                 // Spaces and punctuation
                 ' ' | '\t' | '\n' | '\r' | ',' | '.' | '!' | '?' | ';' | ':' | '"' | '\'' | '('
@@ -95,7 +93,7 @@ impl Tokenizer {
     /// Count FACET Units for a string:
     /// byte_length(UTF-8(NFC+LF normalized s))
     pub fn count_facet_units(&self, text: &str) -> usize {
-        normalize_for_facet_units(text).as_bytes().len()
+        normalize_for_facet_units(text).len()
     }
 
     /// Count FACET Units in a ValueNode recursively.

@@ -13,13 +13,16 @@ use std::sync::{Arc, Mutex};
 // MOCK TYPES
 // ============================================================================
 
+type DynamicMockHandler =
+    dyn Fn(&HashMap<String, ValueNode>) -> EngineResult<ValueNode> + Send + Sync;
+
 /// Mock behavior - static value or dynamic handler
 #[derive(Clone)]
 pub enum MockBehavior {
     /// Static return value
     Static(ValueNode),
     /// Dynamic handler function
-    Dynamic(Arc<dyn Fn(&HashMap<String, ValueNode>) -> EngineResult<ValueNode> + Send + Sync>),
+    Dynamic(Arc<DynamicMockHandler>),
 }
 
 /// Mock definition with metadata

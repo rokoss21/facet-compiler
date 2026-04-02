@@ -47,7 +47,7 @@ impl DependencyGraph {
             if let FacetNode::Vars(vars_block) = block {
                 for body_node in &vars_block.body {
                     if let BodyNode::KeyValue(kv) = body_node {
-                        let mut dependencies = self.extract_dependencies(&kv.value);
+                        let mut dependencies = Self::extract_dependencies(&kv.value);
                         let mut seen = HashSet::new();
                         dependencies.retain(|dep| seen.insert(dep.clone()));
 
@@ -74,7 +74,7 @@ impl DependencyGraph {
     }
 
     /// Extract variable dependencies from a value
-    fn extract_dependencies(&self, value: &ValueNode) -> Vec<String> {
+    fn extract_dependencies(value: &ValueNode) -> Vec<String> {
         let mut deps = Vec::with_capacity(8); // Pre-allocate with reasonable capacity
 
         match value {
@@ -89,26 +89,26 @@ impl DependencyGraph {
             }
             ValueNode::Pipeline(pipeline) => {
                 // Dependencies in initial value
-                deps.extend(self.extract_dependencies(&pipeline.initial));
+                deps.extend(Self::extract_dependencies(&pipeline.initial));
 
                 // Dependencies in lens arguments
                 for lens in &pipeline.lenses {
                     for arg in &lens.args {
-                        deps.extend(self.extract_dependencies(arg));
+                        deps.extend(Self::extract_dependencies(arg));
                     }
                     for arg in lens.kwargs.values() {
-                        deps.extend(self.extract_dependencies(arg));
+                        deps.extend(Self::extract_dependencies(arg));
                     }
                 }
             }
             ValueNode::List(items) => {
                 for item in items {
-                    deps.extend(self.extract_dependencies(item));
+                    deps.extend(Self::extract_dependencies(item));
                 }
             }
             ValueNode::Map(map) => {
                 for val in map.values() {
-                    deps.extend(self.extract_dependencies(val));
+                    deps.extend(Self::extract_dependencies(val));
                 }
             }
             _ => {}

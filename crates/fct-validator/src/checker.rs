@@ -72,6 +72,12 @@ impl TypeChecker {
     }
 }
 
+impl Default for TypeChecker {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<S: LensSignatureProvider> TypeChecker<S> {
     /// Create a new TypeChecker instance with the given lens provider
     pub fn new_with_provider(provider: S) -> Self {
@@ -252,10 +258,8 @@ impl<S: LensSignatureProvider> TypeChecker<S> {
                 }
 
                 // Parse pattern constraint
-                if let Some(pattern_node) = map.get("pattern") {
-                    if let ValueNode::String(pattern_val) = pattern_node {
-                        constraints.pattern = Some(pattern_val.clone());
-                    }
+                if let Some(ValueNode::String(pattern_val)) = map.get("pattern") {
+                    constraints.pattern = Some(pattern_val.clone());
                 }
 
                 // Parse enum constraint
@@ -405,8 +409,12 @@ impl<S: LensSignatureProvider> TypeChecker<S> {
                 ScalarValue::Bool(_) => Ok(FacetType::Primitive(crate::types::PrimitiveType::Bool)),
                 ScalarValue::Null => Ok(FacetType::Primitive(crate::types::PrimitiveType::Null)),
             },
-            ValueNode::List(_) => Ok(FacetType::List(Box::new(FacetType::Primitive(crate::types::PrimitiveType::Any)))),
-            ValueNode::Map(_) => Ok(FacetType::Map(Box::new(FacetType::Primitive(crate::types::PrimitiveType::Any)))),
+            ValueNode::List(_) => Ok(FacetType::List(Box::new(FacetType::Primitive(
+                crate::types::PrimitiveType::Any,
+            )))),
+            ValueNode::Map(_) => Ok(FacetType::Map(Box::new(FacetType::Primitive(
+                crate::types::PrimitiveType::Any,
+            )))),
             ValueNode::Variable(_) => Ok(FacetType::Primitive(crate::types::PrimitiveType::Any)),
             ValueNode::Pipeline(_) => Ok(FacetType::Primitive(crate::types::PrimitiveType::Any)),
             ValueNode::Directive(directive) => {
@@ -653,13 +661,17 @@ impl<S: LensSignatureProvider> TypeChecker<S> {
                 for item in items {
                     self.infer_pipeline_checked_type(item, location)?;
                 }
-                Ok(FacetType::List(Box::new(FacetType::Primitive(crate::types::PrimitiveType::Any))))
+                Ok(FacetType::List(Box::new(FacetType::Primitive(
+                    crate::types::PrimitiveType::Any,
+                ))))
             }
             ValueNode::Map(map) => {
                 for nested in map.values() {
                     self.infer_pipeline_checked_type(nested, location)?;
                 }
-                Ok(FacetType::Map(Box::new(FacetType::Primitive(crate::types::PrimitiveType::Any))))
+                Ok(FacetType::Map(Box::new(FacetType::Primitive(
+                    crate::types::PrimitiveType::Any,
+                ))))
             }
             ValueNode::Pipeline(pipeline) => {
                 let mut current = self.infer_pipeline_checked_type(&pipeline.initial, location)?;
@@ -750,7 +762,7 @@ impl<S: LensSignatureProvider> TypeChecker<S> {
                         });
                     }
 
-                    self.validate_interface_type_mappable(
+                    Self::validate_interface_type_mappable(
                         &func.return_type,
                         &format!("{}.{} return type", interface.name, func.name),
                     )?;
@@ -763,7 +775,7 @@ impl<S: LensSignatureProvider> TypeChecker<S> {
                                 &format!("{}.{}.{}", interface.name, func.name, param.name),
                             ));
                         }
-                        self.validate_interface_type_mappable(
+                        Self::validate_interface_type_mappable(
                             &param.type_node,
                             &format!("{}.{}.{} parameter", interface.name, func.name, param.name),
                         )?;
@@ -826,7 +838,7 @@ impl<S: LensSignatureProvider> TypeChecker<S> {
                     for entry in &vars_block.body {
                         if let BodyNode::KeyValue(kv) = entry {
                             self.ensure_identifier_block_key(kv)?;
-                            self.validate_value_map_keys(&kv.value, false)?;
+                            Self::validate_value_map_keys(&kv.value, false)?;
                         }
                     }
                 }
@@ -834,7 +846,7 @@ impl<S: LensSignatureProvider> TypeChecker<S> {
                     for entry in &policy.body {
                         if let BodyNode::KeyValue(kv) = entry {
                             self.ensure_identifier_block_key(kv)?;
-                            self.validate_value_map_keys(&kv.value, false)?;
+                            Self::validate_value_map_keys(&kv.value, false)?;
                         }
                     }
                 }
@@ -1049,7 +1061,7 @@ impl<S: LensSignatureProvider> TypeChecker<S> {
                 _ => {}
             }
 
-            self.validate_value_map_keys(&kv.value, false)?;
+            Self::validate_value_map_keys(&kv.value, false)?;
         }
 
         if !content_seen {
@@ -1106,7 +1118,7 @@ impl<S: LensSignatureProvider> TypeChecker<S> {
                         }
                     }
 
-                    self.validate_value_map_keys(item, false)?;
+                    Self::validate_value_map_keys(item, false)?;
                 }
                 Ok(())
             }
@@ -1370,11 +1382,7 @@ impl<S: LensSignatureProvider> TypeChecker<S> {
         Ok(())
     }
 
-    fn validate_value_map_keys(
-        &self,
-        value: &ValueNode,
-        allow_string_keys: bool,
-    ) -> ValidationResult<()> {
+    fn validate_value_map_keys(value: &ValueNode, allow_string_keys: bool) -> ValidationResult<()> {
         match value {
             ValueNode::Map(map) => {
                 for (key, nested) in map {
@@ -1384,22 +1392,22 @@ impl<S: LensSignatureProvider> TypeChecker<S> {
                             key,
                         ));
                     }
-                    self.validate_value_map_keys(nested, allow_string_keys)?;
+                    Self::validate_value_map_keys(nested, allow_string_keys)?;
                 }
             }
             ValueNode::List(items) => {
                 for item in items {
-                    self.validate_value_map_keys(item, allow_string_keys)?;
+                    Self::validate_value_map_keys(item, allow_string_keys)?;
                 }
             }
             ValueNode::Pipeline(p) => {
-                self.validate_value_map_keys(&p.initial, allow_string_keys)?;
+                Self::validate_value_map_keys(&p.initial, allow_string_keys)?;
                 for lens in &p.lenses {
                     for arg in &lens.args {
-                        self.validate_value_map_keys(arg, allow_string_keys)?;
+                        Self::validate_value_map_keys(arg, allow_string_keys)?;
                     }
                     for arg in lens.kwargs.values() {
-                        self.validate_value_map_keys(arg, allow_string_keys)?;
+                        Self::validate_value_map_keys(arg, allow_string_keys)?;
                     }
                 }
             }
@@ -1922,11 +1930,7 @@ impl<S: LensSignatureProvider> TypeChecker<S> {
         }
     }
 
-    fn validate_interface_type_mappable(
-        &self,
-        ty: &TypeNode,
-        location: &str,
-    ) -> ValidationResult<()> {
+    fn validate_interface_type_mappable(ty: &TypeNode, location: &str) -> ValidationResult<()> {
         match ty {
             TypeNode::Primitive(name) => match name.as_str() {
                 "string" | "int" | "float" | "bool" | "null" | "any" => Ok(()),
@@ -1937,12 +1941,12 @@ impl<S: LensSignatureProvider> TypeChecker<S> {
             },
             TypeNode::Struct(fields) => {
                 for field_ty in fields.values() {
-                    self.validate_interface_type_mappable(field_ty, location)?;
+                    Self::validate_interface_type_mappable(field_ty, location)?;
                 }
                 Ok(())
             }
             TypeNode::List(item_ty) | TypeNode::Map(item_ty) => {
-                self.validate_interface_type_mappable(item_ty, location)
+                Self::validate_interface_type_mappable(item_ty, location)
             }
             TypeNode::Union(types) => {
                 if types.is_empty() {
@@ -1952,7 +1956,7 @@ impl<S: LensSignatureProvider> TypeChecker<S> {
                     ));
                 }
                 for member in types {
-                    self.validate_interface_type_mappable(member, location)?;
+                    Self::validate_interface_type_mappable(member, location)?;
                 }
                 Ok(())
             }
@@ -2370,7 +2374,10 @@ impl<'a> TypeExprParser<'a> {
                 field_type,
                 required: true,
             };
-            if let Some(existing) = fields.iter_mut().find(|field| field.name == next_field.name) {
+            if let Some(existing) = fields
+                .iter_mut()
+                .find(|field| field.name == next_field.name)
+            {
                 *existing = next_field;
             } else {
                 fields.push(next_field);
@@ -2599,10 +2606,10 @@ impl<'a> TypeExprParser<'a> {
         if !rem.starts_with(keyword) {
             return false;
         }
-        match rem[keyword.len()..].chars().next() {
-            Some(ch) if ch.is_ascii_alphanumeric() || ch == '_' => false,
-            _ => true,
-        }
+        !matches!(
+            rem[keyword.len()..].chars().next(),
+            Some(ch) if ch.is_ascii_alphanumeric() || ch == '_'
+        )
     }
 
     fn expect_keyword(&mut self, keyword: &str) -> ValidationResult<()> {

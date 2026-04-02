@@ -180,7 +180,7 @@ fn test_runner_with_vars() {
 
     let test_result = result.unwrap();
     assert_eq!(test_result.name, "vars test");
-    assert!(test_result.assertions.len() > 0);
+    assert!(!test_result.assertions.is_empty());
 }
 
 #[test]
@@ -272,7 +272,10 @@ fn test_runner_with_mocks() {
         first_event.get("effect_class").and_then(|v| v.as_str()),
         Some("read")
     );
-    assert_eq!(first_event.get("mode").and_then(|v| v.as_str()), Some("exec"));
+    assert_eq!(
+        first_event.get("mode").and_then(|v| v.as_str()),
+        Some("exec")
+    );
     assert_eq!(
         first_event.get("decision").and_then(|v| v.as_str()),
         Some("allowed")
@@ -468,7 +471,10 @@ fn test_runner_mock_tool_call_in_pure_mode_is_f801() {
         first_event.get("error_code").and_then(|v| v.as_str()),
         Some("F801")
     );
-    assert_eq!(first_event.get("mode").and_then(|v| v.as_str()), Some("pure"));
+    assert_eq!(
+        first_event.get("mode").and_then(|v| v.as_str()),
+        Some("pure")
+    );
 }
 
 #[test]
@@ -671,7 +677,10 @@ fn test_runner_vars_override_recomputes_dependent_vars() {
     };
 
     let result = runner.run_test(&doc, &test_block).unwrap();
-    assert!(result.passed, "expected override to recompute dependent vars");
+    assert!(
+        result.passed,
+        "expected override to recompute dependent vars"
+    );
 }
 
 #[test]
@@ -991,13 +1000,11 @@ fn test_runner_mode_policy_interaction_matrix() {
         .run_test(&exec_default_deny_doc, &test_block)
         .unwrap();
     assert!(!exec_default_deny.passed);
-    assert!(
-        exec_default_deny
-            .error
-            .as_deref()
-            .unwrap_or_default()
-            .contains("F454")
-    );
+    assert!(exec_default_deny
+        .error
+        .as_deref()
+        .unwrap_or_default()
+        .contains("F454"));
 
     // exec + undecidable policy condition => fail-closed undecidable (F455)
     let undecidable_rule = ValueNode::Map(OrderedMap::from([
@@ -1032,13 +1039,11 @@ fn test_runner_mode_policy_interaction_matrix() {
         .run_test(&exec_undecidable_doc, &test_block)
         .unwrap();
     assert!(!exec_undecidable.passed);
-    assert!(
-        exec_undecidable
-            .error
-            .as_deref()
-            .unwrap_or_default()
-            .contains("F455")
-    );
+    assert!(exec_undecidable
+        .error
+        .as_deref()
+        .unwrap_or_default()
+        .contains("F455"));
 
     // pure + otherwise allowed policy => runtime I/O prohibited first (F801)
     let pure_allow_doc = fct_ast::FacetDocument {
@@ -1048,13 +1053,11 @@ fn test_runner_mode_policy_interaction_matrix() {
     let pure_runner = TestRunner::new_with_mode(1000, 4096, fct_engine::ExecutionMode::Pure);
     let pure_disallow = pure_runner.run_test(&pure_allow_doc, &test_block).unwrap();
     assert!(!pure_disallow.passed);
-    assert!(
-        pure_disallow
-            .error
-            .as_deref()
-            .unwrap_or_default()
-            .contains("F801")
-    );
+    assert!(pure_disallow
+        .error
+        .as_deref()
+        .unwrap_or_default()
+        .contains("F801"));
 }
 
 #[test]
@@ -1196,7 +1199,10 @@ fn test_runner_canonical_resolves_when_variable() {
         span: span(),
     });
     let mut system_attrs = OrderedMap::new();
-    system_attrs.insert("when".to_string(), ValueNode::Variable("emit_system".to_string()));
+    system_attrs.insert(
+        "when".to_string(),
+        ValueNode::Variable("emit_system".to_string()),
+    );
     let system_block = FacetNode::System(FacetBlock {
         name: "system".to_string(),
         attributes: system_attrs,
@@ -1333,7 +1339,10 @@ fn test_runner_applies_context_budget_and_defaults_to_layout() {
                 key: "defaults".to_string(),
                 key_kind: Default::default(),
                 value: ValueNode::Map(OrderedMap::from([
-                    ("priority".to_string(), ValueNode::Scalar(ScalarValue::Int(123))),
+                    (
+                        "priority".to_string(),
+                        ValueNode::Scalar(ScalarValue::Int(123)),
+                    ),
                     ("min".to_string(), ValueNode::Scalar(ScalarValue::Int(0))),
                     ("grow".to_string(), ValueNode::Scalar(ScalarValue::Int(0))),
                     ("shrink".to_string(), ValueNode::Scalar(ScalarValue::Int(1))),
@@ -1372,7 +1381,10 @@ fn test_runner_applies_context_budget_and_defaults_to_layout() {
     };
 
     let result = runner.run_test(&doc, &test_block).unwrap();
-    assert!(result.passed, "expected layout to honor context defaults/budget");
+    assert!(
+        result.passed,
+        "expected layout to honor context defaults/budget"
+    );
     assert!(
         result.telemetry.tokens_used <= 5,
         "expected context budget to cap token usage, got {}",

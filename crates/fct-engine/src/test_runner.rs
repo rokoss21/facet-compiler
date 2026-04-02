@@ -337,7 +337,6 @@ impl TestRunner {
             doc,
             &ctx.execution_ctx.variables,
             &ctx.execution_ctx.lens_registry,
-            ctx.execution_ctx.mode,
         )?;
 
         // Fallback section if none collected
@@ -351,13 +350,9 @@ impl TestRunner {
             );
             let base_size = count_facet_units_in_value(&vars_value);
             sections.push(
-                Section::new(
-                    "vars".to_string(),
-                    vars_value,
-                    base_size,
-                )
-                .with_priority(200)
-                .with_limits(0, 0.0, 0.5),
+                Section::new("vars".to_string(), vars_value, base_size)
+                    .with_priority(200)
+                    .with_limits(0, 0.0, 0.5),
             );
         }
 
@@ -725,9 +720,11 @@ fn parse_runtime_var_type_decl(
             pattern: None,
         }),
         ValueNode::Map(map) => {
-            let type_name = map.get("type").ok_or_else(|| EngineError::ConstraintViolation {
-                message: format!("@var_types.{var_name} is missing required 'type'"),
-            })?;
+            let type_name = map
+                .get("type")
+                .ok_or_else(|| EngineError::ConstraintViolation {
+                    message: format!("@var_types.{var_name} is missing required 'type'"),
+                })?;
             let ValueNode::String(type_name) = type_name else {
                 return Err(EngineError::ConstraintViolation {
                     message: format!("@var_types.{var_name}.type must be a string"),
@@ -772,9 +769,7 @@ fn parse_runtime_var_type_decl(
             })
         }
         _ => Err(EngineError::ConstraintViolation {
-            message: format!(
-                "@var_types.{var_name} must be a string type or map declaration"
-            ),
+            message: format!("@var_types.{var_name} must be a string type or map declaration"),
         }),
     }
 }
@@ -815,10 +810,7 @@ fn validate_var_override_value(
         };
         if actual < min {
             return Err(EngineError::ConstraintViolation {
-                message: format!(
-                    "@test vars override '{}' violates min >= {}",
-                    var_name, min
-                ),
+                message: format!("@test vars override '{}' violates min >= {}", var_name, min),
             });
         }
     }
@@ -834,10 +826,7 @@ fn validate_var_override_value(
         };
         if actual > max {
             return Err(EngineError::ConstraintViolation {
-                message: format!(
-                    "@test vars override '{}' violates max <= {}",
-                    var_name, max
-                ),
+                message: format!("@test vars override '{}' violates max <= {}", var_name, max),
             });
         }
     }
@@ -916,7 +905,6 @@ fn doc_to_sections(
     doc: &FacetDocument,
     computed_vars: &HashMap<String, ValueNode>,
     lens_registry: &LensRegistry,
-    mode: crate::ExecutionMode,
 ) -> EngineResult<Vec<Section>> {
     let mut sections = Vec::new();
     let defaults = context_layout_defaults_from_doc(doc);
@@ -946,7 +934,7 @@ fn doc_to_sections(
         }
 
         let layout = resolve_section_layout(block, &defaults, &derived_id);
-        let content = extract_message_content(block, computed_vars, lens_registry, mode)?;
+        let content = extract_message_content(block, computed_vars, lens_registry)?;
         let base_size = count_facet_units_in_value(&content);
         let mut section = Section::new(layout.id, content, base_size)
             .with_priority(layout.priority)
@@ -1190,12 +1178,7 @@ fn build_canonical_test_view(
                 continue;
             }
 
-            let content = extract_message_content(
-                block,
-                &exec_ctx.variables,
-                &lens_registry,
-                exec_ctx.mode,
-            )?;
+            let content = extract_message_content(block, &exec_ctx.variables, &lens_registry)?;
             messages.push(json!({
                 "role": role,
                 "content": value_node_to_json(&content)?
@@ -1241,12 +1224,11 @@ fn extract_message_content(
     block: &fct_ast::FacetBlock,
     computed_vars: &HashMap<String, ValueNode>,
     lens_registry: &LensRegistry,
-    mode: crate::ExecutionMode,
 ) -> EngineResult<ValueNode> {
     for body in &block.body {
         if let BodyNode::KeyValue(kv) = body {
             if kv.key == "content" {
-                return resolve_message_value_for_test(&kv.value, computed_vars, lens_registry, mode);
+                return resolve_message_value_for_test(&kv.value, computed_vars, lens_registry);
             }
         }
     }
@@ -1281,12 +1263,14 @@ fn eval_when_atom_for_test(
 ) -> EngineResult<bool> {
     match when_value {
         ValueNode::Scalar(ScalarValue::Bool(v)) => Ok(*v),
-        ValueNode::Variable(var_ref) => match resolve_variable_ref_for_test(var_ref, computed_vars)? {
-            ValueNode::Scalar(ScalarValue::Bool(v)) => Ok(v),
-            _ => Err(EngineError::TypeMismatch {
-                message: "'when' must evaluate to bool".to_string(),
-            }),
-        },
+        ValueNode::Variable(var_ref) => {
+            match resolve_variable_ref_for_test(var_ref, computed_vars)? {
+                ValueNode::Scalar(ScalarValue::Bool(v)) => Ok(v),
+                _ => Err(EngineError::TypeMismatch {
+                    message: "'when' must evaluate to bool".to_string(),
+                }),
+            }
+        }
         _ => Err(EngineError::TypeMismatch {
             message: "'when' must be bool or variable reference".to_string(),
         }),
@@ -1297,7 +1281,6 @@ fn resolve_message_value_for_test(
     value: &ValueNode,
     computed_vars: &HashMap<String, ValueNode>,
     lens_registry: &LensRegistry,
-    mode: crate::ExecutionMode,
 ) -> EngineResult<ValueNode> {
     match value {
         ValueNode::Variable(var_ref) => resolve_variable_ref_for_test(var_ref, computed_vars),
@@ -1308,7 +1291,6 @@ fn resolve_message_value_for_test(
                     item,
                     computed_vars,
                     lens_registry,
-                    mode,
                 )?);
             }
             Ok(ValueNode::List(out))
@@ -1318,14 +1300,14 @@ fn resolve_message_value_for_test(
             for (k, v) in map {
                 out.insert(
                     k.clone(),
-                    resolve_message_value_for_test(v, computed_vars, lens_registry, mode)?,
+                    resolve_message_value_for_test(v, computed_vars, lens_registry)?,
                 );
             }
             Ok(ValueNode::Map(out))
         }
         ValueNode::Pipeline(pipeline) => {
             let mut current =
-                resolve_message_value_for_test(&pipeline.initial, computed_vars, lens_registry, mode)?;
+                resolve_message_value_for_test(&pipeline.initial, computed_vars, lens_registry)?;
             let ctx = LensContext {
                 variables: computed_vars.clone(),
             };
@@ -1353,14 +1335,13 @@ fn resolve_message_value_for_test(
                         arg,
                         computed_vars,
                         lens_registry,
-                        mode,
                     )?);
                 }
                 let mut resolved_kwargs = HashMap::with_capacity(lens_call.kwargs.len());
                 for (k, v) in &lens_call.kwargs {
                     resolved_kwargs.insert(
                         k.clone(),
-                        resolve_message_value_for_test(v, computed_vars, lens_registry, mode)?,
+                        resolve_message_value_for_test(v, computed_vars, lens_registry)?,
                     );
                 }
 

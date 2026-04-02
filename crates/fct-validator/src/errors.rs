@@ -21,7 +21,7 @@ pub enum ValidationError {
     #[allow(dead_code)] // TODO: Implement variable not found validation
     VariableNotFound {
         /// The name of the variable that could not be found
-        var: String
+        var: String,
     },
 
     /// X.validator.TYPE_INFERENCE: Type inference failed due to insufficient or conflicting information.
@@ -31,7 +31,7 @@ pub enum ValidationError {
     #[error("X.validator.TYPE_INFERENCE: Type inference failed: {message}")]
     TypeInferenceFailed {
         /// Detailed explanation of why type inference failed
-        message: String
+        message: String,
     },
 
     /// X.validator.FORWARD_REFERENCE: Variable used before its declaration (forward reference).
@@ -41,7 +41,7 @@ pub enum ValidationError {
     #[error("X.validator.FORWARD_REFERENCE: variable {var} used before declaration")]
     ForwardReference {
         /// The name of the variable that was used forward-referenced
-        var: String
+        var: String,
     },
 
     /// F451: Type mismatch between expected and actual types.
@@ -67,7 +67,7 @@ pub enum ValidationError {
         /// Description of the constraint that was violated
         constraint: String,
         /// The actual value that violated the constraint
-        value: String
+        value: String,
     },
 
     /// F453: Runtime input validation failed during dynamic checks.
@@ -77,14 +77,12 @@ pub enum ValidationError {
     #[error("F453: Runtime input validation failed: {message}")]
     InputValidationFailed {
         /// Details about why the input validation failed
-        message: String
+        message: String,
     },
 
     /// F456: Missing or invalid effect class declaration.
     #[error("F456: Invalid or missing effect declaration: {message}")]
-    InvalidEffectDeclaration {
-        message: String
-    },
+    InvalidEffectDeclaration { message: String },
 
     /// F601: Import path could not be resolved or file not found.
     ///
@@ -93,7 +91,7 @@ pub enum ValidationError {
     #[error("F601: Import not found: {path}")]
     ImportNotFound {
         /// The import path that could not be resolved
-        path: String
+        path: String,
     },
 
     /// F602: Circular import dependency detected.
@@ -103,7 +101,7 @@ pub enum ValidationError {
     #[error("F602: Circular import detected: {path}")]
     CircularImport {
         /// The import path that completed the circular dependency
-        path: String
+        path: String,
     },
 
     /// F802: Lens function not found in the lens registry.
@@ -113,7 +111,7 @@ pub enum ValidationError {
     #[error("F802: Unknown lens: {lens_name}")]
     UnknownLens {
         /// The name of the lens that was not found
-        lens_name: String
+        lens_name: String,
     },
 
     /// F801: Construct disallowed in the active profile/mode.
@@ -123,7 +121,7 @@ pub enum ValidationError {
     #[error("F801: Construct disallowed in active profile/mode: {construct}")]
     ProfileViolation {
         /// Construct identifier or path (for example @interface, @test, @vars.x)
-        construct: String
+        construct: String,
     },
 }
 

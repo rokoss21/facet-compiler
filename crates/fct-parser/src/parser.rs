@@ -1,8 +1,8 @@
 use crate::error::{ParseResult, SpanInput};
 use fct_ast::{
-    BodyNode, DirectiveNode, FacetBlock, FacetDocument, FacetNode, FunctionSignature,
-    KeyValueNode, LensCallNode, ListItemNode, MapKeyKind, OrderedMap, Parameter, PipelineNode,
-    ScalarValue, Span, TypeNode, ValueNode,
+    BodyNode, DirectiveNode, FacetBlock, FacetDocument, FacetNode, FunctionSignature, KeyValueNode,
+    LensCallNode, ListItemNode, MapKeyKind, OrderedMap, Parameter, PipelineNode, ScalarValue, Span,
+    TypeNode, ValueNode,
 };
 use nom::{
     branch::alt,
@@ -350,10 +350,8 @@ fn parse_media_constraints(input: SpanInput, image: bool) -> ParseResult<TypeNod
                 }
                 cursor = after_value;
             } else if !image && key == "max_duration" {
-                let (after_value, duration) = alt((
-                    map(float, |f| f),
-                    map(integer, |i| i as f64),
-                ))(after_eq)?;
+                let (after_value, duration) =
+                    alt((map(float, |f| f), map(integer, |i| i as f64)))(after_eq)?;
                 max_duration = Some(duration);
                 cursor = after_value;
             } else {
@@ -428,7 +426,7 @@ fn lens_args(input: SpanInput) -> ParseResult<(Vec<ValueNode>, OrderedMap<String
     let (input, _) = space0(input)?;
 
     // Empty args case - check for ')' but DON'T consume it (lens_call will consume it)
-    if let Ok(_) = char::<_, nom::error::VerboseError<SpanInput>>(')')(input) {
+    if char::<_, nom::error::VerboseError<SpanInput>>(')')(input).is_ok() {
         return Ok((input, (vec![], OrderedMap::new())));
     }
 

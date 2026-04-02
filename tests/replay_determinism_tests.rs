@@ -10,15 +10,18 @@ fn doc_to_sections(doc: &FacetDocument) -> Vec<Section> {
 
     for block in &doc.blocks {
         let (id, content) = match block {
-            FacetNode::System(_) => {
-                ("system".to_string(), ValueNode::String("System block".to_string()))
-            }
-            FacetNode::User(_) => {
-                ("user".to_string(), ValueNode::String("User block".to_string()))
-            }
-            FacetNode::Assistant(_) => {
-                ("assistant".to_string(), ValueNode::String("Assistant block".to_string()))
-            }
+            FacetNode::System(_) => (
+                "system".to_string(),
+                ValueNode::String("System block".to_string()),
+            ),
+            FacetNode::User(_) => (
+                "user".to_string(),
+                ValueNode::String("User block".to_string()),
+            ),
+            FacetNode::Assistant(_) => (
+                "assistant".to_string(),
+                ValueNode::String("Assistant block".to_string()),
+            ),
             _ => continue,
         };
 

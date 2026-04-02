@@ -60,6 +60,7 @@ struct LayoutView {
 }
 
 /// Inspect command handler
+#[allow(clippy::too_many_arguments)]
 pub fn execute_inspect(
     input: PathBuf,
     ast_output: Option<PathBuf>,
@@ -105,7 +106,10 @@ pub fn execute_inspect(
     let phase1 = resolver
         .resolve_phase1(&source)
         .map_err(|e| anyhow::anyhow!("Resolution error: {}", e))?;
-    let document_hash = format!("sha256:{:x}", Sha256::digest(phase1.resolved_source_form.as_bytes()));
+    let document_hash = format!(
+        "sha256:{:x}",
+        Sha256::digest(phase1.resolved_source_form.as_bytes())
+    );
     let resolved = phase1.resolved_ast;
 
     let mut checker = TypeChecker::new();
@@ -143,8 +147,10 @@ pub fn execute_inspect(
         "policy": policy_view,
     });
 
-    let writes_requested =
-        ast_output.is_some() || dag_output.is_some() || layout_output.is_some() || policy_output.is_some();
+    let writes_requested = ast_output.is_some()
+        || dag_output.is_some()
+        || layout_output.is_some()
+        || policy_output.is_some();
     if !writes_requested {
         println!("{}", serde_json::to_string_pretty(&combined)?);
         return Ok(());
@@ -198,11 +204,7 @@ fn collect_merged_vars(doc: &FacetDocument) -> OrderedMap<String, ValueNode> {
         if let FacetNode::Vars(vars_block) = node {
             for body in &vars_block.body {
                 if let BodyNode::KeyValue(kv) = body {
-                    if vars.contains_key(&kv.key) {
-                        vars.insert(kv.key.clone(), kv.value.clone());
-                    } else {
-                        vars.insert(kv.key.clone(), kv.value.clone());
-                    }
+                    vars.insert(kv.key.clone(), kv.value.clone());
                 }
             }
         }
@@ -629,24 +631,27 @@ mod tests {
         .expect("inspect should succeed");
 
         let ast_json: serde_json::Value =
-            serde_json::from_str(&fs::read_to_string(&ast_path).expect("read ast")).expect("ast json");
+            serde_json::from_str(&fs::read_to_string(&ast_path).expect("read ast"))
+                .expect("ast json");
         let dag_json: serde_json::Value =
-            serde_json::from_str(&fs::read_to_string(&dag_path).expect("read dag")).expect("dag json");
-        let layout_json: serde_json::Value = serde_json::from_str(
-            &fs::read_to_string(&layout_path).expect("read layout"),
-        )
-        .expect("layout json");
-        let policy_json: serde_json::Value = serde_json::from_str(
-            &fs::read_to_string(&policy_path).expect("read policy"),
-        )
-        .expect("policy json");
+            serde_json::from_str(&fs::read_to_string(&dag_path).expect("read dag"))
+                .expect("dag json");
+        let layout_json: serde_json::Value =
+            serde_json::from_str(&fs::read_to_string(&layout_path).expect("read layout"))
+                .expect("layout json");
+        let policy_json: serde_json::Value =
+            serde_json::from_str(&fs::read_to_string(&policy_path).expect("read policy"))
+                .expect("policy json");
 
         assert!(ast_json.get("blocks").is_some(), "ast view missing blocks");
         assert!(
             dag_json.get("topological_order").is_some(),
             "dag view missing topological_order"
         );
-        assert!(layout_json.get("sections").is_some(), "layout view missing sections");
+        assert!(
+            layout_json.get("sections").is_some(),
+            "layout view missing sections"
+        );
         assert!(
             policy_json.get("policy_hash").is_some(),
             "policy view missing policy_hash"

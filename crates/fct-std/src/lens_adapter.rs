@@ -130,11 +130,11 @@ impl LensRegistryAdapter {
 /// Extension trait to easily convert LensRegistry to LensSignatureProvider
 pub trait LensRegistryExt {
     /// Convert this registry to a LensSignatureProvider
-    fn as_signature_provider(self) -> LensRegistryAdapter;
+    fn into_signature_provider(self) -> LensRegistryAdapter;
 }
 
 impl LensRegistryExt for LensRegistry {
-    fn as_signature_provider(self) -> LensRegistryAdapter {
+    fn into_signature_provider(self) -> LensRegistryAdapter {
         LensRegistryAdapter::new(self)
     }
 }

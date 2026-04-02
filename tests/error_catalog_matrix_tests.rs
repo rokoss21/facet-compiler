@@ -45,10 +45,7 @@ fn execute_source_with_input(
 
 fn assert_error_code(result: Result<(), String>, code: &str) {
     let err = result.expect_err("expected error");
-    assert!(
-        err.contains(code),
-        "expected error code {code}, got: {err}"
-    );
+    assert!(err.contains(code), "expected error code {code}, got: {err}");
 }
 
 fn span() -> Span {
@@ -92,7 +89,10 @@ fn unique_temp_dir(prefix: &str) -> PathBuf {
         .duration_since(UNIX_EPOCH)
         .expect("time should be monotonic")
         .as_nanos();
-    path.push(format!("facet-error-matrix-{prefix}-{}-{ts}", std::process::id()));
+    path.push(format!(
+        "facet-error-matrix-{prefix}-{}-{ts}",
+        std::process::id()
+    ));
     fs::create_dir_all(&path).expect("temp dir should be creatable");
     path
 }
@@ -182,7 +182,10 @@ fn matrix_f454_policy_deny() {
 fn matrix_f455_guard_undecidable() {
     let mut rule = OrderedMap::new();
     rule.insert("op".to_string(), ValueNode::String("lens_call".to_string()));
-    rule.insert("name".to_string(), ValueNode::String("llm_call".to_string()));
+    rule.insert(
+        "name".to_string(),
+        ValueNode::String("llm_call".to_string()),
+    );
     rule.insert(
         "when".to_string(),
         ValueNode::Variable("missing.flag".to_string()),

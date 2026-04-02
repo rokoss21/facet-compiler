@@ -92,11 +92,12 @@ impl Section {
             };
 
             for lens_call in &strategy.lenses {
-                let lens = lens_registry
-                    .get(&lens_call.name)
-                    .ok_or_else(|| EngineError::UnknownLens {
-                        name: lens_call.name.clone(),
-                    })?;
+                let lens =
+                    lens_registry
+                        .get(&lens_call.name)
+                        .ok_or_else(|| EngineError::UnknownLens {
+                            name: lens_call.name.clone(),
+                        })?;
                 let signature = lens.signature();
                 if !signature.deterministic {
                     return Err(EngineError::LensExecutionFailed {
@@ -106,9 +107,7 @@ impl Section {
                         ),
                     });
                 }
-                if mode == ExecutionMode::Pure
-                    && signature.trust_level != TrustLevel::Pure
-                {
+                if mode == ExecutionMode::Pure && signature.trust_level != TrustLevel::Pure {
                     return Err(EngineError::LensExecutionFailed {
                         message: format!(
                             "Compression lens '{}' disallowed in pure mode (Level-0 required)",
@@ -369,16 +368,12 @@ impl TokenBoxModel {
                 let requested_reduction = std::cmp::min(need, reducible);
                 if requested_reduction > 0 {
                     let target_size = section.current_size - requested_reduction;
-                    let (truncated_content, truncated_size) = self.truncate_content(
-                        &section.content,
-                        target_size,
-                        section.min,
-                    );
+                    let (truncated_content, truncated_size) =
+                        self.truncate_content(&section.content, target_size, section.min);
                     if truncated_size < section.current_size {
                         section.content = truncated_content;
-                        running_total = running_total.saturating_sub(
-                            section.current_size.saturating_sub(truncated_size),
-                        );
+                        running_total = running_total
+                            .saturating_sub(section.current_size.saturating_sub(truncated_size));
                         section.current_size = truncated_size;
                         was_truncated = true;
                     }
@@ -390,7 +385,7 @@ impl TokenBoxModel {
                 running_total = running_total.saturating_sub(section.current_size);
                 allocated_sections.push(AllocatedSection {
                     final_size: 0,
-                    was_compressed: was_compressed,
+                    was_compressed,
                     was_truncated,
                     was_dropped: true,
                     section,
@@ -525,9 +520,9 @@ impl TokenBoxModel {
         min_units: usize,
     ) -> (ValueNode, usize) {
         let mut truncated_map = map.clone();
-        let mut current_units = self.tokenizer.count_facet_units_in_value(&ValueNode::Map(
-            truncated_map.clone(),
-        ));
+        let mut current_units = self
+            .tokenizer
+            .count_facet_units_in_value(&ValueNode::Map(truncated_map.clone()));
         let keys: Vec<String> = map.keys().cloned().collect();
 
         while current_units > target_units {

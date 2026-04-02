@@ -3,7 +3,10 @@
 //! Converts Token Box Model allocation results into canonical JSON format
 //! suitable for LLM providers.
 
-use fct_ast::{BodyNode, FacetDocument, FacetNode, OrderedMap, ScalarValue, ValueNode, FACET_VERSION, POLICY_VERSION};
+use fct_ast::{
+    BodyNode, FacetDocument, FacetNode, OrderedMap, ScalarValue, ValueNode, FACET_VERSION,
+    POLICY_VERSION,
+};
 use fct_engine::AllocationResult;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -153,11 +156,8 @@ impl Renderer {
                             &mode,
                             computed_vars.as_ref(),
                         )?;
-                        let input_hash = message_emit_input_hash(
-                            &section.id,
-                            "system",
-                            &host_profile_id,
-                        )?;
+                        let input_hash =
+                            message_emit_input_hash(&section.id, "system", &host_profile_id)?;
                         message_guard_decisions.push(GuardDecision {
                             seq: 0,
                             op: "message_emit".to_string(),
@@ -204,11 +204,8 @@ impl Renderer {
                             &mode,
                             computed_vars.as_ref(),
                         )?;
-                        let input_hash = message_emit_input_hash(
-                            &section.id,
-                            "user",
-                            &host_profile_id,
-                        )?;
+                        let input_hash =
+                            message_emit_input_hash(&section.id, "user", &host_profile_id)?;
                         message_guard_decisions.push(GuardDecision {
                             seq: 0,
                             op: "message_emit".to_string(),
@@ -248,11 +245,8 @@ impl Renderer {
                             &mode,
                             computed_vars.as_ref(),
                         )?;
-                        let input_hash = message_emit_input_hash(
-                            &section.id,
-                            "assistant",
-                            &host_profile_id,
-                        )?;
+                        let input_hash =
+                            message_emit_input_hash(&section.id, "assistant", &host_profile_id)?;
                         message_guard_decisions.push(GuardDecision {
                             seq: 0,
                             op: "message_emit".to_string(),
@@ -293,11 +287,8 @@ impl Renderer {
                             &mode,
                             computed_vars.as_ref(),
                         )?;
-                        let input_hash = message_emit_input_hash(
-                            &section.id,
-                            "user",
-                            &host_profile_id,
-                        )?;
+                        let input_hash =
+                            message_emit_input_hash(&section.id, "user", &host_profile_id)?;
                         message_guard_decisions.push(GuardDecision {
                             seq: 0,
                             op: "message_emit".to_string(),
@@ -338,12 +329,8 @@ impl Renderer {
         payload.messages.extend(assistant_messages);
 
         // Extract tool definitions from @interface blocks
-        let (tools, mut tool_guard_decisions) = extract_tools_with_guard(
-            document,
-            &mode,
-            &host_profile_id,
-            computed_vars.as_ref(),
-        )?;
+        let (tools, mut tool_guard_decisions) =
+            extract_tools_with_guard(document, &mode, &host_profile_id, computed_vars.as_ref())?;
         payload.tools = tools;
         let mut guard_decisions = Vec::new();
         guard_decisions.append(&mut message_guard_decisions);
@@ -456,7 +443,8 @@ fn collect_effective_policy(document: &FacetDocument) -> Option<OrderedMap<Strin
             for body in &policy_block.body {
                 if let BodyNode::KeyValue(kv) = body {
                     if let Some(existing) = effective.get_mut(&kv.key) {
-                        let merged = merge_policy_value(&kv.key, existing.clone(), kv.value.clone());
+                        let merged =
+                            merge_policy_value(&kv.key, existing.clone(), kv.value.clone());
                         *existing = merged;
                     } else {
                         effective.insert(kv.key.clone(), kv.value.clone());
@@ -474,7 +462,9 @@ fn merge_policy_value(key: &str, old: ValueNode, new: ValueNode) -> ValueNode {
         (ValueNode::Map(old_map), ValueNode::Map(new_map)) => {
             ValueNode::Map(merge_policy_maps(old_map, new_map))
         }
-        (ValueNode::List(old_list), ValueNode::List(new_list)) if key == "allow" || key == "deny" => {
+        (ValueNode::List(old_list), ValueNode::List(new_list))
+            if key == "allow" || key == "deny" =>
+        {
             ValueNode::List(merge_policy_lists(old_list, new_list))
         }
         (_, replacement) => replacement,
@@ -533,7 +523,9 @@ fn policy_rule_id(item: &ValueNode) -> Option<&str> {
     }
 }
 
-fn ordered_map_to_json(map: &OrderedMap<String, ValueNode>) -> Result<serde_json::Value, RenderError> {
+fn ordered_map_to_json(
+    map: &OrderedMap<String, ValueNode>,
+) -> Result<serde_json::Value, RenderError> {
     let mut out = serde_json::Map::new();
     for (k, v) in map {
         out.insert(k.clone(), value_node_to_json(v)?);
@@ -942,18 +934,14 @@ fn type_node_to_json_schema(
                 "additionalProperties": false
             }))
         }
-        fct_ast::TypeNode::List(item_type) => {
-            Ok(serde_json::json!({
-                "type": "array",
-                "items": type_node_to_json_schema(item_type)?
-            }))
-        }
-        fct_ast::TypeNode::Map(value_type) => {
-            Ok(serde_json::json!({
-                "type": "object",
-                "additionalProperties": type_node_to_json_schema(value_type)?
-            }))
-        }
+        fct_ast::TypeNode::List(item_type) => Ok(serde_json::json!({
+            "type": "array",
+            "items": type_node_to_json_schema(item_type)?
+        })),
+        fct_ast::TypeNode::Map(value_type) => Ok(serde_json::json!({
+            "type": "object",
+            "additionalProperties": type_node_to_json_schema(value_type)?
+        })),
         fct_ast::TypeNode::Union(types) => {
             let mut one_of = Vec::new();
             for ty in types {
@@ -963,14 +951,12 @@ fn type_node_to_json_schema(
                 "oneOf": one_of
             }))
         }
-        fct_ast::TypeNode::Embedding { size } => {
-            Ok(serde_json::json!({
-                "type": "array",
-                "items": { "type": "number" },
-                "minItems": size,
-                "maxItems": size
-            }))
-        }
+        fct_ast::TypeNode::Embedding { size } => Ok(serde_json::json!({
+            "type": "array",
+            "items": { "type": "number" },
+            "minItems": size,
+            "maxItems": size
+        })),
         // Appendix D does not define image/audio mapping; keep deterministic fallback.
         fct_ast::TypeNode::Image { .. } | fct_ast::TypeNode::Audio { .. } => {
             // For now, render complex types as their string representation
@@ -1583,14 +1569,20 @@ mod tests {
                 "digest".to_string(),
                 ValueNode::Map(OrderedMap::from([
                     ("algo".to_string(), ValueNode::String("sha256".to_string())),
-                    ("value".to_string(), ValueNode::String("deadbeef".to_string())),
+                    (
+                        "value".to_string(),
+                        ValueNode::String("deadbeef".to_string()),
+                    ),
                 ])),
             ),
             (
                 "shape".to_string(),
                 ValueNode::Map(OrderedMap::from([
                     ("width".to_string(), ValueNode::Scalar(ScalarValue::Int(64))),
-                    ("height".to_string(), ValueNode::Scalar(ScalarValue::Int(64))),
+                    (
+                        "height".to_string(),
+                        ValueNode::Scalar(ScalarValue::Int(64)),
+                    ),
                 ])),
             ),
         ]);
@@ -1602,7 +1594,10 @@ mod tests {
                 "digest".to_string(),
                 ValueNode::Map(OrderedMap::from([
                     ("algo".to_string(), ValueNode::String("sha256".to_string())),
-                    ("value".to_string(), ValueNode::String("cafebabe".to_string())),
+                    (
+                        "value".to_string(),
+                        ValueNode::String("cafebabe".to_string()),
+                    ),
                 ])),
             ),
             (
@@ -1678,12 +1673,30 @@ mod tests {
     #[test]
     fn test_type_node_to_json_schema_primitives() {
         let cases = vec![
-            (TypeNode::Primitive("string".to_string()), serde_json::json!({"type": "string"})),
-            (TypeNode::Primitive("int".to_string()), serde_json::json!({"type": "integer"})),
-            (TypeNode::Primitive("float".to_string()), serde_json::json!({"type": "number"})),
-            (TypeNode::Primitive("bool".to_string()), serde_json::json!({"type": "boolean"})),
-            (TypeNode::Primitive("null".to_string()), serde_json::json!({"type": "null"})),
-            (TypeNode::Primitive("any".to_string()), serde_json::json!({})),
+            (
+                TypeNode::Primitive("string".to_string()),
+                serde_json::json!({"type": "string"}),
+            ),
+            (
+                TypeNode::Primitive("int".to_string()),
+                serde_json::json!({"type": "integer"}),
+            ),
+            (
+                TypeNode::Primitive("float".to_string()),
+                serde_json::json!({"type": "number"}),
+            ),
+            (
+                TypeNode::Primitive("bool".to_string()),
+                serde_json::json!({"type": "boolean"}),
+            ),
+            (
+                TypeNode::Primitive("null".to_string()),
+                serde_json::json!({"type": "null"}),
+            ),
+            (
+                TypeNode::Primitive("any".to_string()),
+                serde_json::json!({}),
+            ),
         ];
 
         for (ty, expected) in cases {
@@ -1695,7 +1708,10 @@ mod tests {
     #[test]
     fn test_type_node_to_json_schema_struct_list_map_union_embedding() {
         let struct_type = TypeNode::Struct(OrderedMap::from([
-            ("name".to_string(), TypeNode::Primitive("string".to_string())),
+            (
+                "name".to_string(),
+                TypeNode::Primitive("string".to_string()),
+            ),
             (
                 "score".to_string(),
                 TypeNode::Union(vec![
@@ -1989,24 +2005,25 @@ mod tests {
     fn test_policy_hash_is_computed_with_version_envelope() {
         let mut policy_map = OrderedMap::new();
         policy_map.insert("op".to_string(), ValueNode::String("tool_call".to_string()));
-        policy_map.insert("name".to_string(), ValueNode::String("WeatherAPI.get_current".to_string()));
+        policy_map.insert(
+            "name".to_string(),
+            ValueNode::String("WeatherAPI.get_current".to_string()),
+        );
 
         let policy_block = FacetBlock {
             name: "policy".to_string(),
             attributes: OrderedMap::new(),
-            body: vec![
-                BodyNode::KeyValue(KeyValueNode {
-                    key: "allow".to_string(),
-                    key_kind: Default::default(),
-                    value: ValueNode::List(vec![ValueNode::Map(policy_map)]),
-                    span: Span {
-                        start: 0,
-                        end: 0,
-                        line: 1,
-                        column: 1,
-                    },
-                }),
-            ],
+            body: vec![BodyNode::KeyValue(KeyValueNode {
+                key: "allow".to_string(),
+                key_kind: Default::default(),
+                value: ValueNode::List(vec![ValueNode::Map(policy_map)]),
+                span: Span {
+                    start: 0,
+                    end: 0,
+                    line: 1,
+                    column: 1,
+                },
+            })],
             span: Span {
                 start: 0,
                 end: 0,
@@ -2016,9 +2033,7 @@ mod tests {
         };
 
         let document = FacetDocument {
-            blocks: vec![
-                FacetNode::Policy(policy_block),
-            ],
+            blocks: vec![FacetNode::Policy(policy_block)],
             span: Span {
                 start: 0,
                 end: 0,
@@ -2122,7 +2137,10 @@ mod tests {
         });
 
         let deny_rule = ValueNode::Map(OrderedMap::from([
-            ("op".to_string(), ValueNode::String("tool_expose".to_string())),
+            (
+                "op".to_string(),
+                ValueNode::String("tool_expose".to_string()),
+            ),
             (
                 "name".to_string(),
                 ValueNode::String("WeatherAPI.get".to_string()),
@@ -2234,12 +2252,18 @@ mod tests {
         });
 
         let invalid_rule = ValueNode::Map(OrderedMap::from([
-            ("op".to_string(), ValueNode::String("tool_expose".to_string())),
+            (
+                "op".to_string(),
+                ValueNode::String("tool_expose".to_string()),
+            ),
             (
                 "name".to_string(),
                 ValueNode::String("WeatherAPI.get".to_string()),
             ),
-            ("when".to_string(), ValueNode::String("not-bool".to_string())),
+            (
+                "when".to_string(),
+                ValueNode::String("not-bool".to_string()),
+            ),
         ]));
         let policy = FacetNode::Policy(FacetBlock {
             name: "policy".to_string(),
@@ -2337,7 +2361,10 @@ mod tests {
         // Effect matcher is present but does not match the tool effect_class ("read").
         // Rule must not match due to conjunctive semantics.
         let deny_rule = ValueNode::Map(OrderedMap::from([
-            ("op".to_string(), ValueNode::String("tool_expose".to_string())),
+            (
+                "op".to_string(),
+                ValueNode::String("tool_expose".to_string()),
+            ),
             (
                 "name".to_string(),
                 ValueNode::String("WeatherAPI.get".to_string()),
@@ -2444,7 +2471,10 @@ mod tests {
         });
 
         let deny_rule = ValueNode::Map(OrderedMap::from([
-            ("op".to_string(), ValueNode::String("tool_expose".to_string())),
+            (
+                "op".to_string(),
+                ValueNode::String("tool_expose".to_string()),
+            ),
             (
                 "name".to_string(),
                 ValueNode::String("WeatherAPI.get".to_string()),
@@ -2558,7 +2588,10 @@ mod tests {
         );
 
         let deny_rule = ValueNode::Map(OrderedMap::from([
-            ("op".to_string(), ValueNode::String("tool_expose".to_string())),
+            (
+                "op".to_string(),
+                ValueNode::String("tool_expose".to_string()),
+            ),
             (
                 "name".to_string(),
                 ValueNode::String("WeatherAPI.get".to_string()),
@@ -2615,7 +2648,10 @@ mod tests {
                     key: "deny".to_string(),
                     key_kind: Default::default(),
                     value: ValueNode::List(vec![ValueNode::Map(OrderedMap::from([
-                        ("op".to_string(), ValueNode::String("message_emit".to_string())),
+                        (
+                            "op".to_string(),
+                            ValueNode::String("message_emit".to_string()),
+                        ),
                         ("name".to_string(), ValueNode::String("user#1".to_string())),
                     ]))]),
                     span: Span {
@@ -2640,7 +2676,11 @@ mod tests {
             },
         };
 
-        let section = Section::new("user#1".to_string(), ValueNode::String("hello".to_string()), 5);
+        let section = Section::new(
+            "user#1".to_string(),
+            ValueNode::String("hello".to_string()),
+            5,
+        );
         let allocation = AllocationResult {
             sections: vec![AllocatedSection {
                 final_size: 5,
@@ -2663,7 +2703,10 @@ mod tests {
         assert_eq!(output.guard_decisions[0].op, "message_emit");
         assert_eq!(output.guard_decisions[0].name, "user#1");
         assert_eq!(output.guard_decisions[0].decision, "denied");
-        assert_eq!(output.guard_decisions[0].error_code.as_deref(), Some("F454"));
+        assert_eq!(
+            output.guard_decisions[0].error_code.as_deref(),
+            Some("F454")
+        );
         let expected_input_obj = serde_json::json!({
             "message_id": "user#1",
             "role": "user",
@@ -2687,9 +2730,15 @@ mod tests {
                     key: "deny".to_string(),
                     key_kind: Default::default(),
                     value: ValueNode::List(vec![ValueNode::Map(OrderedMap::from([
-                        ("op".to_string(), ValueNode::String("message_emit".to_string())),
+                        (
+                            "op".to_string(),
+                            ValueNode::String("message_emit".to_string()),
+                        ),
                         ("name".to_string(), ValueNode::String("user#1".to_string())),
-                        ("when".to_string(), ValueNode::Variable("missing.flag".to_string())),
+                        (
+                            "when".to_string(),
+                            ValueNode::Variable("missing.flag".to_string()),
+                        ),
                     ]))]),
                     span: Span {
                         start: 0,
@@ -2713,7 +2762,11 @@ mod tests {
             },
         };
 
-        let section = Section::new("user#1".to_string(), ValueNode::String("hello".to_string()), 5);
+        let section = Section::new(
+            "user#1".to_string(),
+            ValueNode::String("hello".to_string()),
+            5,
+        );
         let allocation = AllocationResult {
             sections: vec![AllocatedSection {
                 final_size: 5,
@@ -2737,7 +2790,10 @@ mod tests {
     #[test]
     fn test_message_emit_effect_field_is_conjunctive_filter() {
         let deny_rule = ValueNode::Map(OrderedMap::from([
-            ("op".to_string(), ValueNode::String("message_emit".to_string())),
+            (
+                "op".to_string(),
+                ValueNode::String("message_emit".to_string()),
+            ),
             ("name".to_string(), ValueNode::String("user#1".to_string())),
             ("effect".to_string(), ValueNode::String("read".to_string())),
         ]));
@@ -2771,7 +2827,11 @@ mod tests {
             },
         };
 
-        let section = Section::new("user#1".to_string(), ValueNode::String("hello".to_string()), 5);
+        let section = Section::new(
+            "user#1".to_string(),
+            ValueNode::String("hello".to_string()),
+            5,
+        );
         let allocation = AllocationResult {
             sections: vec![AllocatedSection {
                 final_size: 5,
@@ -2930,7 +2990,11 @@ mod tests {
             },
         };
 
-        let section = Section::new("user#1".to_string(), ValueNode::String("hello".to_string()), 5);
+        let section = Section::new(
+            "user#1".to_string(),
+            ValueNode::String("hello".to_string()),
+            5,
+        );
         let allocation = AllocationResult {
             sections: vec![AllocatedSection {
                 final_size: 5,
@@ -2950,6 +3014,9 @@ mod tests {
         assert!(output.payload.messages.is_empty());
         assert_eq!(output.guard_decisions.len(), 1);
         assert_eq!(output.guard_decisions[0].decision, "denied");
-        assert_eq!(output.guard_decisions[0].error_code.as_deref(), Some("F454"));
+        assert_eq!(
+            output.guard_decisions[0].error_code.as_deref(),
+            Some("F454")
+        );
     }
 }

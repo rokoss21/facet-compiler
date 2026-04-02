@@ -652,7 +652,10 @@ mod token_box_tests {
                 assert_eq!(items.len(), 2);
                 match &items[1] {
                     ValueNode::Map(map) => {
-                        assert_eq!(map.get("type"), Some(&ValueNode::String("text".to_string())));
+                        assert_eq!(
+                            map.get("type"),
+                            Some(&ValueNode::String("text".to_string()))
+                        );
                         assert_eq!(map.get("text"), Some(&ValueNode::String("be".to_string())));
                     }
                     _ => panic!("expected map multimodal item"),

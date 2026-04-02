@@ -7,12 +7,8 @@ mod commands;
 
 use clap::Parser;
 use commands::{Cli, Commands, DefaultRateLimiter};
-use console::style;
 use governor::{Quota, RateLimiter};
 use nonzero_ext::nonzero;
-use std::sync::Arc;
-use std::time::Duration;
-use tracing::{info, warn};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 fn main() -> anyhow::Result<()> {

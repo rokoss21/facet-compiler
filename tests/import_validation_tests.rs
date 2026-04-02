@@ -46,7 +46,11 @@ fn filename_circular_without_cycle_is_allowed() {
 
     let _ = fs::remove_dir_all(&root);
 
-    assert!(result.is_ok(), "unexpected validation error: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "unexpected validation error: {:?}",
+        result.err()
+    );
 }
 
 #[test]
@@ -92,7 +96,11 @@ fn vars_singleton_merge_preserves_first_insertion_order() {
         })
         .collect();
 
-    assert_eq!(vars_blocks.len(), 1, "expected merged singleton @vars block");
+    assert_eq!(
+        vars_blocks.len(),
+        1,
+        "expected merged singleton @vars block"
+    );
 
     let keys: Vec<_> = vars_blocks[0]
         .body

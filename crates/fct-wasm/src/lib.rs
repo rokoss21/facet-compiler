@@ -1,12 +1,8 @@
-use wasm_bindgen::prelude::*;
 use fct_ast::FacetDocument;
-use fct_parser;
-use fct_validator;
-use fct_engine;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use serde_wasm_bindgen;
 use std::collections::HashMap;
+use wasm_bindgen::prelude::*;
 
 // Initialize panic hook for better error messages in console
 #[wasm_bindgen(start)]
@@ -53,6 +49,12 @@ pub struct FacetCompiler {
     validator: fct_validator::TypeChecker,
 }
 
+impl Default for FacetCompiler {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[wasm_bindgen]
 impl FacetCompiler {
     /// Create a new FACET compiler instance
@@ -92,26 +94,24 @@ impl FacetCompiler {
     pub fn validate_ast(&mut self, ast_json: JsValue) -> JsValue {
         // Convert JsValue to FacetDocument
         let doc: Result<FacetDocument, _> = serde_wasm_bindgen::from_value(ast_json);
-        
+
         match doc {
-            Ok(document) => {
-                match self.validator.validate(&document) {
-                    Ok(_) => {
-                        let result = ValidationResult {
-                            success: true,
-                            errors: vec![],
-                        };
-                        serde_wasm_bindgen::to_value(&result).unwrap_or(JsValue::UNDEFINED)
-                    }
-                    Err(e) => {
-                        let result = ValidationResult {
-                            success: false,
-                            errors: vec![e.to_string()],
-                        };
-                        serde_wasm_bindgen::to_value(&result).unwrap_or(JsValue::UNDEFINED)
-                    }
+            Ok(document) => match self.validator.validate(&document) {
+                Ok(_) => {
+                    let result = ValidationResult {
+                        success: true,
+                        errors: vec![],
+                    };
+                    serde_wasm_bindgen::to_value(&result).unwrap_or(JsValue::UNDEFINED)
                 }
-            }
+                Err(e) => {
+                    let result = ValidationResult {
+                        success: false,
+                        errors: vec![e.to_string()],
+                    };
+                    serde_wasm_bindgen::to_value(&result).unwrap_or(JsValue::UNDEFINED)
+                }
+            },
             Err(e) => {
                 let result = ValidationResult {
                     success: false,
@@ -126,7 +126,7 @@ impl FacetCompiler {
     #[wasm_bindgen(js_name = render)]
     pub fn render_ast(&self, ast_json: JsValue, context_json: Option<JsValue>) -> JsValue {
         let doc: Result<FacetDocument, _> = serde_wasm_bindgen::from_value(ast_json);
-        
+
         if let Err(e) = doc {
             let result = RenderResult {
                 success: false,
@@ -137,7 +137,7 @@ impl FacetCompiler {
         }
 
         let document = doc.unwrap();
-        
+
         // Parse context if provided
         let _context_map = if let Some(ctx) = context_json {
             match serde_wasm_bindgen::from_value::<HashMap<String, serde_json::Value>>(ctx) {
@@ -219,8 +219,8 @@ impl FacetCompiler {
             .unwrap_or(false);
 
         if !parse_success {
-            let error = js_sys::Reflect::get(&parse_result, &"error".into())
-                .unwrap_or(JsValue::UNDEFINED);
+            let error =
+                js_sys::Reflect::get(&parse_result, &"error".into()).unwrap_or(JsValue::UNDEFINED);
             let result = CompileResult {
                 success: false,
                 ast: None,
@@ -230,8 +230,7 @@ impl FacetCompiler {
             return serde_wasm_bindgen::to_value(&result).unwrap_or(JsValue::UNDEFINED);
         }
 
-        let ast = js_sys::Reflect::get(&parse_result, &"ast".into())
-            .unwrap_or(JsValue::UNDEFINED);
+        let ast = js_sys::Reflect::get(&parse_result, &"ast".into()).unwrap_or(JsValue::UNDEFINED);
 
         // Validate
         let validate_result = self.validate_ast(ast.clone());
@@ -243,8 +242,7 @@ impl FacetCompiler {
         if !validate_success {
             let errors_js = js_sys::Reflect::get(&validate_result, &"errors".into())
                 .unwrap_or(JsValue::UNDEFINED);
-            let errors: Vec<String> = serde_wasm_bindgen::from_value(errors_js)
-                .unwrap_or_default();
+            let errors: Vec<String> = serde_wasm_bindgen::from_value(errors_js).unwrap_or_default();
             let result = CompileResult {
                 success: false,
                 ast: serde_wasm_bindgen::from_value(ast).ok(),
@@ -262,8 +260,8 @@ impl FacetCompiler {
             .unwrap_or(false);
 
         if !render_success {
-            let error = js_sys::Reflect::get(&render_result, &"error".into())
-                .unwrap_or(JsValue::UNDEFINED);
+            let error =
+                js_sys::Reflect::get(&render_result, &"error".into()).unwrap_or(JsValue::UNDEFINED);
             let result = CompileResult {
                 success: false,
                 ast: serde_wasm_bindgen::from_value(ast).ok(),
@@ -273,16 +271,16 @@ impl FacetCompiler {
             return serde_wasm_bindgen::to_value(&result).unwrap_or(JsValue::UNDEFINED);
         }
 
-        let output = js_sys::Reflect::get(&render_result, &"output".into())
-            .unwrap_or(JsValue::UNDEFINED);
-        
+        let output =
+            js_sys::Reflect::get(&render_result, &"output".into()).unwrap_or(JsValue::UNDEFINED);
+
         let result = CompileResult {
             success: true,
             ast: serde_wasm_bindgen::from_value(ast).ok(),
             rendered: serde_wasm_bindgen::from_value(output).ok(),
             errors: vec![],
         };
-        
+
         serde_wasm_bindgen::to_value(&result).unwrap_or(JsValue::UNDEFINED)
     }
 }

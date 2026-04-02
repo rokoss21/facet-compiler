@@ -6,7 +6,7 @@
 use anyhow::{Context, Result};
 use console::style;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use tracing::info;
 
 // Icon constants
@@ -117,7 +117,6 @@ fn extract_interfaces(document: &fct_ast::FacetDocument) -> Vec<InterfaceInfo> {
                         .map(|param| ParameterInfo {
                             name: param.name.clone(),
                             param_type: Some(type_node_to_string(&param.type_node)),
-                            default_value: None, // TODO: Handle default values if needed
                         })
                         .collect(),
                     return_type: Some(type_node_to_string(&func.return_type)),
@@ -160,7 +159,7 @@ fn type_node_to_string(type_node: &fct_ast::TypeNode) -> String {
 fn generate_typescript_sdk(
     interfaces: &[InterfaceInfo],
     sdk_name: &str,
-    output: &PathBuf,
+    output: &Path,
 ) -> Result<()> {
     println!("{} Generating TypeScript SDK...", CODEGEN_EMOJI);
 
@@ -269,11 +268,7 @@ fn generate_typescript_sdk(
 }
 
 /// Generate Python SDK
-fn generate_python_sdk(
-    interfaces: &[InterfaceInfo],
-    sdk_name: &str,
-    output: &PathBuf,
-) -> Result<()> {
+fn generate_python_sdk(interfaces: &[InterfaceInfo], sdk_name: &str, output: &Path) -> Result<()> {
     println!("{} Generating Python SDK...", CODEGEN_EMOJI);
 
     let mut content = String::new();
@@ -351,10 +346,11 @@ import json
                 method.name
             ));
 
-            content.push_str("\n\n");
+            content.push('\n');
+            content.push('\n');
         }
 
-        content.push_str("\n");
+        content.push('\n');
     }
 
     // Write __init__.py file
@@ -367,7 +363,7 @@ import json
 }
 
 /// Generate Rust SDK
-fn generate_rust_sdk(interfaces: &[InterfaceInfo], sdk_name: &str, output: &PathBuf) -> Result<()> {
+fn generate_rust_sdk(interfaces: &[InterfaceInfo], sdk_name: &str, output: &Path) -> Result<()> {
     println!("{} Generating Rust SDK...", CODEGEN_EMOJI);
 
     let mut content = String::new();
@@ -501,7 +497,6 @@ struct MethodInfo {
 struct ParameterInfo {
     name: String,
     param_type: Option<String>,
-    default_value: Option<fct_ast::ValueNode>,
 }
 
 // Type conversion helpers

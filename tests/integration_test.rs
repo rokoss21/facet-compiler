@@ -31,15 +31,21 @@ fn doc_to_sections(doc: &FacetDocument) -> Vec<Section> {
 
     for block in &doc.blocks {
         let (id, priority, content) = match block {
-            FacetNode::System(_) => {
-                ("system".to_string(), 100, ValueNode::String("System block".to_string()))
-            }
-            FacetNode::User(_) => {
-                ("user".to_string(), 200, ValueNode::String("User block".to_string()))
-            }
-            FacetNode::Assistant(_) => {
-                ("assistant".to_string(), 50, ValueNode::String("Assistant block".to_string()))
-            }
+            FacetNode::System(_) => (
+                "system".to_string(),
+                100,
+                ValueNode::String("System block".to_string()),
+            ),
+            FacetNode::User(_) => (
+                "user".to_string(),
+                200,
+                ValueNode::String("User block".to_string()),
+            ),
+            FacetNode::Assistant(_) => (
+                "assistant".to_string(),
+                50,
+                ValueNode::String("Assistant block".to_string()),
+            ),
             FacetNode::Vars(_) => {
                 // Skip vars in section creation
                 continue;
@@ -48,12 +54,16 @@ fn doc_to_sections(doc: &FacetDocument) -> Vec<Section> {
                 // Skip var types
                 continue;
             }
-            FacetNode::Meta(_) => {
-                ("meta".to_string(), 10, ValueNode::String("Meta block".to_string()))
-            }
-            FacetNode::Context(_) => {
-                ("context".to_string(), 80, ValueNode::String("Context block".to_string()))
-            }
+            FacetNode::Meta(_) => (
+                "meta".to_string(),
+                10,
+                ValueNode::String("Meta block".to_string()),
+            ),
+            FacetNode::Context(_) => (
+                "context".to_string(),
+                80,
+                ValueNode::String("Context block".to_string()),
+            ),
             _ => continue,
         };
 
@@ -73,7 +83,10 @@ fn full_pipeline(source: &str) -> Result<CanonicalPayload, String> {
     full_pipeline_with_context(source, None)
 }
 
-fn full_pipeline_with_context(source: &str, _created_at: Option<&str>) -> Result<CanonicalPayload, String> {
+fn full_pipeline_with_context(
+    source: &str,
+    _created_at: Option<&str>,
+) -> Result<CanonicalPayload, String> {
     // Step 1: Parse
     let doc = parse_document(source).map_err(|e| format!("Parse error: {:?}", e))?;
 
@@ -194,7 +207,11 @@ fn test_integration_with_lens_pipeline() {
     if let Err(ref e) = result {
         eprintln!("Pipeline error: {}", e);
     }
-    assert!(result.is_ok(), "Should execute lens pipeline: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "Should execute lens pipeline: {:?}",
+        result.err()
+    );
 }
 
 // ============================================================================
@@ -452,7 +469,7 @@ fn test_integration_deep_pipeline() {
   content: "Test"
 "#;
 
-    let result = full_pipeline(&source);
+    let result = full_pipeline(source);
     assert!(result.is_ok(), "Should handle multi-step pipeline");
 }
 
@@ -505,7 +522,11 @@ fn test_integration_special_characters() {
 "#;
 
     let result = parse_and_validate(source);
-    assert!(result.is_ok(), "Should handle escaped quotes: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "Should handle escaped quotes: {:?}",
+        result.err()
+    );
 }
 
 #[test]
@@ -531,7 +552,8 @@ fn test_integration_crlf_equivalent_canonical_output_deterministic() {
     let created_at = "2026-02-24T00:00:00Z";
 
     let p1 = full_pipeline_with_context(lf, Some(created_at)).expect("lf pipeline must succeed");
-    let p2 = full_pipeline_with_context(crlf, Some(created_at)).expect("crlf pipeline must succeed");
+    let p2 =
+        full_pipeline_with_context(crlf, Some(created_at)).expect("crlf pipeline must succeed");
 
     assert_eq!(p1.metadata.document_hash, p2.metadata.document_hash);
 

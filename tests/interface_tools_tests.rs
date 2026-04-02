@@ -80,7 +80,11 @@ fn validator_accepts_namespaced_effect_class() {
   fn get(city: string) -> string (effect="x.acme.custom")
 "#;
     let result = validate(source);
-    assert!(result.is_ok(), "expected valid namespaced effect, got {:?}", result);
+    assert!(
+        result.is_ok(),
+        "expected valid namespaced effect, got {:?}",
+        result
+    );
 }
 
 #[test]
@@ -151,7 +155,9 @@ fn renderer_emits_only_system_referenced_tools() {
                 .body
                 .iter()
                 .find_map(|entry| match entry {
-                    fct_ast::BodyNode::KeyValue(kv) if kv.key == "content" => Some(kv.value.clone()),
+                    fct_ast::BodyNode::KeyValue(kv) if kv.key == "content" => {
+                        Some(kv.value.clone())
+                    }
                     _ => None,
                 })
                 .unwrap_or(ValueNode::String("system".to_string()));

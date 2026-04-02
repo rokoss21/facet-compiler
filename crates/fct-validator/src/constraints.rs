@@ -144,9 +144,7 @@ impl TypeConstraints {
             PrimitiveType::Int | PrimitiveType::Float | PrimitiveType::Number => {
                 self.min.is_some() || self.max.is_some() || self.enum_values.is_some()
             }
-            PrimitiveType::String => {
-                self.pattern.is_some() || self.enum_values.is_some()
-            }
+            PrimitiveType::String => self.pattern.is_some() || self.enum_values.is_some(),
             PrimitiveType::Bool | PrimitiveType::Boolean | PrimitiveType::Null => {
                 self.enum_values.is_some()
             }

@@ -133,7 +133,11 @@ fn policy_accepts_valid_rule_and_condition() {
         payment_interface()
     );
     let result = validate(&source);
-    assert!(result.is_ok(), "expected policy to be valid, got: {:?}", result);
+    assert!(
+        result.is_ok(),
+        "expected policy to be valid, got: {:?}",
+        result
+    );
 }
 
 #[test]
@@ -186,7 +190,11 @@ fn policy_accepts_valid_defaults_values() {
   defaults: { tool_call: "deny", message_emit: true, lens_call: false, tool_expose: "allow" }
 "#;
     let result = validate(source);
-    assert!(result.is_ok(), "expected valid defaults map, got: {:?}", result);
+    assert!(
+        result.is_ok(),
+        "expected valid defaults map, got: {:?}",
+        result
+    );
 }
 
 #[test]
@@ -206,7 +214,11 @@ fn policy_accepts_known_lens_name_and_prefix_matcher() {
   allow: [{ op: "lens_call", name: "trim" }, { op: "lens_call", name: "tr.*" }]
 "#;
     let result = validate(source);
-    assert!(result.is_ok(), "expected valid lens matchers, got: {:?}", result);
+    assert!(
+        result.is_ok(),
+        "expected valid lens matchers, got: {:?}",
+        result
+    );
 }
 
 #[test]

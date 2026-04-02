@@ -4,8 +4,9 @@
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 pub enum FacetType {
+    #[default]
     Any,
     Never,
     Primitive(PrimitiveType),
@@ -88,7 +89,10 @@ impl FacetType {
             return true;
         }
 
-        if matches!(other, FacetType::Any | FacetType::Primitive(PrimitiveType::Any)) {
+        if matches!(
+            other,
+            FacetType::Any | FacetType::Primitive(PrimitiveType::Any)
+        ) {
             return true;
         }
 
@@ -103,8 +107,9 @@ impl FacetType {
             (FacetType::Map(actual), FacetType::Map(expected)) => actual.is_assignable_to(expected),
             (FacetType::Struct(actual), FacetType::Struct(expected)) => {
                 expected.iter().all(|expected_field| {
-                    let actual_field =
-                        actual.iter().find(|field| field.name == expected_field.name);
+                    let actual_field = actual
+                        .iter()
+                        .find(|field| field.name == expected_field.name);
                     match (expected_field.required, actual_field) {
                         (true, None) => false,
                         (false, None) => true,
@@ -114,16 +119,22 @@ impl FacetType {
                     }
                 })
             }
-            (value, FacetType::Union(expected_members)) => {
-                expected_members.iter().any(|member| value.is_assignable_to(member))
-            }
-            (FacetType::Union(actual_members), target) => {
-                actual_members.iter().all(|member| member.is_assignable_to(target))
-            }
+            (value, FacetType::Union(expected_members)) => expected_members
+                .iter()
+                .any(|member| value.is_assignable_to(member)),
+            (FacetType::Union(actual_members), target) => actual_members
+                .iter()
+                .all(|member| member.is_assignable_to(target)),
             (FacetType::Multimodal(actual), FacetType::Multimodal(expected)) => {
                 multimodal_assignable(actual, expected)
             }
-            (FacetType::Image { max_dim, format }, FacetType::Image { max_dim: e_max, format: e_fmt })
+            (
+                FacetType::Image { max_dim, format },
+                FacetType::Image {
+                    max_dim: e_max,
+                    format: e_fmt,
+                },
+            )
             | (
                 FacetType::Image { max_dim, format },
                 FacetType::Multimodal(MultimodalType::Image(ImageType {
@@ -255,12 +266,6 @@ fn multimodal_assignable(actual: &MultimodalType, expected: &MultimodalType) -> 
         ),
         (MultimodalType::Embedding(a), MultimodalType::Embedding(e)) => a.size == e.size,
         _ => false,
-    }
-}
-
-impl Default for FacetType {
-    fn default() -> Self {
-        FacetType::Any
     }
 }
 
