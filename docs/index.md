@@ -19,9 +19,11 @@ It compiles structured contracts into reproducible, resource-bounded runtime beh
 - Type-checked contracts with explicit error codes.
 - Bounded execution via budget/gas/policy controls.
 
-## What FACET Does Not Guarantee
+## What FACET Does Not Solve
 
 - FACET does not eliminate model-level nondeterminism in generation.
+- FACET does not guarantee external API correctness.
+- FACET does not replace domain business logic.
 - FACET constrains model interaction so system-level correctness remains controlled by contracts, policy, and validation.
 
 ## Quick Path
@@ -41,6 +43,7 @@ It compiles structured contracts into reproducible, resource-bounded runtime beh
 ## Deep Dives
 
 - [Architecture](03-architecture.html)
+- [Execution Model](15-execution-model.html)
 - [Type System](04-type-system.html)
 - [Lenses](08-lenses.html)
 - [Testing](09-testing.html)

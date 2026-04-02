@@ -49,6 +49,15 @@ FACET describes the **architecture** of AI agent behavior - the structure, data 
 
 Yes! FACET v2.1.3 is licensed under MIT OR Apache-2.0 and available on GitHub. The compiler is written in Rust for performance and safety.
 
+### What does FACET NOT solve?
+
+- FACET does not make LLM inference output deterministic.
+- FACET does not guarantee correctness of third-party APIs.
+- FACET does not replace application/business logic.
+- FACET does not provide legal certification by itself.
+
+See also: [Execution Model](15-execution-model.html).
+
 ---
 
 ## Installation & Setup

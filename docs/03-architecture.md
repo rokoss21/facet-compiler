@@ -11,6 +11,7 @@ permalink: /03-architecture.html
 ## Table of Contents
 
 - [Overview](#overview)
+- [Execution Invariants](#execution-invariants)
 - [System Architecture](#system-architecture)
 - [Compilation Pipeline](#compilation-pipeline)
 - [Crate Organization](#crate-organization)
@@ -57,6 +58,8 @@ The architecture enforces these invariants across runs with identical inputs:
 5. Canonical output ordering is fixed (`system*`, then `user*`, then `assistant*`).
 
 These invariants define the deterministic contract boundary. They do not imply deterministic model inference output.
+
+For a strict state/transition definition and compile/runtime boundary, see [Execution Model](15-execution-model.html).
 
 ---
 
