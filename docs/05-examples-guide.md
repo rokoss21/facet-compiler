@@ -5,9 +5,9 @@ title: Examples
 
 # 05. FACET Examples Guide
 **Reading Time:** 45-60 minutes | **Difficulty:** Beginner → Advanced | **Previous:** [04-type-system.md](04-type-system.html) | **Next:** [06-cli.md](06-cli.html)
-**Version:** 1.0
-**Last Updated:** 2025-12-09
-**Status:** Production Ready
+**Version:** 0.1.2
+**Last Updated:** 2026-04-02
+**Status:** Spec-aligned examples
 
 ## Table of Contents
 
@@ -20,6 +20,7 @@ title: Examples
 - [Example 5: RAG Pipeline (`rag_pipeline.facet`)](#example-5-rag-pipeline-rag_pipelinefacet)
 - [Example 6: Advanced Features (`advanced_features.facet`)](#example-6-advanced-features-advanced_featuresfacet)
 - [Example 7: Testing (`test_example.facet`)](#example-7-testing-test_examplefacet)
+- [Example 8: Production Failure Flow (`production_support_flow.facet`)](#example-8-production-failure-flow-production_support_flowfacet)
 - [Common Patterns](#common-patterns)
 - [Creating Your Own Examples](#creating-your-own-examples)
 - [Troubleshooting](#troubleshooting)
@@ -28,7 +29,7 @@ title: Examples
 
 ## Overview
 
-FACET ships with 8 comprehensive examples demonstrating different aspects of the language. Each example is runnable and shows real-world usage patterns.
+FACET ships with comprehensive examples demonstrating different aspects of the language. Each example is runnable and shows real-world usage patterns.
 
 ### Examples Directory Structure
 
@@ -43,6 +44,8 @@ examples/
 ├── test_example.facet    # @test blocks & mocking
 └── README.md            # Quick reference
 ```
+
+Additional documentation-only examples are in `docs/examples/`.
 
 ### Running Examples
 
@@ -751,6 +754,44 @@ fct test --input examples/test_example.facet --output summary
 # See detailed results
 fct test --input examples/test_example.facet --output verbose
 ```
+
+---
+
+## Example 8: Production Failure Flow (`production_support_flow.facet`)
+
+**File:** `docs/examples/production_support_flow.facet`  
+**Purpose:** Show contract execution boundaries in a production-style support pipeline  
+**Concepts:** `@input`, normalization pipeline, deterministic fail-fast behavior
+
+### Source Code
+
+```facet
+@meta
+  name: "Support Escalation Contract"
+  version: "1.0"
+
+@context
+  budget: 32000
+
+@vars
+  tenant: @input(type="string", default="default")
+  query: @input(type="string")
+  normalized_query: $query |> trim() |> lowercase()
+
+@system
+  content: "Classify support intent. Return JSON with keys: action, confidence, reason."
+
+@user
+  content: $normalized_query
+```
+
+### Why It Matters
+
+- Demonstrates strict request-side contract control.
+- Supports bounded retry/fallback strategy in host code.
+- Works with explicit rule: execution never continues after contract violation.
+
+See the full walkthrough in [Production Scenario](16-production-scenario.html).
 
 ---
 

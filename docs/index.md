@@ -44,6 +44,10 @@ It compiles structured contracts into reproducible, resource-bounded runtime beh
 
 - [Architecture](03-architecture.html)
 - [Execution Model](15-execution-model.html)
+- [Production Scenario](16-production-scenario.html)
+- [Mini Benchmark Report](17-benchmark-report.html)
+- [Integration Guide](18-integration-guide.html)
+- [Engineer Q&A](19-engineer-qa.html)
 - [Type System](04-type-system.html)
 - [Lenses](08-lenses.html)
 - [Testing](09-testing.html)

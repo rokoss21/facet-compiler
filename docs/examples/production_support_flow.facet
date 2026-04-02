@@ -1,0 +1,17 @@
+@meta
+  name: "Support Escalation Contract"
+  version: "1.0"
+
+@context
+  budget: 32000
+
+@vars
+  tenant: @input(type="string", default="default")
+  query: @input(type="string")
+  normalized_query: $query |> trim() |> lowercase()
+
+@system
+  content: "Classify support intent. Return JSON with keys: action, confidence, reason."
+
+@user
+  content: $normalized_query
