@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop, rust ]
+    branches: [ master, main, develop, rust ]
   pull_request:
-    branches: [ main, develop, rust ]
+    branches: [ master, main, develop, rust ]
 
 env:
   CARGO_TERM_COLOR: always
@@ -65,6 +65,19 @@ jobs:
       - name: Determinism Conformance
         run: |
           cargo test -q --test replay_determinism_tests
+
+  spec-examples-matrix:
+    name: Spec Examples Matrix
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build CLI binary
+        run: cargo build --release --bin facet-fct
+      - name: Run ordered spec smoke suite
+        run: ./scripts/smoke_examples_spec.sh ./target/release/facet-fct
+      - name: Run spec scenario matrix
+        run: ./scripts/spec_matrix_examples.sh ./target/release/facet-fct
 
   audit:
     name: Security Audit

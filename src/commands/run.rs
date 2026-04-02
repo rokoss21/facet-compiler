@@ -218,18 +218,22 @@ fn doc_to_sections(
     let mut assistant_count = 0usize;
 
     for block in &doc.blocks {
-        let (derived_id, body) = match block {
+        let (role, derived_id, body) = match block {
             FacetNode::System(b) => {
                 system_count += 1;
-                (derive_message_section_id("system", system_count), b)
+                ("system", derive_message_section_id("system", system_count), b)
             }
             FacetNode::User(b) => {
                 user_count += 1;
-                (derive_message_section_id("user", user_count), b)
+                ("user", derive_message_section_id("user", user_count), b)
             }
             FacetNode::Assistant(b) => {
                 assistant_count += 1;
-                (derive_message_section_id("assistant", assistant_count), b)
+                (
+                    "assistant",
+                    derive_message_section_id("assistant", assistant_count),
+                    b,
+                )
             }
             _ => continue,
         };
@@ -242,6 +246,7 @@ fn doc_to_sections(
         let content = block_content_or_default(body, computed_vars, lens_registry)?;
         let base_size = count_facet_units_in_value(&content);
         let mut section = Section::new(layout.id, content, base_size)
+            .with_role(role)
             .with_priority(layout.priority)
             .with_limits(layout.min, layout.grow, layout.shrink);
         if let Some(strategy) = layout.strategy {
@@ -718,12 +723,14 @@ mod tests {
 
         assert_eq!(sections.len(), 2);
         assert_eq!(sections[0].id, "user#1");
+        assert_eq!(sections[0].role.as_deref(), Some("user"));
         assert_eq!(sections[0].priority, 610);
         assert_eq!(sections[0].min, 3);
         assert_eq!(sections[0].grow, 0.7);
         assert_eq!(sections[0].shrink, 0.4);
 
         assert_eq!(sections[1].id, "u.custom");
+        assert_eq!(sections[1].role.as_deref(), Some("user"));
         assert_eq!(sections[1].priority, 10);
         assert_eq!(sections[1].min, 1);
         assert_eq!(sections[1].grow, 2.0);
@@ -748,6 +755,7 @@ mod tests {
 
         assert_eq!(sections.len(), 1);
         assert_eq!(sections[0].id, "user#2");
+        assert_eq!(sections[0].role.as_deref(), Some("user"));
     }
 
     #[test]

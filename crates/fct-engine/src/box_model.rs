@@ -13,6 +13,7 @@ use std::collections::HashMap;
 #[derive(Debug, Clone)]
 pub struct Section {
     pub id: String,
+    pub role: Option<String>,           // canonical message role when known
     pub source_index: usize,            // original section order index
     pub priority: i32,                  // lower = dropped earlier
     pub base_size: usize,               // FACET Units after initial render
@@ -29,6 +30,7 @@ impl Section {
     pub fn new(id: String, content: ValueNode, base_size: usize) -> Self {
         Self {
             id,
+            role: None,
             source_index: usize::MAX,
             priority: 500, // default priority
             base_size,
@@ -46,6 +48,7 @@ impl Section {
         let base_size = tokenizer.count_facet_units_in_value(&content);
         Self {
             id,
+            role: None,
             source_index: usize::MAX,
             priority: 500,
             base_size,
@@ -61,6 +64,11 @@ impl Section {
 
     pub fn with_priority(mut self, priority: i32) -> Self {
         self.priority = priority;
+        self
+    }
+
+    pub fn with_role(mut self, role: &str) -> Self {
+        self.role = Some(role.to_string());
         self
     }
 

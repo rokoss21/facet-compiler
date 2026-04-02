@@ -22,7 +22,8 @@
 
 @policy
   deny: [
-    { id: "deny-assistant-message", op: "message_emit", name: "assistant#1", when: $deny_assistant }
+    { id: "deny-assistant-message", op: "message_emit", name: "assistant#1", when: $deny_assistant },
+    { id: "deny-weather-expose", op: "tool_expose", name: "WeatherAPI.get_current", when: { not: { all: [$allow_tools, { not: $deny_assistant }] } } }
   ]
   allow: [
     { id: "allow-weather-expose", op: "tool_expose", name: "WeatherAPI.get_current", when: { all: [$allow_tools, { not: $deny_assistant }] } },

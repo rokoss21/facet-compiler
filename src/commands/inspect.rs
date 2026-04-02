@@ -392,6 +392,7 @@ fn doc_to_sections(
         let content = content.unwrap_or_else(|| ValueNode::String(String::new()));
         let base_size = count_facet_units_in_value(&content);
         let mut section = Section::new(id, content, base_size)
+            .with_role(role)
             .with_priority(priority)
             .with_limits(min, grow, shrink);
         if let Some(strategy_pipeline) = strategy {
@@ -514,7 +515,12 @@ fn build_layout_view(budget: usize, allocation: &AllocationResult) -> LayoutView
         .iter()
         .map(|item| LayoutSectionView {
             id: item.section.id.clone(),
-            role: section_role(&item.section.id).to_string(),
+            role: item
+                .section
+                .role
+                .as_deref()
+                .unwrap_or_else(|| section_role(&item.section.id))
+                .to_string(),
             source_index: item.section.source_index,
             base_size: item.section.base_size,
             final_size: item.final_size,

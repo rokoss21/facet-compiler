@@ -147,7 +147,7 @@ impl Renderer {
         for section_result in &allocation.sections {
             let section = &section_result.section;
 
-            match section_role(&section.id) {
+            match section_role_for_section(section) {
                 Some("system") => {
                     if section_result.final_size > 0 {
                         let guard = evaluate_message_emit(
@@ -768,6 +768,16 @@ fn section_role(id: &str) -> Option<&str> {
     } else {
         None
     }
+}
+
+fn section_role_for_section(section: &fct_engine::Section) -> Option<&str> {
+    if let Some(role) = section.role.as_deref() {
+        return match role {
+            "system" | "tools" | "user" | "assistant" => Some(role),
+            _ => section_role(&section.id),
+        };
+    }
+    section_role(&section.id)
 }
 
 /// Extract tool definitions from @interface blocks in the document
@@ -1535,6 +1545,70 @@ mod tests {
                         ValueNode::String("asst".to_string()),
                         10,
                     ),
+                },
+            ],
+            total_size: 30,
+            budget: 100,
+            overflow: 0,
+        };
+
+        let result = renderer.render(&document, &allocation).unwrap();
+        assert_eq!(result.messages.len(), 3);
+        assert_eq!(result.messages[0].role, "system");
+        assert_eq!(result.messages[1].role, "user");
+        assert_eq!(result.messages[2].role, "assistant");
+    }
+
+    #[test]
+    fn test_render_uses_explicit_section_role_when_id_is_custom() {
+        let renderer = Renderer::new();
+        let document = FacetDocument {
+            blocks: vec![],
+            span: Span {
+                start: 0,
+                end: 0,
+                line: 1,
+                column: 1,
+            },
+        };
+
+        let allocation = AllocationResult {
+            sections: vec![
+                AllocatedSection {
+                    final_size: 10,
+                    was_compressed: false,
+                    was_truncated: false,
+                    was_dropped: false,
+                    section: Section::new(
+                        "sys.long".to_string(),
+                        ValueNode::String("sys".to_string()),
+                        10,
+                    )
+                    .with_role("system"),
+                },
+                AllocatedSection {
+                    final_size: 10,
+                    was_compressed: false,
+                    was_truncated: false,
+                    was_dropped: false,
+                    section: Section::new(
+                        "user.critical".to_string(),
+                        ValueNode::String("usr".to_string()),
+                        10,
+                    )
+                    .with_role("user"),
+                },
+                AllocatedSection {
+                    final_size: 10,
+                    was_compressed: false,
+                    was_truncated: false,
+                    was_dropped: false,
+                    section: Section::new(
+                        "assistant.flex".to_string(),
+                        ValueNode::String("asst".to_string()),
+                        10,
+                    )
+                    .with_role("assistant"),
                 },
             ],
             total_size: 30,

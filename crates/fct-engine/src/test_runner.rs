@@ -913,18 +913,22 @@ fn doc_to_sections(
     let mut assistant_count = 0usize;
 
     for node in &doc.blocks {
-        let (derived_id, block) = match node {
+        let (role, derived_id, block) = match node {
             FacetNode::System(b) => {
                 system_count += 1;
-                (derive_message_section_id("system", system_count), b)
+                ("system", derive_message_section_id("system", system_count), b)
             }
             FacetNode::User(b) => {
                 user_count += 1;
-                (derive_message_section_id("user", user_count), b)
+                ("user", derive_message_section_id("user", user_count), b)
             }
             FacetNode::Assistant(b) => {
                 assistant_count += 1;
-                (derive_message_section_id("assistant", assistant_count), b)
+                (
+                    "assistant",
+                    derive_message_section_id("assistant", assistant_count),
+                    b,
+                )
             }
             _ => continue,
         };
@@ -937,6 +941,7 @@ fn doc_to_sections(
         let content = extract_message_content(block, computed_vars, lens_registry)?;
         let base_size = count_facet_units_in_value(&content);
         let mut section = Section::new(layout.id, content, base_size)
+            .with_role(role)
             .with_priority(layout.priority)
             .with_limits(layout.min, layout.grow, layout.shrink);
         if let Some(strategy) = layout.strategy {
