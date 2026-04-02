@@ -221,7 +221,11 @@ fn doc_to_sections(
         let (role, derived_id, body) = match block {
             FacetNode::System(b) => {
                 system_count += 1;
-                ("system", derive_message_section_id("system", system_count), b)
+                (
+                    "system",
+                    derive_message_section_id("system", system_count),
+                    b,
+                )
             }
             FacetNode::User(b) => {
                 user_count += 1;
