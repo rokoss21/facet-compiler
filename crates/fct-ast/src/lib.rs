@@ -49,6 +49,9 @@ pub struct ImportNode {
     pub span: Span,
 }
 
+/// Normative AST alias for import directives (`@import`).
+pub type ImportDirectiveNode = ImportNode;
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct InterfaceNode {
     pub name: String,
@@ -137,10 +140,46 @@ pub struct KeyValueNode {
     pub span: Span,
 }
 
+/// Ordered map node used by normative AST model.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct MapNode {
+    pub entries: OrderedMap<String, ValueNode>,
+    pub span: Span,
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ListItemNode {
     pub value: ValueNode,
     pub span: Span,
+}
+
+/// Ordered list node used by normative AST model.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ListNode {
+    pub items: Vec<ValueNode>,
+    pub span: Span,
+}
+
+/// Structured variable reference node (`$name.path.to.field`).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct VarRefNode {
+    pub name: String,
+    pub path_segments: Vec<String>,
+    pub span: Span,
+}
+
+impl VarRefNode {
+    pub fn from_dotted(var_ref: &str, span: Span) -> Self {
+        let trimmed = var_ref.strip_prefix('$').unwrap_or(var_ref);
+        let mut parts = trimmed.split('.');
+        let name = parts.next().unwrap_or_default().to_string();
+        let path_segments = parts.map(ToString::to_string).collect();
+        Self {
+            name,
+            path_segments,
+            span,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -170,6 +209,9 @@ pub struct PipelineNode {
     pub span: Span,
 }
 
+/// Normative AST alias for lens pipelines.
+pub type LensPipelineNode = PipelineNode;
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct LensCallNode {
     pub name: String,
@@ -184,6 +226,9 @@ pub struct DirectiveNode {
     pub args: OrderedMap<String, ValueNode>,
     pub span: Span,
 }
+
+/// Normative AST alias for `@input(...)` directive-expressions.
+pub type InputExprNode = DirectiveNode;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum TypeNode {
@@ -211,3 +256,44 @@ pub mod types;
 
 pub use lens_signatures::{LensSignature, LensSignatureProvider, LensSignatureRegistry};
 pub use types::{FacetType, ParameterSignature, PrimitiveType, StructField};
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn span() -> Span {
+        Span {
+            start: 0,
+            end: 0,
+            line: 1,
+            column: 1,
+        }
+    }
+
+    #[test]
+    fn var_ref_node_parses_dotted_reference() {
+        let node = VarRefNode::from_dotted("$user.profile.name", span());
+        assert_eq!(node.name, "user");
+        assert_eq!(node.path_segments, vec!["profile", "name"]);
+    }
+
+    #[test]
+    fn var_ref_node_parses_single_name_reference() {
+        let node = VarRefNode::from_dotted("$query", span());
+        assert_eq!(node.name, "query");
+        assert!(node.path_segments.is_empty());
+    }
+
+    #[test]
+    fn map_node_preserves_insertion_order() {
+        let mut entries = OrderedMap::new();
+        entries.insert("b".to_string(), ValueNode::String("2".to_string()));
+        entries.insert("a".to_string(), ValueNode::String("1".to_string()));
+        let node = MapNode {
+            entries,
+            span: span(),
+        };
+        let keys: Vec<_> = node.entries.keys().cloned().collect();
+        assert_eq!(keys, vec!["b".to_string(), "a".to_string()]);
+    }
+}
