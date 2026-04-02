@@ -45,6 +45,9 @@ wasm-pack.log
 *.zip
 *.pdf
 *.facet
+!examples/*.facet
+!examples/**/*.facet
+/examples/execution.json
 
 # IDE
 .vscode/
@@ -71,3 +74,5 @@ wasm-pack.log
 
 # Documentation
 /target/doc/
+
+/examples/**/execution.json

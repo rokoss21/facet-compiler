@@ -1,0 +1,5 @@
+@import "./imports/05_base.facet"
+@import "./imports/05_override.facet"
+
+@user
+  content: $prompt

@@ -1,0 +1,27 @@
+@meta
+  version: "2.1.3"
+  title: "RAG Pipeline (Deterministic)"
+
+@context
+  budget: 32000
+
+@var_types
+  query: "string"
+  normalized_query: "string"
+  corpus: "list<struct { id: int, text: string }>"
+
+@vars
+  query: @input(type="string", default="facet compiler")
+  normalized_query: $query |> trim() |> lowercase()
+  corpus: [
+    { id: 1, text: "FACET compiles deterministic request context." },
+    { id: 2, text: "R-DAG computes typed variables in topological order." },
+    { id: 3, text: "Policy guard decisions are fail-closed in hypervisor mode." }
+  ]
+  snippets: $corpus |> map(field="text")
+
+@system
+  content: "Use only the provided snippets and answer briefly."
+
+@user
+  content: $normalized_query

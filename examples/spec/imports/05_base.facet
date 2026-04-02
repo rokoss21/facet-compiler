@@ -1,0 +1,12 @@
+@meta
+  version: "2.1.3"
+  title: "05 Imports Base"
+
+@context
+  budget: 32000
+
+@vars
+  prompt: "base value"
+
+@system
+  content: "System from base import"

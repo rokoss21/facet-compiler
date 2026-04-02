@@ -1,0 +1,19 @@
+@meta
+  version: "2.1.3"
+  title: "06 Interfaces + Policy"
+
+@interface WeatherAPI
+  fn get_current(city: string) -> string (effect="read")
+
+@system
+  tools: [$WeatherAPI]
+  content: "Use WeatherAPI.get_current when weather is requested."
+
+@policy
+  allow: [
+    { id: "allow-expose-weather", op: "tool_expose", name: "WeatherAPI.get_current", effect: "read" },
+    { id: "allow-call-weather", op: "tool_call", name: "WeatherAPI.get_current", effect: "read" }
+  ]
+
+@user
+  content: "What's the weather in Minsk?"

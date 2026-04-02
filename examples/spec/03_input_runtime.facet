@@ -1,0 +1,22 @@
+@meta
+  version: "2.1.3"
+  title: "03 Runtime @input"
+
+@context
+  budget: 32000
+
+@var_types
+  query: "string"
+  clean_query: "string"
+  limit: "int"
+
+@vars
+  query: @input(type="string", default="what is facet")
+  clean_query: $query |> trim() |> lowercase()
+  limit: @input(type="int", default=5)
+
+@system
+  content: "Answer briefly and deterministically."
+
+@user
+  content: $clean_query

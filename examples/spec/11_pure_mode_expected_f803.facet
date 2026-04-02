@@ -1,0 +1,9 @@
+@meta
+  version: "2.1.3"
+  title: "11 Pure Mode Expected F803"
+
+@vars
+  out: "hello" |> llm_call()
+
+@user
+  content: $out

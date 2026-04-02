@@ -14,7 +14,7 @@ impl Lens for MapLens {
         &self,
         input: ValueNode,
         args: Vec<ValueNode>,
-        _kwargs: HashMap<String, ValueNode>,
+        kwargs: HashMap<String, ValueNode>,
         _ctx: &LensContext,
     ) -> LensResult<ValueNode> {
         let list = match input {
@@ -26,6 +26,38 @@ impl Lens for MapLens {
                 })
             }
         };
+
+        if let Some(field_value) = kwargs.get("field") {
+            let field_name = match field_value {
+                ValueNode::String(name) => name.as_str(),
+                _ => {
+                    return Err(LensError::ArgumentError {
+                        message: "Map field argument must be string".to_string(),
+                    })
+                }
+            };
+
+            let mut mapped_items = Vec::with_capacity(list.len());
+            for item in list {
+                match item {
+                    ValueNode::Map(map) => {
+                        mapped_items.push(
+                            map.get(field_name)
+                                .cloned()
+                                .unwrap_or(ValueNode::Scalar(ScalarValue::Null)),
+                        );
+                    }
+                    other => {
+                        return Err(LensError::TypeMismatch {
+                            expected: "list<map>".to_string(),
+                            got: format!("{:?}", other),
+                        })
+                    }
+                }
+            }
+
+            return Ok(ValueNode::List(mapped_items));
+        }
 
         // Get map operation from args
         let operation = args.first().ok_or_else(|| LensError::ArgumentError {
@@ -565,5 +597,57 @@ impl Lens for JoinLens {
             trust_level: TrustLevel::Pure,
             deterministic: true,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use fct_ast::OrderedMap;
+
+    #[test]
+    fn map_supports_named_field_argument() {
+        let lens = MapLens;
+        let mut row1 = OrderedMap::new();
+        row1.insert("text".to_string(), ValueNode::String("A".to_string()));
+        let mut row2 = OrderedMap::new();
+        row2.insert("text".to_string(), ValueNode::String("B".to_string()));
+        row2.insert("id".to_string(), ValueNode::Scalar(ScalarValue::Int(2)));
+
+        let input = ValueNode::List(vec![ValueNode::Map(row1), ValueNode::Map(row2)]);
+        let mut kwargs = HashMap::new();
+        kwargs.insert("field".to_string(), ValueNode::String("text".to_string()));
+
+        let out = lens
+            .execute(input, vec![], kwargs, &LensContext::new())
+            .expect("named field map should succeed");
+
+        assert_eq!(
+            out,
+            ValueNode::List(vec![
+                ValueNode::String("A".to_string()),
+                ValueNode::String("B".to_string())
+            ])
+        );
+    }
+
+    #[test]
+    fn map_named_field_defaults_missing_to_null() {
+        let lens = MapLens;
+        let mut row = OrderedMap::new();
+        row.insert("id".to_string(), ValueNode::Scalar(ScalarValue::Int(1)));
+
+        let input = ValueNode::List(vec![ValueNode::Map(row)]);
+        let mut kwargs = HashMap::new();
+        kwargs.insert("field".to_string(), ValueNode::String("text".to_string()));
+
+        let out = lens
+            .execute(input, vec![], kwargs, &LensContext::new())
+            .expect("missing field should be null");
+
+        assert_eq!(
+            out,
+            ValueNode::List(vec![ValueNode::Scalar(ScalarValue::Null)])
+        );
     }
 }

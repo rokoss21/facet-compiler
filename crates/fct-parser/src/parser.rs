@@ -971,9 +971,22 @@ fn facet_block(input: SpanInput, level: usize) -> ParseResult<FacetNode> {
         return Ok((input, node));
     }
 
-    // Parse optional attributes: (key=value, ...)
-    let (input, attrs) = opt(attributes)(input)?;
-    let attributes = attrs.unwrap_or_default();
+    // Parse facet attributes.
+    // @test supports both legacy `@test(name="...")` and spec form `@test "..."`.
+    let (input, parsed_attributes) = if name == "test" {
+        if let Ok((next, attrs)) = attributes(input) {
+            (next, attrs)
+        } else if let Ok((next, test_name)) = string_literal(input) {
+            let mut attrs = OrderedMap::new();
+            attrs.insert("name".to_string(), ValueNode::String(test_name));
+            (next, attrs)
+        } else {
+            (input, OrderedMap::new())
+        }
+    } else {
+        let (next, attrs) = opt(attributes)(input)?;
+        (next, attrs.unwrap_or_default())
+    };
 
     let (input, _) = space0(input)?;
 
@@ -999,49 +1012,49 @@ fn facet_block(input: SpanInput, level: usize) -> ParseResult<FacetNode> {
     let node = match name.as_str() {
         "system" => FacetNode::System(FacetBlock {
             name: name.clone(),
-            attributes: attributes.clone(),
+            attributes: parsed_attributes.clone(),
             body,
             span,
         }),
         "user" => FacetNode::User(FacetBlock {
             name: name.clone(),
-            attributes: attributes.clone(),
+            attributes: parsed_attributes.clone(),
             body,
             span,
         }),
         "assistant" => FacetNode::Assistant(FacetBlock {
             name: name.clone(),
-            attributes: attributes.clone(),
+            attributes: parsed_attributes.clone(),
             body,
             span,
         }),
         "vars" => FacetNode::Vars(FacetBlock {
             name: name.clone(),
-            attributes: attributes.clone(),
+            attributes: parsed_attributes.clone(),
             body,
             span,
         }),
         "var_types" => FacetNode::VarTypes(FacetBlock {
             name: name.clone(),
-            attributes: attributes.clone(),
+            attributes: parsed_attributes.clone(),
             body,
             span,
         }),
         "context" => FacetNode::Context(FacetBlock {
             name: name.clone(),
-            attributes: attributes.clone(),
+            attributes: parsed_attributes.clone(),
             body,
             span,
         }),
         "policy" => FacetNode::Policy(FacetBlock {
             name: name.clone(),
-            attributes: attributes.clone(),
+            attributes: parsed_attributes.clone(),
             body,
             span,
         }),
         "test" => {
             // Parse test block content
-            let test_name = attributes
+            let test_name = parsed_attributes
                 .get("name")
                 .and_then(|v| {
                     if let ValueNode::String(s) = v {
@@ -1076,7 +1089,7 @@ fn facet_block(input: SpanInput, level: usize) -> ParseResult<FacetNode> {
         }
         _ => FacetNode::Meta(FacetBlock {
             name: name.clone(),
-            attributes: attributes.clone(),
+            attributes: parsed_attributes.clone(),
             body,
             span,
         }),
@@ -1799,6 +1812,20 @@ mod tests {
                     test.input.get("n"),
                     Some(ValueNode::Scalar(ScalarValue::Int(3)))
                 ));
+                assert_eq!(test.assertions.len(), 1);
+            }
+            other => panic!("expected test block, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_parses_test_block_with_spec_string_name_syntax() {
+        let src =
+            "@test \"basic\"\n  assert:\n    - \"canonical.messages[0].role == \\\"system\\\"\"\n";
+        let doc = parse_document(src).expect("@test \"name\" should parse");
+        match &doc.blocks[0] {
+            FacetNode::Test(test) => {
+                assert_eq!(test.name, "basic");
                 assert_eq!(test.assertions.len(), 1);
             }
             other => panic!("expected test block, got {:?}", other),

@@ -1,0 +1,31 @@
+@meta
+  version: "2.1.3"
+  title: "09 Multimodal Content"
+
+@system
+  content: [
+    { type: "text", text: "System text with image asset" },
+    {
+      type: "image",
+      asset: {
+        kind: "image",
+        format: "jpeg",
+        digest: { algo: "sha256", value: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" },
+        shape: { width: 1024, height: 768 }
+      }
+    }
+  ]
+
+@user
+  content: [
+    { type: "text", text: "User text with audio asset" },
+    {
+      type: "audio",
+      asset: {
+        kind: "audio",
+        format: "wav",
+        digest: { algo: "sha256", value: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" },
+        shape: { duration: 3.2 }
+      }
+    }
+  ]

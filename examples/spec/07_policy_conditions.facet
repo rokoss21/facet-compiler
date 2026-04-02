@@ -1,0 +1,30 @@
+@meta
+  version: "2.1.3"
+  title: "07 Policy Conditions"
+
+@interface WeatherAPI
+  fn get_current(city: string) -> string (effect="read")
+
+@var_types
+  allow_tools: "bool"
+  deny_assistant: "bool"
+
+@vars
+  allow_tools: @input(type="bool", default=true)
+  deny_assistant: @input(type="bool", default=false)
+
+@system
+  tools: [$WeatherAPI]
+  content: "Conditional policy demo"
+
+@assistant
+  content: "Assistant block may be denied by message_emit policy"
+
+@policy
+  deny: [
+    { id: "deny-assistant-message", op: "message_emit", name: "assistant#1", when: $deny_assistant }
+  ]
+  allow: [
+    { id: "allow-weather-expose", op: "tool_expose", name: "WeatherAPI.get_current", when: { all: [$allow_tools, { not: $deny_assistant }] } },
+    { id: "allow-weather-call", op: "tool_call", name: "WeatherAPI.get_current", when: { any: [$allow_tools, { not: $deny_assistant }] } }
+  ]

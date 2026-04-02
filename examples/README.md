@@ -1,134 +1,89 @@
-# FACET Examples
+# FACET v2.1.3 Examples
 
-This directory contains example FACET files demonstrating various features and use cases.
+This directory contains runnable FACET examples aligned with the v2.1.3 production spec.
 
-## Available Examples
+Primary suite: `examples/spec/` (ordered from simple to complex).
 
-### 1. `basic_prompt.facet` - Simple AI Assistant
+## Quick Start
 
-A straightforward example showing:
-- Variable declarations (`@vars`)
-- String pipeline transformations (`trim()`, `uppercase()`, `lowercase()`)
-- System and user blocks with metadata
-- Variable substitution
-
-**Try it:**
 ```bash
-# Build (parse + validate)
-cargo run -- build --input examples/basic_prompt.facet
+# Build release binary once
+cargo build --release --bin facet-fct
 
-# Run full pipeline with verbose output
-cargo run -- -v run --input examples/basic_prompt.facet --budget 4096 --format pretty
+# Run full suite smoke checks
+./scripts/smoke_examples_spec.sh
 ```
 
-### 2. `rag_pipeline.facet` - RAG (Retrieval-Augmented Generation)
+## Ordered Spec Suite
 
-Demonstrates a realistic RAG pattern:
-- Document processing pipelines
-- Context management with `@context` block
-- List literals for multiple documents
-- Metadata and retrieval configuration
-- Lower temperature for factual answers
+### 01. `examples/spec/01_minimal.facet`
+- Minimal canonical document: `@meta`, `@context`, `@system`, `@user`.
 
-**Try it:**
+### 02. `examples/spec/02_vars_types_pipelines.facet`
+- `@vars` + `@var_types` + string pipelines (`trim`, `lowercase`) + list/map literals.
+
+### 03. `examples/spec/03_input_runtime.facet`
+- Runtime `@input(...)` materialization with types/defaults.
+- Runtime values file: `examples/spec/03_input_runtime.input.json`.
+
+### 04. `examples/spec/04_when_gating.facet`
+- Boolean `when` gating on message facets.
+- Runtime values file: `examples/spec/04_when_gating.input.json`.
+
+### 05. `examples/spec/05_imports_merge.facet`
+- Deterministic `@import` resolution and merge.
+- Imported modules: `examples/spec/imports/05_base.facet`, `examples/spec/imports/05_override.facet`.
+
+### 06. `examples/spec/06_interfaces_policy.facet`
+- `@interface`, `@system.tools`, and `@policy` allow rules for `tool_expose`/`tool_call`.
+
+### 07. `examples/spec/07_policy_conditions.facet`
+- `PolicyCond` with `all/any/not` and runtime-controlled policy behavior.
+- Runtime values file: `examples/spec/07_policy_conditions.input.json`.
+
+### 08. `examples/spec/08_test_suite.facet`
+- Spec-style tests: `@test "name"`, `mock`, `assert`.
+- Includes assertion over execution provenance (`execution.provenance.events[...]`).
+
+### 09. `examples/spec/09_multimodal_content.facet`
+- Canonical multimodal content items (`text`, `image`, `audio`) and canonical asset shape.
+
+### 10. `examples/spec/10_layout_budget.facet`
+- Token Box controls: `priority`, `min`, `shrink`, deterministic layout under budget.
+
+### 11. `examples/spec/11_pure_mode_expected_f803.facet`
+- Expected failure case in Pure mode: Level-1 lens cache miss -> `F803`.
+
+### 12. `examples/spec/12_exec_mode_expected_f454.facet`
+- Expected failure case in Exec mode: policy deny on guarded `lens_call` -> `F454`.
+
+## Manual Commands
+
 ```bash
-cargo run -- build --input examples/rag_pipeline.facet
-cargo run -- run --input examples/rag_pipeline.facet --budget 8192
+BIN=./target/release/facet-fct
+
+# Build any example
+$BIN build --input examples/spec/01_minimal.facet
+
+# Run with runtime input
+$BIN run --input examples/spec/03_input_runtime.facet \
+  --runtime-input examples/spec/03_input_runtime.input.json \
+  --format json
+
+# Run tests
+$BIN test --input examples/spec/08_test_suite.facet --output summary
+
+# Inspect AST/DAG/Layout/Policy views
+$BIN inspect --input examples/spec/02_vars_types_pipelines.facet \
+  --ast /tmp/ast.json --dag /tmp/dag.json --layout /tmp/layout.json --policy /tmp/policy.json
 ```
 
-### 3. `advanced_features.facet` - Complete Feature Showcase
+## Legacy Top-Level Examples
 
-A comprehensive example demonstrating:
-- **Scalar types:** int, float, bool, null
-- **String pipelines:** complex transformations
-- **List literals:** `[1, 2, 3]`, `["a", "b", "c"]`
-- **Nested maps:** configuration objects with deep nesting
-- **Escaped strings:** JSON, file paths
-- **Multiple block types:** `@meta`, `@system`, `@context`, `@user`, `@assistant`
-- **Variable references:** `$var_name`
+These files are kept for compatibility and quick demos:
+- `examples/basic_prompt.facet`
+- `examples/rag_pipeline.facet`
+- `examples/advanced_features.facet`
+- `examples/policy_guard_test.facet`
 
-**Try it:**
-```bash
-# Inspect the AST
-cargo run -- inspect --input examples/advanced_features.facet
-
-# Run with custom budgets
-cargo run -- run --input examples/advanced_features.facet \
-  --budget 8192 \
-  --context-budget 20000 \
-  --format pretty
-```
-
-## CLI Commands
-
-### `build` - Parse and Validate
-```bash
-cargo run -- build --input <FILE>
-cargo run -- -v build --input <FILE>  # verbose mode
-```
-
-### `inspect` - View AST
-```bash
-cargo run -- inspect --input <FILE>
-```
-
-### `run` - Full Pipeline
-```bash
-cargo run -- run --input <FILE> [OPTIONS]
-
-Options:
-  -b, --budget <BUDGET>              Token budget for context window [default: 4096]
-  -c, --context-budget <BUDGET>      R-DAG execution budget [default: 10000]
-  -f, --format <FORMAT>              Output format: json or pretty [default: json]
-```
-
-## Common Patterns
-
-### Variable Processing
-```facet
-@vars
-  raw_input: "  messy text  "
-  cleaned: $raw_input |> trim() |> lowercase()
-```
-
-### Nested Configuration
-```facet
-@vars
-  config: {
-    api: {
-      endpoint: "https://api.example.com"
-      timeout: 30
-    }
-    features: {
-      streaming: true
-    }
-  }
-```
-
-### List Handling
-```facet
-@vars
-  models: ["gpt-4", "gpt-3.5-turbo"]
-  numbers: [1, 2, 3, 4, 5]
-```
-
-### Document Contexts
-```facet
-@context
-  documents: [$doc1, $doc2, $doc3]
-  retrieval_method: "semantic_search"
-```
-
-## Creating Your Own Examples
-
-1. Start with `@meta` for documentation
-2. Define variables in `@vars`
-3. Configure system behavior in `@system`
-4. Add user input in `@user`
-5. Test with `build` first, then `run`
-
-## Next Steps
-
-- Read [docs/cli.md](../docs/cli.md) for complete CLI reference
-- See [docs/lenses.md](../docs/lenses.md) for available lens functions
-- Check [facet2-specification.md](../facet2-specification.md) for full language specification
+New feature-complete coverage should be added under `examples/spec/`.

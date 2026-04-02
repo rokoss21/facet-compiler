@@ -255,8 +255,14 @@ impl ResolverContext {
                 if root.is_absolute() {
                     root.canonicalize().unwrap_or(root)
                 } else {
-                    let joined = config.base_dir.join(root);
-                    joined.canonicalize().unwrap_or(joined)
+                    // Prefer resolving relative roots from CWD first to avoid
+                    // accidentally double-joining with an already-relative base_dir.
+                    if let Ok(from_cwd) = root.canonicalize() {
+                        from_cwd
+                    } else {
+                        let joined = config.base_dir.join(root);
+                        joined.canonicalize().unwrap_or(joined)
+                    }
                 }
             })
             .collect();
@@ -2041,6 +2047,35 @@ mod tests {
             }
             assert!(result.is_ok(), "Safe path should work: {}", path);
         }
+    }
+
+    #[test]
+    fn test_relative_base_and_allowed_root_resolve_without_double_join() {
+        use std::fs;
+        use tempfile::TempDir;
+
+        let temp_dir = TempDir::new().expect("temp dir");
+        let project_root = temp_dir.path();
+        let spec_dir = project_root.join("examples").join("spec");
+        fs::create_dir_all(&spec_dir).expect("create examples/spec");
+        fs::write(spec_dir.join("mod.facet"), "@vars\n  ok: true\n").expect("write module");
+
+        let prev_cwd = std::env::current_dir().expect("cwd");
+        std::env::set_current_dir(project_root).expect("cd to temp project");
+
+        let context = ResolverContext::new(ResolverConfig {
+            base_dir: std::path::PathBuf::from("examples/spec"),
+            allowed_roots: vec![std::path::PathBuf::from("examples/spec")],
+        });
+
+        let result = context.resolve_path("mod.facet");
+        std::env::set_current_dir(prev_cwd).expect("restore cwd");
+
+        assert!(
+            result.is_ok(),
+            "relative allowed root should resolve import, got: {:?}",
+            result.err()
+        );
     }
 
     #[cfg(windows)]

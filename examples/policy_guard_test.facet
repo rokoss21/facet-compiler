@@ -1,0 +1,19 @@
+@interface WeatherAPI
+  fn get_current(city: string) -> string (effect="read")
+
+@system
+  tools: [$WeatherAPI]
+  content: "Use WeatherAPI only when needed."
+
+@policy
+  allow: [
+    { id: "allow-weather-expose", op: "tool_expose", name: "WeatherAPI.get_current", effect: "read" },
+    { id: "allow-weather-call", op: "tool_call", name: "WeatherAPI.get_current", effect: "read" }
+  ]
+
+@test "mock-weather"
+  mock:
+    "WeatherAPI.get_current": "Rain"
+  assert:
+    - "canonical.messages[0].role == \"system\""
+    - "telemetry.gas < 10000"

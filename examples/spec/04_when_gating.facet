@@ -1,0 +1,23 @@
+@meta
+  version: "2.1.3"
+  title: "04 when Gating"
+
+@context
+  budget: 32000
+
+@var_types
+  show_system: "bool"
+  show_assistant: "bool"
+
+@vars
+  show_system: @input(type="bool", default=true)
+  show_assistant: @input(type="bool", default=false)
+
+@system(when=$show_system)
+  content: "Visible only when show_system=true"
+
+@user
+  content: "Always visible user message"
+
+@assistant(when=$show_assistant)
+  content: "Visible only when show_assistant=true"

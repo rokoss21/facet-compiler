@@ -1,0 +1,28 @@
+@meta
+  version: "2.1.3"
+  title: "10 Layout Budget"
+
+@context
+  budget: 120
+  defaults: { priority: 500, min: 0, grow: 0, shrink: 1 }
+
+@system
+  id: "sys.long"
+  priority: 100
+  min: 20
+  shrink: 1
+  content: "This is a long system section that can be compressed or truncated if required by the layout budget."
+
+@user
+  id: "user.critical"
+  priority: 200
+  min: 0
+  shrink: 0
+  content: "Critical user section"
+
+@assistant
+  id: "assistant.flex"
+  priority: 700
+  min: 10
+  shrink: 1
+  content: "Flexible assistant section that may be truncated or dropped first."

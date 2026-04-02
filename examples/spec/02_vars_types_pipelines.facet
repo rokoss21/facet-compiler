@@ -1,0 +1,24 @@
+@meta
+  version: "2.1.3"
+  title: "02 Vars + Types + Pipelines"
+
+@context
+  budget: 32000
+
+@var_types
+  raw: "string"
+  clean: "string"
+  tags: "list<string>"
+  cfg: "map<string, int>"
+
+@vars
+  raw: "  Facet Compiler  "
+  clean: $raw |> trim() |> lowercase()
+  tags: ["v2", "rust", "deterministic"]
+  cfg: { retries: 3, timeout: 30 }
+
+@system
+  content: "Normalize user input before response."
+
+@user
+  content: $clean

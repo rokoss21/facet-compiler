@@ -1,0 +1,12 @@
+@meta
+  version: "2.1.3"
+  title: "01 Minimal"
+
+@context
+  budget: 32000
+
+@system
+  content: "You are a helpful assistant."
+
+@user
+  content: "Hello from FACET spec example 01."

@@ -1,0 +1,20 @@
+@meta
+  version: "2.1.3"
+  title: "Basic Prompt"
+
+@context
+  budget: 32000
+
+@var_types
+  raw_name: "string"
+  name: "string"
+
+@vars
+  raw_name: @input(type="string", default="world")
+  name: $raw_name |> trim() |> uppercase()
+
+@system
+  content: "You are a concise assistant."
+
+@user
+  content: $name

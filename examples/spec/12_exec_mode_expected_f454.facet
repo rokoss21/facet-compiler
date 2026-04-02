@@ -1,0 +1,12 @@
+@meta
+  version: "2.1.3"
+  title: "12 Exec Mode Expected F454"
+
+@vars
+  out: "hello" |> llm_call()
+
+@policy
+  deny: [{ op: "lens_call", name: "llm_call" }]
+
+@user
+  content: $out

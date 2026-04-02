@@ -68,6 +68,14 @@ fn facet_forms_matrix_parses() {
 "#,
         ),
         (
+            "test_spec_name_string",
+            r#"
+@test "basic"
+  assert:
+    - "canonical contains hello"
+"#,
+        ),
+        (
             "import_plus_block",
             r#"
 @import "./module.facet"
