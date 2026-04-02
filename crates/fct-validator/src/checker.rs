@@ -2783,4 +2783,90 @@ mod tests {
             "expected F451 TypeMismatch, got: {err:?}"
         );
     }
+
+    #[test]
+    fn appendix_a_standard_lenses_are_available_in_validator_registry() {
+        let mut map_value = OrderedMap::new();
+        map_value.insert("a".to_string(), ValueNode::Scalar(ScalarValue::Int(2)));
+        map_value.insert("b".to_string(), ValueNode::Scalar(ScalarValue::Int(1)));
+
+        let mut row1 = OrderedMap::new();
+        row1.insert("score".to_string(), ValueNode::Scalar(ScalarValue::Int(2)));
+        let mut row2 = OrderedMap::new();
+        row2.insert("score".to_string(), ValueNode::Scalar(ScalarValue::Int(1)));
+        let list_of_rows = ValueNode::List(vec![ValueNode::Map(row1), ValueNode::Map(row2)]);
+
+        let doc = vars_doc(vec![
+            (
+                "v_default",
+                ValueNode::Pipeline(PipelineNode {
+                    initial: Box::new(ValueNode::String("hello".to_string())),
+                    lenses: vec![lens(
+                        "default",
+                        vec![ValueNode::String("fallback".to_string())],
+                    )],
+                    span: span(),
+                }),
+            ),
+            (
+                "v_json",
+                ValueNode::Pipeline(PipelineNode {
+                    initial: Box::new(ValueNode::Map(map_value.clone())),
+                    lenses: vec![lens("json", vec![ValueNode::Scalar(ScalarValue::Int(0))])],
+                    span: span(),
+                }),
+            ),
+            (
+                "v_keys",
+                ValueNode::Pipeline(PipelineNode {
+                    initial: Box::new(ValueNode::Map(map_value.clone())),
+                    lenses: vec![lens("keys", vec![])],
+                    span: span(),
+                }),
+            ),
+            (
+                "v_values",
+                ValueNode::Pipeline(PipelineNode {
+                    initial: Box::new(ValueNode::Map(map_value)),
+                    lenses: vec![lens("values", vec![])],
+                    span: span(),
+                }),
+            ),
+            (
+                "v_map",
+                ValueNode::Pipeline(PipelineNode {
+                    initial: Box::new(list_of_rows.clone()),
+                    lenses: vec![lens("map", vec![ValueNode::String("score".to_string())])],
+                    span: span(),
+                }),
+            ),
+            (
+                "v_sort_by",
+                ValueNode::Pipeline(PipelineNode {
+                    initial: Box::new(list_of_rows),
+                    lenses: vec![lens(
+                        "sort_by",
+                        vec![
+                            ValueNode::String("score".to_string()),
+                            ValueNode::Scalar(ScalarValue::Bool(true)),
+                        ],
+                    )],
+                    span: span(),
+                }),
+            ),
+            (
+                "v_ensure_list",
+                ValueNode::Pipeline(PipelineNode {
+                    initial: Box::new(ValueNode::String("x".to_string())),
+                    lenses: vec![lens("ensure_list", vec![])],
+                    span: span(),
+                }),
+            ),
+        ]);
+
+        let mut checker = TypeChecker::new();
+        checker
+            .validate(&doc)
+            .expect("Appendix A standard lenses must be recognized by validator");
+    }
 }

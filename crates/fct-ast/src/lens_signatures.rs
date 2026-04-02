@@ -259,7 +259,7 @@ impl LensSignatureRegistry {
             vec![ParameterSignature {
                 name: "separator".to_string(),
                 param_type: FacetType::Primitive(PrimitiveType::String),
-                required: false,
+                required: true,
             }],
         ));
 
@@ -301,6 +301,79 @@ impl LensSignatureRegistry {
                 param_type: FacetType::Primitive(PrimitiveType::String),
                 required: false,
             }],
+        ));
+
+        // Appendix A.2 data lenses
+        self.register(LensSignature::new(
+            "json".to_string(),
+            FacetType::Any,
+            FacetType::Primitive(PrimitiveType::String),
+            vec![ParameterSignature {
+                name: "indent".to_string(),
+                param_type: FacetType::Primitive(PrimitiveType::Number),
+                required: false,
+            }],
+        ));
+
+        self.register(LensSignature::new(
+            "keys".to_string(),
+            FacetType::Map(Box::new(FacetType::Any)),
+            FacetType::List(Box::new(FacetType::Primitive(PrimitiveType::String))),
+            vec![],
+        ));
+
+        self.register(LensSignature::new(
+            "values".to_string(),
+            FacetType::Map(Box::new(FacetType::Any)),
+            FacetType::List(Box::new(FacetType::Any)),
+            vec![],
+        ));
+
+        self.register(LensSignature::new(
+            "map".to_string(),
+            FacetType::List(Box::new(FacetType::Any)),
+            FacetType::List(Box::new(FacetType::Any)),
+            vec![ParameterSignature {
+                name: "field".to_string(),
+                param_type: FacetType::Primitive(PrimitiveType::String),
+                required: true,
+            }],
+        ));
+
+        self.register(LensSignature::new(
+            "sort_by".to_string(),
+            FacetType::List(Box::new(FacetType::Any)),
+            FacetType::List(Box::new(FacetType::Any)),
+            vec![
+                ParameterSignature {
+                    name: "field".to_string(),
+                    param_type: FacetType::Primitive(PrimitiveType::String),
+                    required: true,
+                },
+                ParameterSignature {
+                    name: "desc".to_string(),
+                    param_type: FacetType::Primitive(PrimitiveType::Bool),
+                    required: false,
+                },
+            ],
+        ));
+
+        self.register(LensSignature::new(
+            "default".to_string(),
+            FacetType::Any,
+            FacetType::Any,
+            vec![ParameterSignature {
+                name: "value".to_string(),
+                param_type: FacetType::Any,
+                required: true,
+            }],
+        ));
+
+        self.register(LensSignature::new(
+            "ensure_list".to_string(),
+            FacetType::Any,
+            FacetType::List(Box::new(FacetType::Any)),
+            vec![],
         ));
 
         // Type conversion lenses
