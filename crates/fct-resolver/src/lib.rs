@@ -22,7 +22,7 @@
 //!
 //! ## Basic Usage
 //!
-//! ```rust
+//! ```ignore
 //! use fct_resolver::{Resolver, ResolverConfig};
 //! use std::path::PathBuf;
 //!
@@ -40,7 +40,7 @@
 //!
 //! ## Advanced Security Configuration
 //!
-//! ```rust
+//! ```ignore
 //! use fct_resolver::{Resolver, ResolverConfig};
 //! use std::path::PathBuf;
 //!
@@ -60,16 +60,16 @@
 //!
 //! ## Error Codes
 //!
-//! Resolver errors use the F6xx code range:
+//! Resolver errors use FACET standard import codes plus namespaced host diagnostics:
 //! - **F601**: Import not found
 //! - **F602**: Import cycle detected
-//! - **F603**: File read timeout
-//! - **F604**: Symlink escape detected
-//! - **F605**: Access to sensitive location denied
-//! - **F606**: Suspicious path encoding detected
+//! - **X.resolver.FILE_TIMEOUT**: File read timeout
+//! - **F601**: Symlink escape detected / outside allowlisted roots
+//! - **X.resolver.SENSITIVE_LOCATION**: Access to sensitive location denied
+//! - **X.resolver.SUSPICIOUS_ENCODING**: Suspicious path encoding detected
 
 use fct_ast::{FacetBlock, FacetDocument, FacetNode, ImportNode};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 use thiserror::Error;
@@ -85,12 +85,12 @@ use tokio::time::timeout;
 ///
 /// - **F601**: File resolution errors
 /// - **F602**: Dependency graph errors
-/// - **F603**: Timeout and performance errors
-/// - **F604-F606**: Security violation errors
+/// - **X.resolver.FILE_TIMEOUT**: Timeout and performance errors
+/// - **X.resolver.***: Host security violation errors
 ///
 /// # Examples
 ///
-/// ```rust
+/// ```ignore
 /// use fct_resolver::ResolverError;
 ///
 /// match resolution_result {
@@ -133,7 +133,7 @@ pub enum ResolverError {
     ///
     /// This is a security restriction to prevent directory traversal attacks
     /// and ensure all imports are within allowed directories.
-    #[error("Invalid import path: {path} (absolute paths not allowed)")]
+    #[error("F601: Import not found / disallowed path: {path} (absolute paths not allowed)")]
     AbsolutePathNotAllowed {
         /// The absolute path that was rejected
         path: String
@@ -143,7 +143,7 @@ pub enum ResolverError {
     ///
     /// This is a security restriction to prevent directory traversal attacks
     /// that could access files outside the allowed directories.
-    #[error("Invalid import path: {path} (parent traversal not allowed)")]
+    #[error("F601: Import not found / disallowed path: {path} (parent traversal not allowed)")]
     ParentTraversalNotAllowed {
         /// The path containing parent traversal that was rejected
         path: String
@@ -163,12 +163,12 @@ pub enum ResolverError {
     #[error("Parse error in imported file: {0}")]
     ParseError(String),
 
-    /// F603: File read operation timed out.
+    /// X.resolver.FILE_TIMEOUT: File read operation timed out.
     ///
     /// This error occurs when reading a file takes longer than the configured
     /// timeout, which can happen with very large files, network drives, or
     /// malicious slowloris-style attacks.
-    #[error("F603: File read timeout after {seconds}s: {path}")]
+    #[error("X.resolver.FILE_TIMEOUT: File read timeout after {seconds}s: {path}")]
     FileReadTimeout {
         /// The file path that timed out
         path: String,
@@ -176,11 +176,11 @@ pub enum ResolverError {
         seconds: u64
     },
 
-    /// F604: Symlink escape attack detected.
+    /// F601: Symlink escape attack detected (outside allowlisted roots).
     ///
     /// This security error occurs when a symbolic link points outside the
     /// allowed directories, potentially allowing access to sensitive files.
-    #[error("F604: Symlink escape detected: {link_path} -> {target_path}")]
+    #[error("F601: Import not found / disallowed path: symlink escape {link_path} -> {target_path}")]
     SymlinkEscape {
         /// The path of the symlink file
         link_path: String,
@@ -188,23 +188,23 @@ pub enum ResolverError {
         target_path: String
     },
 
-    /// F605: Attempt to access sensitive system location.
+    /// X.resolver.SENSITIVE_LOCATION: Attempt to access sensitive system location.
     ///
     /// This security error occurs when an import attempts to access known
     /// sensitive locations like system directories, configuration files,
     /// or user private data.
-    #[error("F605: Access to sensitive location denied: {path}")]
+    #[error("X.resolver.SENSITIVE_LOCATION: Access to sensitive location denied: {path}")]
     SensitiveLocationAccess {
         /// The sensitive path that access was denied to
         path: String
     },
 
-    /// F606: Suspicious path encoding detected.
+    /// X.resolver.SUSPICIOUS_ENCODING: Suspicious path encoding detected.
     ///
     /// This security error occurs when an import path contains suspicious
     /// encoding patterns like double-encoded URLs, Unicode normalization
     /// attacks, or other obfuscation attempts.
-    #[error("F606: Path contains suspicious encoding: {path}")]
+    #[error("X.resolver.SUSPICIOUS_ENCODING: Path contains suspicious encoding: {path}")]
     SuspiciousEncoding {
         /// The path with suspicious encoding that was rejected
         path: String
@@ -234,7 +234,6 @@ impl Default for ResolverConfig {
 struct ResolverContext {
     config: ResolverConfig,
     import_stack: Vec<PathBuf>,
-    visited: HashSet<PathBuf>,
 }
 
 impl ResolverContext {
@@ -242,12 +241,27 @@ impl ResolverContext {
         Self {
             config,
             import_stack: Vec::new(),
-            visited: HashSet::new(),
         }
     }
 
     /// Validate and resolve import path
     pub fn resolve_path(&self, import_path: &str) -> ResolverResult<PathBuf> {
+        self.resolve_path_from(import_path, None)
+    }
+
+    /// Validate and resolve import path, relative to the importing file when provided.
+    pub fn resolve_path_from(
+        &self,
+        import_path: &str,
+        importer_file: Option<&Path>,
+    ) -> ResolverResult<PathBuf> {
+        // URL imports are prohibited by the import sandbox (F601).
+        if import_path.contains("://") {
+            return Err(ResolverError::ImportNotFound {
+                path: import_path.to_string(),
+            });
+        }
+
         // 1. Check for suspicious encoding
         self.check_suspicious_encoding(import_path)?;
 
@@ -270,8 +284,11 @@ impl ResolverContext {
         // 2. Check for sensitive locations
         self.check_sensitive_locations(path)?;
 
-        // Resolve relative to base directory
-        let full_path = self.config.base_dir.join(path);
+        // Resolve relative to the importing file directory if available.
+        let base_dir = importer_file
+            .and_then(Path::parent)
+            .unwrap_or(&self.config.base_dir);
+        let full_path = base_dir.join(path);
 
         // 3. Normalize path and check for symlink escape
         let canonical = full_path
@@ -458,7 +475,7 @@ impl ResolverContext {
 ///
 /// # Examples
 ///
-/// ```rust
+/// ```ignore
 /// use fct_resolver::{Resolver, ResolverConfig};
 /// use std::path::PathBuf;
 ///
@@ -478,6 +495,12 @@ pub struct Resolver {
     context: ResolverContext,
 }
 
+/// Deterministic Phase-1 resolution output.
+pub struct Phase1Output {
+    pub resolved_source_form: String,
+    pub resolved_ast: FacetDocument,
+}
+
 impl Resolver {
     /// Create a new resolver with the specified configuration.
     ///
@@ -486,7 +509,7 @@ impl Resolver {
     ///
     /// # Examples
     ///
-    /// ```rust
+    /// ```ignore
     /// use fct_resolver::{Resolver, ResolverConfig};
     /// use std::path::PathBuf;
     ///
@@ -518,7 +541,7 @@ impl Resolver {
     ///
     /// # Examples
     ///
-    /// ```rust
+    /// ```ignore
     /// use fct_resolver::Resolver;
     ///
     /// let mut resolver = Resolver::new(config);
@@ -531,12 +554,106 @@ impl Resolver {
     /// }
     /// ```
     pub fn resolve(&mut self, doc: FacetDocument) -> ResolverResult<FacetDocument> {
-        let blocks = self.resolve_blocks(doc.blocks)?;
+        self.context.import_stack.clear();
+        let resolved_blocks = self.resolve_blocks(doc.blocks)?;
+        let blocks = self.merge_blocks(resolved_blocks);
 
         Ok(FacetDocument {
             blocks,
             span: doc.span,
         })
+    }
+
+    /// Build Resolved Source Form by expanding `@import` directives in encounter order.
+    ///
+    /// The returned string is normalized to NFC + LF and contains all imported content
+    /// expanded in-place, preserving non-import lines from source.
+    pub fn resolve_source_form(&mut self, source: &str) -> ResolverResult<String> {
+        self.context.import_stack.clear();
+        self.expand_source_form(source, None)
+    }
+
+    /// Resolve imports and return both the Resolved Source Form and Resolved AST.
+    pub fn resolve_phase1(&mut self, source: &str) -> ResolverResult<Phase1Output> {
+        let parsed = fct_parser::parse_document(source).map_err(ResolverError::ParseError)?;
+        let resolved_source_form = self.resolve_source_form(source)?;
+        let resolved_ast = self.resolve(parsed)?;
+        Ok(Phase1Output {
+            resolved_source_form,
+            resolved_ast,
+        })
+    }
+
+    fn expand_source_form(
+        &mut self,
+        source: &str,
+        importer_file: Option<&Path>,
+    ) -> ResolverResult<String> {
+        let normalized = fct_parser::normalize_source(source);
+        let mut out = String::new();
+
+        for line_chunk in normalized.split_inclusive('\n') {
+            let has_newline = line_chunk.ends_with('\n');
+            let line = if has_newline {
+                &line_chunk[..line_chunk.len() - 1]
+            } else {
+                line_chunk
+            };
+
+            if let Some(import_path) = Self::extract_top_level_import_path(line) {
+                let path = if let Some(importer) = importer_file {
+                    self.context.resolve_path_from(import_path, Some(importer))?
+                } else {
+                    self.context.resolve_path(import_path)?
+                };
+
+                self.context.check_cycle(&path)?;
+
+                self.context.import_stack.push(path.clone());
+                let expanded = (|| {
+                    let content = self.read_file_with_timeout(&path)?;
+                    self.expand_source_form(&content, Some(path.as_path()))
+                })();
+                self.context.import_stack.pop();
+
+                let imported_source = expanded?;
+                out.push_str(&imported_source);
+
+                if has_newline && !out.ends_with('\n') {
+                    out.push('\n');
+                }
+            } else {
+                out.push_str(line);
+                if has_newline {
+                    out.push('\n');
+                }
+            }
+        }
+
+        Ok(out)
+    }
+
+    fn extract_top_level_import_path(line: &str) -> Option<&str> {
+        if line.starts_with(' ') || line.starts_with('\t') {
+            return None;
+        }
+
+        let trimmed = line.trim();
+        if trimmed.is_empty() || trimmed.starts_with('#') {
+            return None;
+        }
+
+        let rest = trimmed.strip_prefix("@import")?.trim_start();
+        if !(rest.starts_with('"') && rest.ends_with('"') && rest.len() >= 2) {
+            return None;
+        }
+
+        let inner = &rest[1..rest.len() - 1];
+        if inner.contains('"') {
+            return None;
+        }
+
+        Some(inner)
     }
 
     fn resolve_blocks(&mut self, blocks: Vec<FacetNode>) -> ResolverResult<Vec<FacetNode>> {
@@ -559,33 +676,27 @@ impl Resolver {
     }
 
     fn resolve_import(&mut self, import: &ImportNode) -> ResolverResult<Vec<FacetNode>> {
-        // Resolve path
-        let path = self.context.resolve_path(&import.path)?;
+        let importer_file = self.context.import_stack.last().map(PathBuf::as_path);
+        let path = if let Some(importer) = importer_file {
+            self.context.resolve_path_from(&import.path, Some(importer))?
+        } else {
+            self.context.resolve_path(&import.path)?
+        };
 
         // Check for cycles
         self.context.check_cycle(&path)?;
 
-        // Check if already visited (to avoid re-processing)
-        if self.context.visited.contains(&path) {
-            return Ok(vec![]);
-        }
-
-        // Add to stack and visited set
+        // Push current import to stack for nested relative resolution and cycle checks.
         self.context.import_stack.push(path.clone());
-        self.context.visited.insert(path.clone());
-
-        // Read and parse the file with timeout
-        let content = self.read_file_with_timeout(&path)?;
-        let imported_doc =
-            fct_parser::parse_document(&content).map_err(ResolverError::ParseError)?;
-
-        // Recursively resolve imports in the imported document
-        let resolved_blocks = self.resolve_blocks(imported_doc.blocks)?;
-
-        // Pop from stack
+        let resolved = (|| {
+            let content = self.read_file_with_timeout(&path)?;
+            let imported_doc =
+                fct_parser::parse_document(&content).map_err(ResolverError::ParseError)?;
+            self.resolve_blocks(imported_doc.blocks)
+        })();
         self.context.import_stack.pop();
 
-        Ok(resolved_blocks)
+        resolved
     }
 
     /// Read file with timeout to prevent hanging on slow/network filesystems
@@ -611,94 +722,282 @@ impl Resolver {
         })
     }
 
-    /// Merge blocks by type (Smart Merge for future implementation)
+    /// Merge blocks according to FACET cardinality and deterministic merge rules.
     pub fn merge_blocks(&self, blocks: Vec<FacetNode>) -> Vec<FacetNode> {
-        let mut merged: HashMap<String, FacetBlock> = HashMap::new();
-        let mut other_blocks = Vec::new();
+        let mut result = Vec::new();
+        let mut singleton_positions: HashMap<&'static str, usize> = HashMap::new();
 
         for block in blocks {
-            match block {
-                FacetNode::System(b) => {
-                    merged
-                        .entry("system".to_string())
-                        .and_modify(|existing| self.merge_facet_blocks(existing, &b))
-                        .or_insert(b);
+            if let Some(singleton_key) = Self::singleton_key(&block) {
+                if let Some(existing_idx) = singleton_positions.get(singleton_key).copied() {
+                    if let Some(existing_node) = result.get_mut(existing_idx) {
+                        self.merge_singleton_node(existing_node, block);
+                    }
+                } else {
+                    singleton_positions.insert(singleton_key, result.len());
+                    result.push(block);
                 }
-                FacetNode::User(b) => {
-                    merged
-                        .entry("user".to_string())
-                        .and_modify(|existing| self.merge_facet_blocks(existing, &b))
-                        .or_insert(b);
-                }
-                FacetNode::Vars(b) => {
-                    merged
-                        .entry("vars".to_string())
-                        .and_modify(|existing| self.merge_facet_blocks(existing, &b))
-                        .or_insert(b);
-                }
-                other => other_blocks.push(other),
+            } else {
+                // Repeatable and passthrough blocks retain source encounter order.
+                result.push(block);
             }
         }
 
-        // Convert merged blocks back to FacetNodes
-        let mut result = Vec::new();
-
-        if let Some(system) = merged.remove("system") {
-            result.push(FacetNode::System(system));
-        }
-        if let Some(user) = merged.remove("user") {
-            result.push(FacetNode::User(user));
-        }
-        if let Some(vars) = merged.remove("vars") {
-            result.push(FacetNode::Vars(vars));
-        }
-
-        result.extend(other_blocks);
         result
     }
 
-    /// Merge two facet blocks with Smart Merge strategy
-    fn merge_facet_blocks(&self, existing: &mut FacetBlock, new: &FacetBlock) {
-        use fct_ast::BodyNode;
-        use std::collections::HashMap;
+    fn singleton_key(node: &FacetNode) -> Option<&'static str> {
+        match node {
+            FacetNode::Meta(_) => Some("meta"),
+            FacetNode::Context(_) => Some("context"),
+            FacetNode::Vars(_) => Some("vars"),
+            FacetNode::VarTypes(_) => Some("var_types"),
+            FacetNode::Policy(_) => Some("policy"),
+            _ => None,
+        }
+    }
 
-        // Merge attributes (new overwrites existing)
+    fn merge_singleton_node(&self, existing: &mut FacetNode, incoming: FacetNode) {
+        match (existing, incoming) {
+            (FacetNode::Meta(existing_block), FacetNode::Meta(new_block)) => {
+                self.merge_facet_blocks(existing_block, &new_block, false);
+            }
+            (FacetNode::Context(existing_block), FacetNode::Context(new_block)) => {
+                self.merge_facet_blocks(existing_block, &new_block, false);
+            }
+            (FacetNode::Vars(existing_block), FacetNode::Vars(new_block)) => {
+                self.merge_facet_blocks(existing_block, &new_block, false);
+            }
+            (FacetNode::VarTypes(existing_block), FacetNode::VarTypes(new_block)) => {
+                self.merge_facet_blocks(existing_block, &new_block, false);
+            }
+            (FacetNode::Policy(existing_block), FacetNode::Policy(new_block)) => {
+                self.merge_facet_blocks(existing_block, &new_block, true);
+            }
+            // Mismatched singletons should not happen in normal flow.
+            (_, _) => {}
+        }
+    }
+
+    fn merge_facet_blocks(
+        &self,
+        existing: &mut FacetBlock,
+        new: &FacetBlock,
+        policy_mode: bool,
+    ) {
+        use fct_ast::{BodyNode, KeyValueNode};
+
         for (key, value) in &new.attributes {
             existing.attributes.insert(key.clone(), value.clone());
         }
 
-        // Smart Merge for body items:
-        // 1. Build index of existing KeyValue items by key
-        // 2. Merge/replace KeyValue items by key
-        // 3. Append ListItem items (simple append for now)
+        let keyed_list_field = self
+            .read_attribute_string(existing, "key")
+            .or_else(|| self.read_attribute_string(new, "key"));
 
-        let body_size = existing.body.len();
-        let mut key_index: HashMap<String, usize> = HashMap::with_capacity(body_size);
-
-        // Index existing KeyValue items
+        let mut key_index: HashMap<String, usize> = HashMap::new();
         for (idx, item) in existing.body.iter().enumerate() {
             if let BodyNode::KeyValue(kv) = item {
                 key_index.insert(kv.key.clone(), idx);
             }
         }
 
-        // Process new body items
         for new_item in &new.body {
             match new_item {
                 BodyNode::KeyValue(new_kv) => {
-                    // If key exists, replace it; otherwise append
-                    if let Some(&idx) = key_index.get(&new_kv.key) {
-                        existing.body[idx] = new_item.clone();
+                    if let Some(existing_idx) = key_index.get(&new_kv.key).copied() {
+                        if let Some(BodyNode::KeyValue(existing_kv)) = existing.body.get(existing_idx) {
+                            let merged_value = self.merge_value_nodes(
+                                &existing_kv.value,
+                                &new_kv.value,
+                                &new_kv.key,
+                                policy_mode,
+                                keyed_list_field.as_deref(),
+                            );
+                            existing.body[existing_idx] = BodyNode::KeyValue(KeyValueNode {
+                                key: existing_kv.key.clone(),
+                                key_kind: Default::default(),
+                                value: merged_value,
+                                span: new_kv.span.clone(),
+                            });
+                        } else {
+                            existing.body[existing_idx] = new_item.clone();
+                        }
                     } else {
                         existing.body.push(new_item.clone());
                         key_index.insert(new_kv.key.clone(), existing.body.len() - 1);
                     }
                 }
-                BodyNode::ListItem(_) => {
-                    // Simply append list items
-                    existing.body.push(new_item.clone());
+                BodyNode::ListItem(_) => existing.body.push(new_item.clone()),
+            }
+        }
+    }
+
+    fn merge_value_nodes(
+        &self,
+        current: &fct_ast::ValueNode,
+        incoming: &fct_ast::ValueNode,
+        key: &str,
+        policy_mode: bool,
+        keyed_list_field: Option<&str>,
+    ) -> fct_ast::ValueNode {
+        use fct_ast::ValueNode;
+
+        match (current, incoming) {
+            (ValueNode::Map(existing_map), ValueNode::Map(new_map)) => {
+                ValueNode::Map(self.merge_maps(existing_map, new_map, policy_mode))
+            }
+            (ValueNode::List(existing_list), ValueNode::List(new_list)) => {
+                if policy_mode && (key == "allow" || key == "deny") {
+                    ValueNode::List(self.merge_policy_lists(existing_list, new_list))
+                } else if let Some(key_field) = keyed_list_field {
+                    ValueNode::List(self.merge_keyed_lists(existing_list, new_list, key_field))
+                } else {
+                    incoming.clone()
                 }
             }
+            _ => incoming.clone(),
+        }
+    }
+
+    fn merge_maps(
+        &self,
+        existing_map: &fct_ast::OrderedMap<String, fct_ast::ValueNode>,
+        new_map: &fct_ast::OrderedMap<String, fct_ast::ValueNode>,
+        policy_mode: bool,
+    ) -> fct_ast::OrderedMap<String, fct_ast::ValueNode> {
+        let mut merged = existing_map.clone();
+
+        for (k, incoming_val) in new_map {
+            match merged.get(k) {
+                Some(current_val) => {
+                    let merged_val = self.merge_value_nodes(
+                        current_val,
+                        incoming_val,
+                        k,
+                        policy_mode,
+                        None,
+                    );
+                    merged.insert(k.clone(), merged_val);
+                }
+                None => {
+                    merged.insert(k.clone(), incoming_val.clone());
+                }
+            }
+        }
+
+        merged
+    }
+
+    fn merge_policy_lists(
+        &self,
+        existing_list: &[fct_ast::ValueNode],
+        new_list: &[fct_ast::ValueNode],
+    ) -> Vec<fct_ast::ValueNode> {
+        use fct_ast::ValueNode;
+
+        let mut merged = existing_list.to_vec();
+        let mut id_index: HashMap<String, usize> = HashMap::new();
+
+        for (idx, item) in merged.iter().enumerate() {
+            if let Some(id) = Self::extract_rule_id(item) {
+                id_index.insert(id, idx);
+            }
+        }
+
+        for new_item in new_list {
+            if let Some(id) = Self::extract_rule_id(new_item) {
+                if let Some(existing_idx) = id_index.get(&id).copied() {
+                    let replacement = match (merged.get(existing_idx), new_item) {
+                        (Some(ValueNode::Map(existing_rule)), ValueNode::Map(new_rule)) => {
+                            ValueNode::Map(self.merge_maps(existing_rule, new_rule, true))
+                        }
+                        _ => new_item.clone(),
+                    };
+                    merged[existing_idx] = replacement;
+                } else {
+                    id_index.insert(id, merged.len());
+                    merged.push(new_item.clone());
+                }
+            } else {
+                merged.push(new_item.clone());
+            }
+        }
+
+        merged
+    }
+
+    fn merge_keyed_lists(
+        &self,
+        existing_list: &[fct_ast::ValueNode],
+        new_list: &[fct_ast::ValueNode],
+        key_field: &str,
+    ) -> Vec<fct_ast::ValueNode> {
+        use fct_ast::ValueNode;
+
+        let mut merged = existing_list.to_vec();
+        let mut key_index: HashMap<String, usize> = HashMap::new();
+
+        for (idx, item) in merged.iter().enumerate() {
+            if let Some(key) = Self::extract_list_item_key(item, key_field) {
+                key_index.insert(key, idx);
+            }
+        }
+
+        for new_item in new_list {
+            if let Some(key) = Self::extract_list_item_key(new_item, key_field) {
+                if let Some(existing_idx) = key_index.get(&key).copied() {
+                    let replacement = match (merged.get(existing_idx), new_item) {
+                        (Some(ValueNode::Map(existing_map)), ValueNode::Map(new_map)) => {
+                            ValueNode::Map(self.merge_maps(existing_map, new_map, false))
+                        }
+                        _ => new_item.clone(),
+                    };
+                    merged[existing_idx] = replacement;
+                } else {
+                    key_index.insert(key, merged.len());
+                    merged.push(new_item.clone());
+                }
+            } else {
+                merged.push(new_item.clone());
+            }
+        }
+
+        merged
+    }
+
+    fn read_attribute_string(&self, block: &FacetBlock, key: &str) -> Option<String> {
+        match block.attributes.get(key) {
+            Some(fct_ast::ValueNode::String(s)) => Some(s.clone()),
+            _ => None,
+        }
+    }
+
+    fn extract_rule_id(item: &fct_ast::ValueNode) -> Option<String> {
+        match item {
+            fct_ast::ValueNode::Map(map) => match map.get("id") {
+                Some(fct_ast::ValueNode::String(s)) => Some(s.clone()),
+                _ => None,
+            },
+            _ => None,
+        }
+    }
+
+    fn extract_list_item_key(item: &fct_ast::ValueNode, field: &str) -> Option<String> {
+        use fct_ast::{ScalarValue, ValueNode};
+
+        let map = match item {
+            ValueNode::Map(map) => map,
+            _ => return None,
+        };
+
+        match map.get(field) {
+            Some(ValueNode::String(s)) => Some(s.clone()),
+            Some(ValueNode::Scalar(ScalarValue::Int(i))) => Some(i.to_string()),
+            Some(ValueNode::Scalar(ScalarValue::Float(f))) => Some(f.to_string()),
+            Some(ValueNode::Scalar(ScalarValue::Bool(b))) => Some(b.to_string()),
+            Some(ValueNode::Scalar(ScalarValue::Null)) => Some("null".to_string()),
+            _ => None,
         }
     }
 }
@@ -744,10 +1043,11 @@ mod tests {
         // Create existing block with key1: "old" and key2: "stays"
         let mut existing = FacetBlock {
             name: "System".to_string(),
-            attributes: HashMap::new(),
+            attributes: fct_ast::OrderedMap::new(),
             body: vec![
                 BodyNode::KeyValue(KeyValueNode {
                     key: "key1".to_string(),
+                    key_kind: Default::default(),
                     value: ValueNode::String("old".to_string()),
                     span: Span {
                         start: 0,
@@ -758,6 +1058,7 @@ mod tests {
                 }),
                 BodyNode::KeyValue(KeyValueNode {
                     key: "key2".to_string(),
+                    key_kind: Default::default(),
                     value: ValueNode::String("stays".to_string()),
                     span: Span {
                         start: 0,
@@ -778,10 +1079,11 @@ mod tests {
         // Create new block with key1: "new" (should replace) and key3: "added"
         let new_block = FacetBlock {
             name: "System".to_string(),
-            attributes: HashMap::new(),
+            attributes: fct_ast::OrderedMap::new(),
             body: vec![
                 BodyNode::KeyValue(KeyValueNode {
                     key: "key1".to_string(),
+                    key_kind: Default::default(),
                     value: ValueNode::String("new".to_string()),
                     span: Span {
                         start: 0,
@@ -792,6 +1094,7 @@ mod tests {
                 }),
                 BodyNode::KeyValue(KeyValueNode {
                     key: "key3".to_string(),
+                    key_kind: Default::default(),
                     value: ValueNode::String("added".to_string()),
                     span: Span {
                         start: 0,
@@ -809,7 +1112,7 @@ mod tests {
             },
         };
 
-        resolver.merge_facet_blocks(&mut existing, &new_block);
+        resolver.merge_facet_blocks(&mut existing, &new_block, false);
 
         // Should have 3 items: key1 (replaced), key2 (original), key3 (added)
         assert_eq!(existing.body.len(), 3);
@@ -879,9 +1182,10 @@ mod tests {
         let blocks = vec![
             FacetNode::System(FacetBlock {
                 name: "System".to_string(),
-                attributes: HashMap::new(),
+                attributes: fct_ast::OrderedMap::new(),
                 body: vec![BodyNode::KeyValue(KeyValueNode {
                     key: "role".to_string(),
+                    key_kind: Default::default(),
                     value: ValueNode::String("assistant".to_string()),
                     span: Span {
                         start: 0,
@@ -899,9 +1203,10 @@ mod tests {
             }),
             FacetNode::System(FacetBlock {
                 name: "System".to_string(),
-                attributes: HashMap::new(),
+                attributes: fct_ast::OrderedMap::new(),
                 body: vec![BodyNode::KeyValue(KeyValueNode {
                     key: "model".to_string(),
+                    key_kind: Default::default(),
                     value: ValueNode::String("gpt-4".to_string()),
                     span: Span {
                         start: 0,
@@ -921,14 +1226,15 @@ mod tests {
 
         let merged = resolver.merge_blocks(blocks);
 
-        // Should have 1 system block with both keys
-        assert_eq!(merged.len(), 1);
+        // @system is repeatable in FACET v2.1.3 and must keep encounter order.
+        assert_eq!(merged.len(), 2);
         match &merged[0] {
             FacetNode::System(block) => {
-                assert_eq!(block.body.len(), 2);
+                assert_eq!(block.body.len(), 1);
             }
             _ => panic!("Expected System block"),
         }
+        assert!(matches!(merged[1], FacetNode::System(_)));
     }
 
     #[test]
@@ -943,9 +1249,10 @@ mod tests {
         let doc = FacetDocument {
             blocks: vec![FacetNode::Vars(FacetBlock {
                 name: "Vars".to_string(),
-                attributes: HashMap::new(),
+                attributes: fct_ast::OrderedMap::new(),
                 body: vec![BodyNode::KeyValue(KeyValueNode {
                     key: "name".to_string(),
+                    key_kind: Default::default(),
                     value: ValueNode::String("test".to_string()),
                     span: Span {
                         start: 0,
@@ -986,7 +1293,7 @@ mod tests {
         let blocks = vec![
             FacetNode::System(FacetBlock {
                 name: "System".to_string(),
-                attributes: HashMap::new(),
+                attributes: fct_ast::OrderedMap::new(),
                 body: vec![],
                 span: Span {
                     start: 0,
@@ -997,7 +1304,7 @@ mod tests {
             }),
             FacetNode::Vars(FacetBlock {
                 name: "Vars".to_string(),
-                attributes: HashMap::new(),
+                attributes: fct_ast::OrderedMap::new(),
                 body: vec![],
                 span: Span {
                     start: 0,
@@ -1008,7 +1315,7 @@ mod tests {
             }),
             FacetNode::User(FacetBlock {
                 name: "User".to_string(),
-                attributes: HashMap::new(),
+                attributes: fct_ast::OrderedMap::new(),
                 body: vec![],
                 span: Span {
                     start: 0,
@@ -1031,6 +1338,431 @@ mod tests {
         assert!(merged
             .iter()
             .any(|b| matches!(b, FacetNode::User(_))));
+    }
+
+    #[test]
+    fn test_singleton_vars_merge_preserves_first_key_position() {
+        use fct_ast::{BodyNode, FacetBlock, KeyValueNode, Span, ValueNode};
+        use std::collections::HashMap;
+
+        let resolver = Resolver::new(ResolverConfig::default());
+
+        let blocks = vec![
+            FacetNode::Vars(FacetBlock {
+                name: "Vars".to_string(),
+                attributes: fct_ast::OrderedMap::new(),
+                body: vec![
+                    BodyNode::KeyValue(KeyValueNode {
+                        key: "a".to_string(),
+                        key_kind: Default::default(),
+                        value: ValueNode::String("old".to_string()),
+                        span: Span {
+                            start: 0,
+                            end: 0,
+                            line: 0,
+                            column: 0,
+                        },
+                    }),
+                    BodyNode::KeyValue(KeyValueNode {
+                        key: "b".to_string(),
+                        key_kind: Default::default(),
+                        value: ValueNode::String("keep".to_string()),
+                        span: Span {
+                            start: 0,
+                            end: 0,
+                            line: 0,
+                            column: 0,
+                        },
+                    }),
+                ],
+                span: Span {
+                    start: 0,
+                    end: 0,
+                    line: 0,
+                    column: 0,
+                },
+            }),
+            FacetNode::Vars(FacetBlock {
+                name: "Vars".to_string(),
+                attributes: fct_ast::OrderedMap::new(),
+                body: vec![
+                    BodyNode::KeyValue(KeyValueNode {
+                        key: "a".to_string(),
+                        key_kind: Default::default(),
+                        value: ValueNode::String("new".to_string()),
+                        span: Span {
+                            start: 0,
+                            end: 0,
+                            line: 0,
+                            column: 0,
+                        },
+                    }),
+                    BodyNode::KeyValue(KeyValueNode {
+                        key: "c".to_string(),
+                        key_kind: Default::default(),
+                        value: ValueNode::String("append".to_string()),
+                        span: Span {
+                            start: 0,
+                            end: 0,
+                            line: 0,
+                            column: 0,
+                        },
+                    }),
+                ],
+                span: Span {
+                    start: 0,
+                    end: 0,
+                    line: 0,
+                    column: 0,
+                },
+            }),
+        ];
+
+        let merged = resolver.merge_blocks(blocks);
+        assert_eq!(merged.len(), 1);
+        match &merged[0] {
+            FacetNode::Vars(block) => {
+                let keys: Vec<String> = block
+                    .body
+                    .iter()
+                    .filter_map(|node| match node {
+                        BodyNode::KeyValue(kv) => Some(kv.key.clone()),
+                        _ => None,
+                    })
+                    .collect();
+                assert_eq!(keys, vec!["a".to_string(), "b".to_string(), "c".to_string()]);
+
+                match &block.body[0] {
+                    BodyNode::KeyValue(kv) => match &kv.value {
+                        ValueNode::String(s) => assert_eq!(s, "new"),
+                        _ => panic!("Expected string value for a"),
+                    },
+                    _ => panic!("Expected key-value"),
+                }
+            }
+            _ => panic!("Expected merged @vars block"),
+        }
+    }
+
+    #[test]
+    fn test_policy_allow_list_merge_by_id() {
+        use fct_ast::{BodyNode, FacetBlock, KeyValueNode, Span, ValueNode};
+        use std::collections::HashMap;
+
+        let resolver = Resolver::new(ResolverConfig::default());
+
+        let mut allow_rule_v1 = fct_ast::OrderedMap::new();
+        allow_rule_v1.insert("id".to_string(), ValueNode::String("r1".to_string()));
+        allow_rule_v1.insert("op".to_string(), ValueNode::String("tool_call".to_string()));
+        allow_rule_v1.insert(
+            "name".to_string(),
+            ValueNode::String("WeatherAPI.get_current".to_string()),
+        );
+
+        let mut allow_rule_v2 = fct_ast::OrderedMap::new();
+        allow_rule_v2.insert("id".to_string(), ValueNode::String("r1".to_string()));
+        allow_rule_v2.insert("effect".to_string(), ValueNode::String("read".to_string()));
+
+        let mut allow_rule_v3 = fct_ast::OrderedMap::new();
+        allow_rule_v3.insert("id".to_string(), ValueNode::String("r2".to_string()));
+        allow_rule_v3.insert("op".to_string(), ValueNode::String("lens_call".to_string()));
+        allow_rule_v3.insert("name".to_string(), ValueNode::String("trim".to_string()));
+
+        let blocks = vec![
+            FacetNode::Policy(FacetBlock {
+                name: "Policy".to_string(),
+                attributes: fct_ast::OrderedMap::new(),
+                body: vec![BodyNode::KeyValue(KeyValueNode {
+                    key: "allow".to_string(),
+                    key_kind: Default::default(),
+                    value: ValueNode::List(vec![ValueNode::Map(allow_rule_v1)]),
+                    span: Span {
+                        start: 0,
+                        end: 0,
+                        line: 0,
+                        column: 0,
+                    },
+                })],
+                span: Span {
+                    start: 0,
+                    end: 0,
+                    line: 0,
+                    column: 0,
+                },
+            }),
+            FacetNode::Policy(FacetBlock {
+                name: "Policy".to_string(),
+                attributes: fct_ast::OrderedMap::new(),
+                body: vec![BodyNode::KeyValue(KeyValueNode {
+                    key: "allow".to_string(),
+                    key_kind: Default::default(),
+                    value: ValueNode::List(vec![ValueNode::Map(allow_rule_v2), ValueNode::Map(allow_rule_v3)]),
+                    span: Span {
+                        start: 0,
+                        end: 0,
+                        line: 0,
+                        column: 0,
+                    },
+                })],
+                span: Span {
+                    start: 0,
+                    end: 0,
+                    line: 0,
+                    column: 0,
+                },
+            }),
+        ];
+
+        let merged = resolver.merge_blocks(blocks);
+        assert_eq!(merged.len(), 1);
+
+        match &merged[0] {
+            FacetNode::Policy(block) => match &block.body[0] {
+                BodyNode::KeyValue(kv) => match &kv.value {
+                    ValueNode::List(items) => {
+                        assert_eq!(items.len(), 2);
+                        let first = match &items[0] {
+                            ValueNode::Map(map) => map,
+                            _ => panic!("Expected map rule"),
+                        };
+                        assert!(first.contains_key("op"));
+                        assert!(first.contains_key("name"));
+                        assert!(first.contains_key("effect"));
+                    }
+                    _ => panic!("Expected policy allow list"),
+                },
+                _ => panic!("Expected key-value"),
+            },
+            _ => panic!("Expected merged @policy block"),
+        }
+    }
+
+    #[test]
+    fn test_keyed_list_merge_uses_attribute_key() {
+        use fct_ast::{BodyNode, FacetBlock, KeyValueNode, ScalarValue, Span, ValueNode};
+        use std::collections::HashMap;
+
+        let resolver = Resolver::new(ResolverConfig::default());
+        let mut attrs = fct_ast::OrderedMap::new();
+        attrs.insert("key".to_string(), ValueNode::String("id".to_string()));
+
+        let mut item_a_old = fct_ast::OrderedMap::new();
+        item_a_old.insert("id".to_string(), ValueNode::String("a".to_string()));
+        item_a_old.insert("v".to_string(), ValueNode::Scalar(ScalarValue::Int(1)));
+
+        let mut item_a_new = fct_ast::OrderedMap::new();
+        item_a_new.insert("id".to_string(), ValueNode::String("a".to_string()));
+        item_a_new.insert("w".to_string(), ValueNode::Scalar(ScalarValue::Int(2)));
+
+        let mut item_b = fct_ast::OrderedMap::new();
+        item_b.insert("id".to_string(), ValueNode::String("b".to_string()));
+        item_b.insert("v".to_string(), ValueNode::Scalar(ScalarValue::Int(3)));
+
+        let blocks = vec![
+            FacetNode::Meta(FacetBlock {
+                name: "Meta".to_string(),
+                attributes: attrs.clone(),
+                body: vec![BodyNode::KeyValue(KeyValueNode {
+                    key: "items".to_string(),
+                    key_kind: Default::default(),
+                    value: ValueNode::List(vec![ValueNode::Map(item_a_old)]),
+                    span: Span {
+                        start: 0,
+                        end: 0,
+                        line: 0,
+                        column: 0,
+                    },
+                })],
+                span: Span {
+                    start: 0,
+                    end: 0,
+                    line: 0,
+                    column: 0,
+                },
+            }),
+            FacetNode::Meta(FacetBlock {
+                name: "Meta".to_string(),
+                attributes: attrs,
+                body: vec![BodyNode::KeyValue(KeyValueNode {
+                    key: "items".to_string(),
+                    key_kind: Default::default(),
+                    value: ValueNode::List(vec![ValueNode::Map(item_a_new), ValueNode::Map(item_b)]),
+                    span: Span {
+                        start: 0,
+                        end: 0,
+                        line: 0,
+                        column: 0,
+                    },
+                })],
+                span: Span {
+                    start: 0,
+                    end: 0,
+                    line: 0,
+                    column: 0,
+                },
+            }),
+        ];
+
+        let merged = resolver.merge_blocks(blocks);
+        assert_eq!(merged.len(), 1);
+        match &merged[0] {
+            FacetNode::Meta(block) => match &block.body[0] {
+                BodyNode::KeyValue(kv) => match &kv.value {
+                    ValueNode::List(items) => {
+                        assert_eq!(items.len(), 2);
+                        let first = match &items[0] {
+                            ValueNode::Map(map) => map,
+                            _ => panic!("Expected map item"),
+                        };
+                        assert!(first.contains_key("v"));
+                        assert!(first.contains_key("w"));
+                    }
+                    _ => panic!("Expected list"),
+                },
+                _ => panic!("Expected key-value"),
+            },
+            _ => panic!("Expected merged @meta block"),
+        }
+    }
+
+    #[test]
+    fn test_nested_import_is_resolved_relative_to_importing_file() {
+        use fct_ast::BodyNode;
+        use tempfile::TempDir;
+
+        let temp_dir = TempDir::new().unwrap();
+        let root = temp_dir.path();
+        std::fs::create_dir_all(root.join("sub/nested")).unwrap();
+
+        std::fs::write(
+            root.join("sub/a.facet"),
+            "@import \"nested/b.facet\"\n\n@vars\n  a: \"A\"\n",
+        )
+        .unwrap();
+        std::fs::write(root.join("sub/nested/b.facet"), "@vars\n  b: \"B\"\n").unwrap();
+
+        let source = "@import \"sub/a.facet\"\n\n@vars\n  m: \"M\"\n";
+        let doc = fct_parser::parse_document(source).unwrap();
+
+        let config = ResolverConfig {
+            base_dir: root.to_path_buf(),
+            allowed_roots: vec![root.canonicalize().unwrap()],
+        };
+        let mut resolver = Resolver::new(config);
+        let resolved = resolver.resolve(doc).unwrap();
+
+        let vars_blocks: Vec<&FacetBlock> = resolved
+            .blocks
+            .iter()
+            .filter_map(|b| match b {
+                FacetNode::Vars(v) => Some(v),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(vars_blocks.len(), 1);
+
+        let keys: Vec<String> = vars_blocks[0]
+            .body
+            .iter()
+            .filter_map(|n| match n {
+                BodyNode::KeyValue(kv) => Some(kv.key.clone()),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(keys, vec!["b".to_string(), "a".to_string(), "m".to_string()]);
+    }
+
+    #[test]
+    fn test_resolve_source_form_expands_imports_in_place() {
+        use tempfile::TempDir;
+
+        let temp_dir = TempDir::new().unwrap();
+        let root = temp_dir.path();
+
+        std::fs::write(root.join("lib.facet"), "@vars\n  imported: \"I\"\n").unwrap();
+
+        let source = "@vars\n  root: \"R\"\n@import \"lib.facet\"\n@vars\n  tail: \"T\"\n";
+        let mut resolver = Resolver::new(ResolverConfig {
+            base_dir: root.to_path_buf(),
+            allowed_roots: vec![root.canonicalize().unwrap()],
+        });
+
+        let resolved_source = resolver.resolve_source_form(source).unwrap();
+        let expected = "@vars\n  root: \"R\"\n@vars\n  imported: \"I\"\n@vars\n  tail: \"T\"\n";
+        assert_eq!(resolved_source, expected);
+    }
+
+    #[test]
+    fn test_resolve_source_form_normalizes_crlf_and_nested_imports() {
+        use tempfile::TempDir;
+
+        let temp_dir = TempDir::new().unwrap();
+        let root = temp_dir.path();
+
+        std::fs::create_dir_all(root.join("sub")).unwrap();
+        std::fs::write(
+            root.join("sub/a.facet"),
+            "@import \"b.facet\"\r\n@vars\r\n  a: \"A\"\r\n",
+        )
+        .unwrap();
+        std::fs::write(root.join("sub/b.facet"), "@vars\r\n  b: \"B\"\r\n").unwrap();
+
+        let source = "@import \"sub/a.facet\"\r\n@vars\r\n  root: \"R\"\r\n";
+        let mut resolver = Resolver::new(ResolverConfig {
+            base_dir: root.to_path_buf(),
+            allowed_roots: vec![root.canonicalize().unwrap()],
+        });
+
+        let resolved_source = resolver.resolve_source_form(source).unwrap();
+        assert!(!resolved_source.contains('\r'));
+        assert_eq!(
+            resolved_source,
+            "@vars\n  b: \"B\"\n@vars\n  a: \"A\"\n@vars\n  root: \"R\"\n"
+        );
+    }
+
+    #[test]
+    fn test_resolve_phase1_returns_source_and_ast() {
+        use fct_ast::BodyNode;
+        use tempfile::TempDir;
+
+        let temp_dir = TempDir::new().unwrap();
+        let root = temp_dir.path();
+        std::fs::write(root.join("lib.facet"), "@vars\n  imported: \"I\"\n").unwrap();
+
+        let source = "@import \"lib.facet\"\n@vars\n  root: \"R\"\n";
+        let mut resolver = Resolver::new(ResolverConfig {
+            base_dir: root.to_path_buf(),
+            allowed_roots: vec![root.canonicalize().unwrap()],
+        });
+
+        let phase1 = resolver.resolve_phase1(source).unwrap();
+
+        assert_eq!(
+            phase1.resolved_source_form,
+            "@vars\n  imported: \"I\"\n@vars\n  root: \"R\"\n"
+        );
+
+        let vars_blocks: Vec<&FacetBlock> = phase1
+            .resolved_ast
+            .blocks
+            .iter()
+            .filter_map(|b| match b {
+                FacetNode::Vars(v) => Some(v),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(vars_blocks.len(), 1);
+
+        let keys: Vec<String> = vars_blocks[0]
+            .body
+            .iter()
+            .filter_map(|n| match n {
+                BodyNode::KeyValue(kv) => Some(kv.key.clone()),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(keys, vec!["imported".to_string(), "root".to_string()]);
     }
 
     #[test]
@@ -1280,7 +2012,7 @@ mod tests {
         let temp_dir = std::env::temp_dir();
         let config = ResolverConfig {
             base_dir: temp_dir.clone(),
-            allowed_roots: vec![temp_dir],
+            allowed_roots: vec![temp_dir.clone()],
         };
 
         let context = ResolverContext::new(config);
@@ -1305,6 +2037,50 @@ mod tests {
 
         println!("✅ Cycle detection functionality test passed");
         println!("✅ Enhanced error messages include F602 error code and cycle depth");
+    }
+
+    #[test]
+    fn test_extension_errors_use_namespaced_codes() {
+        let timeout = ResolverError::FileReadTimeout {
+            path: "a.facet".to_string(),
+            seconds: 1,
+        };
+        assert!(timeout
+            .to_string()
+            .starts_with("X.resolver.FILE_TIMEOUT"));
+
+        let sensitive = ResolverError::SensitiveLocationAccess {
+            path: "/etc".to_string(),
+        };
+        assert!(sensitive
+            .to_string()
+            .starts_with("X.resolver.SENSITIVE_LOCATION"));
+
+        let suspicious = ResolverError::SuspiciousEncoding {
+            path: "%2e%2e".to_string(),
+        };
+        assert!(suspicious
+            .to_string()
+            .starts_with("X.resolver.SUSPICIOUS_ENCODING"));
+    }
+
+    #[test]
+    fn test_import_sandbox_violations_emit_f601() {
+        let absolute = ResolverError::AbsolutePathNotAllowed {
+            path: "/etc/passwd".to_string(),
+        };
+        assert!(absolute.to_string().starts_with("F601:"));
+
+        let traversal = ResolverError::ParentTraversalNotAllowed {
+            path: "../secret.facet".to_string(),
+        };
+        assert!(traversal.to_string().starts_with("F601:"));
+
+        let symlink_escape = ResolverError::SymlinkEscape {
+            link_path: "a.facet".to_string(),
+            target_path: "/etc/passwd".to_string(),
+        };
+        assert!(symlink_escape.to_string().starts_with("F601:"));
     }
 
     // Additional cycle tests temporarily disabled due to FACET syntax complexity

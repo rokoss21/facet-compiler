@@ -9,7 +9,7 @@ use crate::VarTypeDecl;
 use fct_ast::types::{FacetType as AstFacetType, PrimitiveType as AstPrimitiveType};
 use fct_ast::{
     BodyNode, FacetBlock, FacetDocument, FacetNode, KeyValueNode, LensSignatureProvider,
-    LensSignatureRegistry, OrderedMap, ScalarValue, TypeNode, ValueNode,
+    LensSignatureRegistry, MapKeyKind, OrderedMap, ScalarValue, TypeNode, ValueNode,
 };
 use fct_resolver::{Resolver, ResolverConfig, ResolverError};
 use std::collections::{HashMap, HashSet};
@@ -896,6 +896,7 @@ impl<S: LensSignatureProvider> TypeChecker<S> {
                 FacetNode::Vars(vars_block) | FacetNode::VarTypes(vars_block) => {
                     for entry in &vars_block.body {
                         if let BodyNode::KeyValue(kv) = entry {
+                            self.ensure_identifier_block_key(kv)?;
                             self.validate_value_map_keys(&kv.value, false)?;
                         }
                     }
@@ -903,6 +904,7 @@ impl<S: LensSignatureProvider> TypeChecker<S> {
                 FacetNode::Policy(policy) => {
                     for entry in &policy.body {
                         if let BodyNode::KeyValue(kv) = entry {
+                            self.ensure_identifier_block_key(kv)?;
                             self.validate_value_map_keys(&kv.value, false)?;
                         }
                     }
@@ -956,6 +958,7 @@ impl<S: LensSignatureProvider> TypeChecker<S> {
                     ))
                 }
             };
+            self.ensure_identifier_block_key(kv)?;
 
             match kv.key.as_str() {
                 "budget" => {
@@ -1058,6 +1061,7 @@ impl<S: LensSignatureProvider> TypeChecker<S> {
                     ))
                 }
             };
+            self.ensure_identifier_block_key(kv)?;
 
             if !allowed.contains(kv.key.as_str()) {
                 return Err(Self::policy_err("Unknown message field", &kv.key));
@@ -1471,6 +1475,16 @@ impl<S: LensSignatureProvider> TypeChecker<S> {
                 }
             }
             _ => {}
+        }
+        Ok(())
+    }
+
+    fn ensure_identifier_block_key(&self, kv: &KeyValueNode) -> ValidationResult<()> {
+        if kv.key_kind == MapKeyKind::String {
+            return Err(Self::policy_err(
+                "String-keyed maps are only allowed in @meta",
+                &kv.key,
+            ));
         }
         Ok(())
     }
@@ -2742,6 +2756,7 @@ mod tests {
             .map(|(key, value)| {
                 BodyNode::KeyValue(KeyValueNode {
                     key: key.to_string(),
+                    key_kind: Default::default(),
                     value,
                     span: span(),
                 })

@@ -1,5 +1,9 @@
+use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+
+pub type OrderedMap<K, V> = IndexMap<K, V>;
+pub const FACET_VERSION: &str = "2.1.3";
+pub const POLICY_VERSION: &str = "1";
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Span {
@@ -25,6 +29,7 @@ pub enum FacetNode {
     Vars(FacetBlock),
     VarTypes(FacetBlock),
     Context(FacetBlock),
+    Policy(FacetBlock),
     Import(ImportNode),
     Interface(InterfaceNode),
     Test(TestBlock),
@@ -33,7 +38,7 @@ pub enum FacetNode {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct FacetBlock {
     pub name: String,
-    pub attributes: HashMap<String, ValueNode>,
+    pub attributes: OrderedMap<String, ValueNode>,
     pub body: Vec<BodyNode>,
     pub span: Span,
 }
@@ -56,6 +61,7 @@ pub struct FunctionSignature {
     pub name: String,
     pub params: Vec<Parameter>,
     pub return_type: TypeNode,
+    pub effect: Option<String>,
     pub span: Span,
 }
 
@@ -69,7 +75,9 @@ pub struct Parameter {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct TestBlock {
     pub name: String,
-    pub vars: std::collections::HashMap<String, ValueNode>,
+    pub vars: OrderedMap<String, ValueNode>,
+    #[serde(default)]
+    pub input: OrderedMap<String, ValueNode>,
     pub mocks: Vec<MockDefinition>,
     pub assertions: Vec<Assertion>,
     pub body: Vec<BodyNode>, // Keep for backward compatibility
@@ -113,9 +121,18 @@ pub enum BodyNode {
     ListItem(ListItemNode),
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+pub enum MapKeyKind {
+    #[default]
+    Identifier,
+    String,
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct KeyValueNode {
     pub key: String,
+    #[serde(default)]
+    pub key_kind: MapKeyKind,
     pub value: ValueNode,
     pub span: Span,
 }
@@ -134,7 +151,7 @@ pub enum ValueNode {
     Variable(String), // $foo.bar
     Pipeline(PipelineNode),
     List(Vec<ValueNode>),
-    Map(HashMap<String, ValueNode>),
+    Map(OrderedMap<String, ValueNode>),
     Directive(DirectiveNode),
 }
 
@@ -157,32 +174,40 @@ pub struct PipelineNode {
 pub struct LensCallNode {
     pub name: String,
     pub args: Vec<ValueNode>,
-    pub kwargs: HashMap<String, ValueNode>,
+    pub kwargs: OrderedMap<String, ValueNode>,
     pub span: Span,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct DirectiveNode {
     pub name: String,
-    pub args: HashMap<String, ValueNode>,
+    pub args: OrderedMap<String, ValueNode>,
     pub span: Span,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum TypeNode {
     Primitive(String),
-    Struct(HashMap<String, TypeNode>),
+    Struct(OrderedMap<String, TypeNode>),
     List(Box<TypeNode>),
     Map(Box<TypeNode>),
     Union(Vec<TypeNode>),
-    Image { max_dim: Option<u32>, format: Option<String> },
-    Audio { max_duration: Option<f64>, format: Option<String> },
-    Embedding { size: usize },
+    Image {
+        max_dim: Option<u32>,
+        format: Option<String>,
+    },
+    Audio {
+        max_duration: Option<f64>,
+        format: Option<String>,
+    },
+    Embedding {
+        size: usize,
+    },
 }
 
 // Export type system and lens signature system
-pub mod types;
 pub mod lens_signatures;
+pub mod types;
 
-pub use types::{FacetType, PrimitiveType, StructField, ParameterSignature};
 pub use lens_signatures::{LensSignature, LensSignatureProvider, LensSignatureRegistry};
+pub use types::{FacetType, ParameterSignature, PrimitiveType, StructField};

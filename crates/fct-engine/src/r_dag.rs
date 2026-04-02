@@ -1429,6 +1429,7 @@ mod tests {
                 attributes: OrderedMap::new(),
                 body: vec![BodyNode::KeyValue(KeyValueNode {
                     key: "x".to_string(),
+                    key_kind: Default::default(),
                     value: ValueNode::Pipeline(PipelineNode {
                         initial: Box::new(ValueNode::String("hello".to_string())),
                         lenses: vec![LensCallNode {
@@ -1503,6 +1504,7 @@ mod tests {
                 attributes: OrderedMap::new(),
                 body: vec![BodyNode::KeyValue(KeyValueNode {
                     key: "greeting".to_string(),
+                    key_kind: Default::default(),
                     value: ValueNode::Pipeline(PipelineNode {
                         initial: Box::new(ValueNode::String("  HELLO  ".to_string())),
                         lenses: vec![
@@ -1579,6 +1581,7 @@ mod tests {
                 attributes: OrderedMap::new(),
                 body: vec![BodyNode::KeyValue(KeyValueNode {
                     key: "greeting".to_string(),
+                    key_kind: Default::default(),
                     value: ValueNode::Pipeline(PipelineNode {
                         initial: Box::new(ValueNode::String("hello".to_string())),
                         lenses: vec![LensCallNode {
@@ -1643,6 +1646,7 @@ mod tests {
                 attributes: OrderedMap::new(),
                 body: vec![BodyNode::KeyValue(KeyValueNode {
                     key: "items".to_string(),
+                    key_kind: Default::default(),
                     value: ValueNode::Pipeline(PipelineNode {
                         initial: Box::new(ValueNode::String("a,b,c".to_string())),
                         lenses: vec![LensCallNode {
@@ -1714,6 +1718,7 @@ mod tests {
                 body: vec![
                     BodyNode::KeyValue(KeyValueNode {
                         key: "b".to_string(),
+                        key_kind: Default::default(),
                         value: ValueNode::String("B".to_string()),
                         span: Span {
                             start: 0,
@@ -1724,6 +1729,7 @@ mod tests {
                     }),
                     BodyNode::KeyValue(KeyValueNode {
                         key: "a".to_string(),
+                        key_kind: Default::default(),
                         value: ValueNode::String("A".to_string()),
                         span: Span {
                             start: 0,
@@ -1734,6 +1740,7 @@ mod tests {
                     }),
                     BodyNode::KeyValue(KeyValueNode {
                         key: "c".to_string(),
+                        key_kind: Default::default(),
                         value: ValueNode::String("C".to_string()),
                         span: Span {
                             start: 0,
@@ -1776,6 +1783,7 @@ mod tests {
                     body: vec![
                         BodyNode::KeyValue(KeyValueNode {
                             key: "a".to_string(),
+                            key_kind: Default::default(),
                             value: ValueNode::String("old".to_string()),
                             span: Span {
                                 start: 0,
@@ -1786,6 +1794,7 @@ mod tests {
                         }),
                         BodyNode::KeyValue(KeyValueNode {
                             key: "b".to_string(),
+                            key_kind: Default::default(),
                             value: ValueNode::String("B".to_string()),
                             span: Span {
                                 start: 0,
@@ -1808,6 +1817,7 @@ mod tests {
                     body: vec![
                         BodyNode::KeyValue(KeyValueNode {
                             key: "a".to_string(),
+                            key_kind: Default::default(),
                             value: ValueNode::String("new".to_string()),
                             span: Span {
                                 start: 0,
@@ -1818,6 +1828,7 @@ mod tests {
                         }),
                         BodyNode::KeyValue(KeyValueNode {
                             key: "c".to_string(),
+                            key_kind: Default::default(),
                             value: ValueNode::String("C".to_string()),
                             span: Span {
                                 start: 0,
@@ -1859,6 +1870,7 @@ mod tests {
                 attributes: OrderedMap::new(),
                 body: vec![BodyNode::KeyValue(KeyValueNode {
                     key: "x".to_string(),
+                    key_kind: Default::default(),
                     value: ValueNode::Variable("missing.dep".to_string()),
                     span: Span {
                         start: 0,
@@ -1898,6 +1910,7 @@ mod tests {
                 body: vec![
                     BodyNode::KeyValue(KeyValueNode {
                         key: "a".to_string(),
+                        key_kind: Default::default(),
                         value: ValueNode::Variable("b".to_string()),
                         span: Span {
                             start: 0,
@@ -1908,6 +1921,7 @@ mod tests {
                     }),
                     BodyNode::KeyValue(KeyValueNode {
                         key: "b".to_string(),
+                        key_kind: Default::default(),
                         value: ValueNode::Variable("a".to_string()),
                         span: Span {
                             start: 0,
@@ -1947,6 +1961,7 @@ mod tests {
                 attributes: OrderedMap::new(),
                 body: vec![BodyNode::KeyValue(KeyValueNode {
                     key: "x".to_string(),
+                    key_kind: Default::default(),
                     value: ValueNode::String("hello".to_string()),
                     span: Span {
                         start: 0,
@@ -1994,6 +2009,7 @@ mod tests {
                 body: vec![
                     BodyNode::KeyValue(KeyValueNode {
                         key: "name".to_string(),
+                        key_kind: Default::default(),
                         value: ValueNode::String("World".to_string()),
                         span: Span {
                             start: 0,
@@ -2004,6 +2020,7 @@ mod tests {
                     }),
                     BodyNode::KeyValue(KeyValueNode {
                         key: "greeting".to_string(),
+                        key_kind: Default::default(),
                         value: ValueNode::Pipeline(PipelineNode {
                             initial: Box::new(ValueNode::Variable("name".to_string())),
                             lenses: vec![LensCallNode {
@@ -2071,6 +2088,7 @@ mod tests {
                     attributes: OrderedMap::new(),
                     body: vec![BodyNode::KeyValue(KeyValueNode {
                         key: "allow".to_string(),
+                        key_kind: Default::default(),
                         value: ValueNode::List(vec![ValueNode::Map(allow_rule)]),
                         span: Span {
                             start: 0,
@@ -2091,6 +2109,7 @@ mod tests {
                     attributes: OrderedMap::new(),
                     body: vec![BodyNode::KeyValue(KeyValueNode {
                         key: "x".to_string(),
+                        key_kind: Default::default(),
                         value: ValueNode::String("v".to_string()),
                         span: Span {
                             start: 0,
@@ -2144,6 +2163,7 @@ mod tests {
                 attributes: OrderedMap::new(),
                 body: vec![BodyNode::KeyValue(KeyValueNode {
                     key: "x".to_string(),
+                    key_kind: Default::default(),
                     value: ValueNode::String("v".to_string()),
                     span: Span {
                         start: 0,
@@ -2187,6 +2207,7 @@ mod tests {
                 body: vec![
                     BodyNode::KeyValue(KeyValueNode {
                         key: "user".to_string(),
+                        key_kind: Default::default(),
                         value: ValueNode::Map(OrderedMap::from([(
                             "profile".to_string(),
                             ValueNode::Map(OrderedMap::from([(
@@ -2203,6 +2224,7 @@ mod tests {
                     }),
                     BodyNode::KeyValue(KeyValueNode {
                         key: "display".to_string(),
+                        key_kind: Default::default(),
                         value: ValueNode::Variable("user.profile.name".to_string()),
                         span: Span {
                             start: 0,
@@ -2246,6 +2268,7 @@ mod tests {
                 body: vec![
                     BodyNode::KeyValue(KeyValueNode {
                         key: "user".to_string(),
+                        key_kind: Default::default(),
                         value: ValueNode::Map(OrderedMap::from([(
                             "name".to_string(),
                             ValueNode::String("Alice".to_string()),
@@ -2259,6 +2282,7 @@ mod tests {
                     }),
                     BodyNode::KeyValue(KeyValueNode {
                         key: "display".to_string(),
+                        key_kind: Default::default(),
                         value: ValueNode::Variable("user.profile.name".to_string()),
                         span: Span {
                             start: 0,
@@ -2300,6 +2324,7 @@ mod tests {
                 body: vec![
                     BodyNode::KeyValue(KeyValueNode {
                         key: "items".to_string(),
+                        key_kind: Default::default(),
                         value: ValueNode::Map(OrderedMap::from([(
                             "0".to_string(),
                             ValueNode::String("x".to_string()),
@@ -2313,6 +2338,7 @@ mod tests {
                     }),
                     BodyNode::KeyValue(KeyValueNode {
                         key: "first".to_string(),
+                        key_kind: Default::default(),
                         value: ValueNode::Variable("items.0".to_string()),
                         span: Span {
                             start: 0,
@@ -2353,6 +2379,7 @@ mod tests {
                 attributes: OrderedMap::new(),
                 body: vec![BodyNode::KeyValue(KeyValueNode {
                     key: "query".to_string(),
+                    key_kind: Default::default(),
                     value: ValueNode::Directive(DirectiveNode {
                         name: "input".to_string(),
                         args: OrderedMap::from([(
@@ -2409,6 +2436,7 @@ mod tests {
                 attributes: OrderedMap::new(),
                 body: vec![BodyNode::KeyValue(KeyValueNode {
                     key: "n".to_string(),
+                    key_kind: Default::default(),
                     value: ValueNode::Directive(DirectiveNode {
                         name: "input".to_string(),
                         args: OrderedMap::from([
@@ -2466,6 +2494,7 @@ mod tests {
                 attributes: OrderedMap::new(),
                 body: vec![BodyNode::KeyValue(KeyValueNode {
                     key: "query".to_string(),
+                    key_kind: Default::default(),
                     value: ValueNode::Directive(DirectiveNode {
                         name: "input".to_string(),
                         args: OrderedMap::from([(
@@ -2518,6 +2547,7 @@ mod tests {
                 attributes: OrderedMap::new(),
                 body: vec![BodyNode::KeyValue(KeyValueNode {
                     key: "n".to_string(),
+                    key_kind: Default::default(),
                     value: ValueNode::Directive(DirectiveNode {
                         name: "input".to_string(),
                         args: OrderedMap::from([(
@@ -2572,6 +2602,7 @@ mod tests {
                 attributes: OrderedMap::new(),
                 body: vec![BodyNode::KeyValue(KeyValueNode {
                     key: "n".to_string(),
+                    key_kind: Default::default(),
                     value: ValueNode::Directive(DirectiveNode {
                         name: "input".to_string(),
                         args: OrderedMap::from([
@@ -2625,6 +2656,7 @@ mod tests {
                 attributes: OrderedMap::new(),
                 body: vec![BodyNode::KeyValue(KeyValueNode {
                     key: "query".to_string(),
+                    key_kind: Default::default(),
                     value: ValueNode::Pipeline(PipelineNode {
                         initial: Box::new(ValueNode::Directive(DirectiveNode {
                             name: "input".to_string(),
@@ -2703,6 +2735,7 @@ mod tests {
                 attributes: OrderedMap::new(),
                 body: vec![BodyNode::KeyValue(KeyValueNode {
                     key: "answer".to_string(),
+                    key_kind: Default::default(),
                     value: ValueNode::Pipeline(PipelineNode {
                         initial: Box::new(ValueNode::String("hello".to_string())),
                         lenses: vec![LensCallNode {
@@ -2761,6 +2794,7 @@ mod tests {
                 attributes: OrderedMap::new(),
                 body: vec![BodyNode::KeyValue(KeyValueNode {
                     key: "answer".to_string(),
+                    key_kind: Default::default(),
                     value: ValueNode::Pipeline(PipelineNode {
                         initial: Box::new(ValueNode::String("hello".to_string())),
                         lenses: vec![LensCallNode {
@@ -2879,6 +2913,7 @@ mod tests {
                 attributes: OrderedMap::new(),
                 body: vec![BodyNode::KeyValue(KeyValueNode {
                     key: "answer".to_string(),
+                    key_kind: Default::default(),
                     value: ValueNode::Pipeline(PipelineNode {
                         initial: Box::new(ValueNode::String("  HELLO ".to_string())),
                         lenses: vec![LensCallNode {
@@ -2939,6 +2974,7 @@ mod tests {
                 attributes: OrderedMap::new(),
                 body: vec![BodyNode::KeyValue(KeyValueNode {
                     key: "answer".to_string(),
+                    key_kind: Default::default(),
                     value: ValueNode::Pipeline(PipelineNode {
                         initial: Box::new(ValueNode::String("hello".to_string())),
                         lenses: vec![LensCallNode {
@@ -3021,6 +3057,7 @@ mod tests {
                 attributes: OrderedMap::new(),
                 body: vec![BodyNode::KeyValue(KeyValueNode {
                     key: "answer".to_string(),
+                    key_kind: Default::default(),
                     value: ValueNode::Pipeline(PipelineNode {
                         initial: Box::new(ValueNode::String("hello".to_string())),
                         lenses: vec![LensCallNode {
@@ -3081,6 +3118,7 @@ mod tests {
                 attributes: OrderedMap::new(),
                 body: vec![BodyNode::KeyValue(KeyValueNode {
                     key: "answer".to_string(),
+                    key_kind: Default::default(),
                     value: ValueNode::Pipeline(PipelineNode {
                         initial: Box::new(ValueNode::String("hello".to_string())),
                         lenses: vec![LensCallNode {
@@ -3141,6 +3179,7 @@ mod tests {
                 attributes: OrderedMap::new(),
                 body: vec![BodyNode::KeyValue(KeyValueNode {
                     key: "answer".to_string(),
+                    key_kind: Default::default(),
                     value: ValueNode::Pipeline(PipelineNode {
                         initial: Box::new(ValueNode::String("hello".to_string())),
                         lenses: vec![LensCallNode {
@@ -3206,6 +3245,7 @@ mod tests {
                 attributes: OrderedMap::new(),
                 body: vec![BodyNode::KeyValue(KeyValueNode {
                     key: "answer".to_string(),
+                    key_kind: Default::default(),
                     value: ValueNode::Pipeline(PipelineNode {
                         initial: Box::new(ValueNode::String("hello".to_string())),
                         lenses: vec![LensCallNode {
@@ -3283,6 +3323,7 @@ mod tests {
                     attributes: OrderedMap::new(),
                     body: vec![BodyNode::KeyValue(KeyValueNode {
                         key: "allow".to_string(),
+                        key_kind: Default::default(),
                         value: ValueNode::List(vec![policy_allow_rule]),
                         span: Span {
                             start: 0,
@@ -3303,6 +3344,7 @@ mod tests {
                     attributes: OrderedMap::new(),
                     body: vec![BodyNode::KeyValue(KeyValueNode {
                         key: "answer".to_string(),
+                        key_kind: Default::default(),
                         value: ValueNode::Pipeline(PipelineNode {
                             initial: Box::new(ValueNode::String("hello".to_string())),
                             lenses: vec![LensCallNode {
@@ -3396,6 +3438,7 @@ mod tests {
                     attributes: OrderedMap::new(),
                     body: vec![BodyNode::KeyValue(KeyValueNode {
                         key: "allow".to_string(),
+                        key_kind: Default::default(),
                         value: ValueNode::List(vec![policy_allow_rule]),
                         span: Span {
                             start: 0,
@@ -3416,6 +3459,7 @@ mod tests {
                     attributes: OrderedMap::new(),
                     body: vec![BodyNode::KeyValue(KeyValueNode {
                         key: "answer".to_string(),
+                        key_kind: Default::default(),
                         value: ValueNode::Pipeline(PipelineNode {
                             initial: Box::new(ValueNode::String("hello".to_string())),
                             lenses: vec![LensCallNode {
@@ -3500,6 +3544,7 @@ mod tests {
                     attributes: OrderedMap::new(),
                     body: vec![BodyNode::KeyValue(KeyValueNode {
                         key: "allow".to_string(),
+                        key_kind: Default::default(),
                         value: ValueNode::List(vec![policy_allow_rule]),
                         span: Span {
                             start: 0,
@@ -3520,6 +3565,7 @@ mod tests {
                     attributes: OrderedMap::new(),
                     body: vec![BodyNode::KeyValue(KeyValueNode {
                         key: "answer".to_string(),
+                        key_kind: Default::default(),
                         value: ValueNode::Pipeline(PipelineNode {
                             initial: Box::new(ValueNode::String("hello".to_string())),
                             lenses: vec![LensCallNode {
@@ -3608,6 +3654,7 @@ mod tests {
                     attributes: OrderedMap::new(),
                     body: vec![BodyNode::KeyValue(KeyValueNode {
                         key: "allow".to_string(),
+                        key_kind: Default::default(),
                         value: ValueNode::List(vec![policy_allow_rule]),
                         span: Span {
                             start: 0,
@@ -3628,6 +3675,7 @@ mod tests {
                     attributes: OrderedMap::new(),
                     body: vec![BodyNode::KeyValue(KeyValueNode {
                         key: "answer".to_string(),
+                        key_kind: Default::default(),
                         value: ValueNode::Pipeline(PipelineNode {
                             initial: Box::new(ValueNode::String("hello".to_string())),
                             lenses: vec![LensCallNode {

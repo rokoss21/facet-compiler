@@ -32,6 +32,16 @@ fn meta_allows_namespaced_string_keys() {
 }
 
 #[test]
+fn meta_allows_quoted_identifier_like_key() {
+    let source = r#"
+@meta
+  "author": "Facet Playground"
+"#;
+
+    assert!(validate(source).is_ok());
+}
+
+#[test]
 fn context_requires_budget() {
     let source = r#"
 @context
@@ -481,6 +491,17 @@ fn string_keyed_map_outside_meta_is_rejected() {
     let source = r#"
 @user
   content: { "x.acme.value": "v" }
+"#;
+
+    let err = validate(source).unwrap_err();
+    assert!(err.contains("F452"), "expected F452, got: {err}");
+}
+
+#[test]
+fn quoted_identifier_key_outside_meta_is_rejected() {
+    let source = r#"
+@user
+  "content": "hi"
 "#;
 
     let err = validate(source).unwrap_err();
