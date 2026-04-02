@@ -5,6 +5,7 @@
 
 use anyhow::{Context, Result};
 use console::style;
+use crate::commands::mode_profile::resolve_execution_mode;
 use fct_ast::{BodyNode, FacetDocument, FacetNode, OrderedMap, PipelineNode, ScalarValue, ValueNode};
 use fct_engine::{
     count_facet_units_in_value, derive_message_section_id, ExecutionContext,
@@ -46,10 +47,7 @@ pub fn execute_run(
     info!("Starting full pipeline for file: {:?}", input);
     info!("Budget: {}, Context budget: {}", budget, context_budget);
 
-    if pure && exec {
-        return Err(anyhow::anyhow!("Use only one mode flag: --pure or --exec"));
-    }
-    let mode = if pure { "pure" } else { "exec" };
+    let (execution_mode, mode) = resolve_execution_mode(pure, exec)?;
 
     let source = fs::read_to_string(&input)
         .with_context(|| format!("Failed to read input file: {:?}", input))?;
@@ -79,11 +77,6 @@ pub fn execute_run(
     let mut engine = RDagEngine::new();
     engine.build(&resolved)?;
     engine.validate()?;
-    let execution_mode = if pure {
-        ExecutionMode::Pure
-    } else {
-        ExecutionMode::Exec
-    };
     let mut exec_ctx = ExecutionContext::new_with_mode(context_budget, execution_mode);
     if let Some(runtime_input_path) = runtime_input {
         let runtime_inputs = load_runtime_inputs(&runtime_input_path)?;
@@ -559,34 +552,14 @@ fn merge_guard_decisions(
     engine_decisions: &[ExecutionGuardDecision],
     render_decisions: &[GuardDecision],
 ) -> Vec<GuardDecision> {
-    let mut merged = Vec::with_capacity(engine_decisions.len() + render_decisions.len());
-
-    for decision in engine_decisions {
-        merged.push(GuardDecision {
-            seq: 0,
-            op: decision.op.clone(),
-            name: decision.name.clone(),
-            effect_class: decision.effect_class.clone(),
-            mode: decision.mode.clone(),
-            decision: decision.decision.clone(),
-            policy_rule_id: decision.policy_rule_id.clone(),
-            input_hash: decision.input_hash.clone(),
-            error_code: decision.error_code.clone(),
-        });
-    }
-    merged.extend(render_decisions.iter().cloned());
-
-    for (idx, decision) in merged.iter_mut().enumerate() {
-        decision.seq = idx + 1;
-    }
-    merged
+    crate::commands::guard::merge_guard_decisions(engine_decisions, render_decisions)
 }
 
 fn build_execution_artifact(
     payload: &CanonicalPayload,
     decisions: &[GuardDecision],
 ) -> Result<serde_json::Value> {
-    build_execution_artifact_with_attestation(payload, decisions, None)
+    crate::commands::artifact::build_execution_artifact(payload, decisions)
 }
 
 fn build_execution_artifact_with_attestation(
@@ -594,67 +567,11 @@ fn build_execution_artifact_with_attestation(
     decisions: &[GuardDecision],
     attestation: Option<serde_json::Value>,
 ) -> Result<serde_json::Value> {
-    let metadata = serde_json::json!({
-        "facet_version": payload.metadata.facet_version,
-        "host_profile_id": payload.metadata.host_profile_id,
-        "document_hash": payload.metadata.document_hash,
-        "policy_hash": payload.metadata.policy_hash,
-        "policy_version": payload.metadata.policy_version,
-    });
-
-    let normalized = normalize_guard_decisions(decisions);
-    let events: Vec<serde_json::Value> = normalized
-        .iter()
-        .map(serde_json::to_value)
-        .collect::<Result<_, _>>()?;
-
-    let h0_input = serde_json::json!({
-        "facet_version": payload.metadata.facet_version,
-        "host_profile_id": payload.metadata.host_profile_id,
-        "document_hash": payload.metadata.document_hash,
-        "policy_hash": payload.metadata.policy_hash,
-        "policy_version": payload.metadata.policy_version,
-        "profile": payload.metadata.profile,
-        "mode": payload.metadata.mode,
-    });
-
-    let mut prev = sha256_prefixed(canonicalize_json(&h0_input)?.as_bytes());
-    for event in &events {
-        let chain_input = serde_json::json!({
-            "prev": prev,
-            "event": event
-        });
-        prev = sha256_prefixed(canonicalize_json(&chain_input)?.as_bytes());
-    }
-
-    let attestation_value = match attestation {
-        Some(value) => validate_attestation_envelope(value)?,
-        None => serde_json::Value::Null,
-    };
-
-    Ok(serde_json::json!({
-        "metadata": metadata,
-        "provenance": {
-            "events": events,
-            "hash_chain": {
-                "algo": "sha256",
-                "head": prev
-            }
-        },
-        "attestation": attestation_value
-    }))
-}
-
-fn normalize_guard_decisions(decisions: &[GuardDecision]) -> Vec<GuardDecision> {
-    decisions
-        .iter()
-        .enumerate()
-        .map(|(idx, d)| {
-            let mut out = d.clone();
-            out.seq = idx + 1;
-            out
-        })
-        .collect()
+    crate::commands::artifact::build_execution_artifact_with_attestation(
+        payload,
+        decisions,
+        attestation,
+    )
 }
 
 fn sha256_prefixed(bytes: &[u8]) -> String {
@@ -662,59 +579,7 @@ fn sha256_prefixed(bytes: &[u8]) -> String {
 }
 
 fn canonicalize_json(value: &serde_json::Value) -> Result<String> {
-    Ok(serde_json_canonicalizer::to_string(value)?)
-}
-
-fn validate_attestation_envelope(attestation: serde_json::Value) -> Result<serde_json::Value> {
-    let obj = attestation
-        .as_object()
-        .ok_or_else(|| anyhow::anyhow!("Attestation must be an object"))?;
-
-    if obj.len() != 3 {
-        return Err(anyhow::anyhow!(
-            "Attestation must contain exactly: algo, key_id, sig"
-        ));
-    }
-
-    let algo = obj
-        .get("algo")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| anyhow::anyhow!("Attestation.algo must be a string"))?;
-    let key_id = obj
-        .get("key_id")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| anyhow::anyhow!("Attestation.key_id must be a string"))?;
-    let sig = obj
-        .get("sig")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| anyhow::anyhow!("Attestation.sig must be a string"))?;
-
-    let namespaced_algo = algo.starts_with("x.")
-        && algo.split('.').count() >= 3
-        && !algo.split('.').any(|seg| seg.is_empty());
-    if algo != "ed25519" && !namespaced_algo {
-        return Err(anyhow::anyhow!(
-            "Attestation.algo must be 'ed25519' or namespaced 'x.<host>.<algo>'"
-        ));
-    }
-    if key_id.trim().is_empty() {
-        return Err(anyhow::anyhow!("Attestation.key_id must be non-empty"));
-    }
-    if sig.is_empty()
-        || !sig
-            .chars()
-            .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
-    {
-        return Err(anyhow::anyhow!(
-            "Attestation.sig must be non-empty base64url (unpadded)"
-        ));
-    }
-
-    Ok(serde_json::json!({
-        "algo": algo,
-        "key_id": key_id,
-        "sig": sig,
-    }))
+    crate::commands::canonical::canonicalize_json(value)
 }
 
 #[cfg(test)]

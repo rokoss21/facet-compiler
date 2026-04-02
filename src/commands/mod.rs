@@ -4,16 +4,21 @@
 //! Each command is implemented in its own module for better organization.
 
 use clap::Parser;
+use governor::{clock::DefaultClock, state::direct::NotKeyed, state::InMemoryState, RateLimiter};
 use std::path::PathBuf;
-use governor::{RateLimiter, state::InMemoryState, clock::DefaultClock, state::direct::NotKeyed};
 
 pub type DefaultRateLimiter = RateLimiter<NotKeyed, InMemoryState, DefaultClock>;
 
 pub mod build;
+pub mod codegen;
+pub mod inspect;
 pub mod run;
 pub mod test;
-pub mod inspect;
-pub mod codegen;
+pub mod artifact;
+pub mod canonical;
+pub mod guard;
+pub mod mode_profile;
+pub mod policy;
 
 /// Main CLI structure using clap for argument parsing
 #[derive(Parser)]
@@ -52,6 +57,34 @@ pub enum Commands {
         /// Input FACET file path
         #[arg(short, long)]
         input: PathBuf,
+
+        /// Write resolved AST view to JSON file
+        #[arg(long)]
+        ast: Option<PathBuf>,
+
+        /// Write dependency graph view to JSON file
+        #[arg(long)]
+        dag: Option<PathBuf>,
+
+        /// Write layout allocation view to JSON file
+        #[arg(long)]
+        layout: Option<PathBuf>,
+
+        /// Write effective policy view to JSON file
+        #[arg(long)]
+        policy: Option<PathBuf>,
+
+        /// Layout budget for inspect preview
+        #[arg(long, default_value_t = 4096)]
+        budget: usize,
+
+        /// Inspect in pure mode
+        #[arg(long, conflicts_with = "exec")]
+        pure: bool,
+
+        /// Inspect in exec mode (default)
+        #[arg(long)]
+        exec: bool,
     },
 
     /// Run full pipeline: parse, resolve, validate, compute, and render
@@ -59,6 +92,10 @@ pub enum Commands {
         /// Input FACET file path
         #[arg(short, long)]
         input: PathBuf,
+
+        /// Runtime input values JSON file for @input(...) variables
+        #[arg(long)]
+        runtime_input: Option<PathBuf>,
 
         /// Token budget for context window (default: 4096)
         #[arg(short, long, default_value_t = 4096)]
@@ -71,6 +108,14 @@ pub enum Commands {
         /// Output format: json or pretty
         #[arg(short, long, default_value = "json")]
         format: String,
+
+        /// Run in pure mode
+        #[arg(long, conflicts_with = "exec")]
+        pure: bool,
+
+        /// Run in exec mode (default)
+        #[arg(long)]
+        exec: bool,
     },
 
     /// Run @test blocks
@@ -94,6 +139,14 @@ pub enum Commands {
         /// Gas limit for test execution
         #[arg(long, default_value_t = 10000)]
         gas_limit: usize,
+
+        /// Run tests in pure mode
+        #[arg(long, conflicts_with = "exec")]
+        pure: bool,
+
+        /// Run tests in exec mode (default)
+        #[arg(long)]
+        exec: bool,
     },
 
     /// Generate SDK from FACET interfaces
