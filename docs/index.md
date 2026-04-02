@@ -1,4 +1,5 @@
 ---
+permalink: /
 ---
 # FACET v2.0 Documentation
 
@@ -175,5 +176,4 @@
 **Ready to master FACET? Start with [01-quickstart.md](01-quickstart.md)!** 🚀
 
 *Documentation automatically generated and maintained. Last updated: 2025-12-09*
-
 
