@@ -7,8 +7,11 @@ edition = "2021"
 nom = { workspace = true }
 nom_locate = { workspace = true, optional = true }
 serde = { workspace = true }
+serde_json = { workspace = true }
 thiserror = { workspace = true }
 fct-ast = { workspace = true }
+unicode-normalization = "0.1"
+sha2 = "0.10"
 
 [features]
 default = ["nom_locate"]

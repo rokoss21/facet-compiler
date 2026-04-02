@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 fct-ast = { path = "../fct-ast" }
 fct-std = { path = "../fct-std" }
+fct-resolver = { path = "../fct-resolver" }
 thiserror = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 regex = { version = "1.10", default-features = false, features = ["std"] }
