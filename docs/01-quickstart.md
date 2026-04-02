@@ -1,12 +1,10 @@
 ---
+permalink: /01-quickstart.html
 ---
+
 # 01. FACET v2.1.3 Quick Start Guide
-
 **Reading Time:** 5 minutes | **Difficulty:** Beginner | **Next:** [02-tutorial.md](02-tutorial.html)
-
 Get up and running with FACET in 5 minutes.
-
----
 
 ## Table of Contents
 

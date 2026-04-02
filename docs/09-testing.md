@@ -1,12 +1,10 @@
 ---
+permalink: /09-testing.html
 ---
+
 # 09. FACET v2.1.3 Testing Guide
-
 **Reading Time:** 15-20 minutes | **Difficulty:** Intermediate | **Previous:** [08-lenses.md](08-lenses.html) | **Next:** [10-performance.md](10-performance.html)
-
 **Specification Compliance:** Implements FACET v2.1.3 specification Section 13 (@test blocks) with extended features.
-
----
 
 ## Table of Contents
 

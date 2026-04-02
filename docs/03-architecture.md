@@ -1,14 +1,12 @@
 ---
+permalink: /03-architecture.html
 ---
+
 # 03. FACET v2.1.3 Architecture Guide
-
 **Reading Time:** 20-30 minutes | **Difficulty:** Intermediate | **Previous:** [02-tutorial.md](02-tutorial.html) | **Next:** [04-type-system.md](04-type-system.html)
-
 **Last Updated:** 2025-12-09
 **Version:** 0.1.0
 **Status:** Production Ready
-
----
 
 ## Table of Contents
 

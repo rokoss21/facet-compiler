@@ -1,12 +1,10 @@
 ---
+permalink: /08-lenses.html
 ---
+
 # 08. FACET Standard Lens Library Reference
-
 **Reading Time:** 20-25 minutes | **Difficulty:** Intermediate | **Previous:** [07-api-reference.md](07-api-reference.html) | **Next:** [09-testing.md](09-testing.html)
-
 Complete reference for all built-in lens functions in FACET v2.1.3.
-
----
 
 ## Table of Contents
 

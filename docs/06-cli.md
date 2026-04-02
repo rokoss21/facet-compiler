@@ -1,14 +1,11 @@
 ---
+permalink: /06-cli.html
 ---
+
 # 06. FACET CLI Reference
-
 **Reading Time:** 15-20 minutes | **Difficulty:** Beginner | **Previous:** [05-examples-guide.md](05-examples-guide.html) | **Next:** [07-api-reference.md](07-api-reference.html)
-
 Complete command-line interface documentation for the FACET v2.1.3 Compiler (`fct`).
-
 **Specification Compliance:** Implements the v2.1.3 command surface (`build`, `run`, `test`, `inspect`, `codegen`) with profile/mode-aware behavior.
-
----
 
 ## Table of Contents
 

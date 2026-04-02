@@ -1,14 +1,12 @@
 ---
+permalink: /13-import-system.html
 ---
+
 # 13. FACET Import System Guide
-
 **Reading Time:** 20-25 minutes | **Difficulty:** Intermediate | **Previous:** [12-errors.md](12-errors.html) | **Next:** [faq.md](faq.html)
-
 **Version:** 0.1.0
 **Status:** Production Ready
 **Last Updated:** 2025-12-09
-
----
 
 ## Table of Contents
 

@@ -1,14 +1,12 @@
 ---
+permalink: /11-security.html
 ---
+
 # 11. FACET Security Model & Best Practices
-
 **Reading Time:** 20-25 minutes | **Difficulty:** Intermediate | **Previous:** [10-performance.md](10-performance.html) | **Next:** [12-errors.md](12-errors.html)
-
 **Version:** 1.0
 **Last Updated:** 2025-12-09
 **Status:** Production Ready
-
----
 
 ## Table of Contents
 

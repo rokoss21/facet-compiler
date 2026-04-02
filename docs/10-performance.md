@@ -1,14 +1,12 @@
 ---
+permalink: /10-performance.html
 ---
+
 # 10. FACET Performance Guide
-
 **Reading Time:** 25-30 minutes | **Difficulty:** Intermediate | **Previous:** [09-testing.md](09-testing.html) | **Next:** [11-security.md](11-security.html)
-
 **Version:** 1.0
 **Last Updated:** 2025-12-09
 **Status:** Production Ready
-
----
 
 ## Table of Contents
 

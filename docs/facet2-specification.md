@@ -1,3 +1,7 @@
+---
+permalink: /facet2-specification.html
+---
+
 ### FACET v2.1.3 — Production Language Specification
 
 **Status:** Recommendation (REC‑PROD)  

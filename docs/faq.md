@@ -1,12 +1,11 @@
 ---
+permalink: /faq.html
 ---
-# FACET v2.1.3 Frequently Asked Questions
 
+# FACET v2.1.3 Frequently Asked Questions
 **Version:** 1.0
 **Last Updated:** 2025-12-09
 **Status:** Production Ready
-
----
 
 ## Table of Contents
 

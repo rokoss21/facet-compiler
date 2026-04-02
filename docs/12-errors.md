@@ -1,12 +1,10 @@
 ---
+permalink: /12-errors.html
 ---
+
 # 12. FACET v2.1.3 Error Codes Reference
-
 **Reading Time:** 15-20 minutes | **Difficulty:** Intermediate | **Previous:** [11-security.md](11-security.html) | **Next:** [13-import-system.md](13-import-system.html)
-
 This document provides a comprehensive reference for all error codes in FACET v2.1.3, including examples and troubleshooting guidance.
-
----
 
 ## Table of Contents
 

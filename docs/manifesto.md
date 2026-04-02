@@ -1,3 +1,7 @@
+---
+permalink: /manifesto.html
+---
+
 # FACET Manifesto
 
 ## Deterministic Contract Layer for Intelligence

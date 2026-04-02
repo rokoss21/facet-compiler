@@ -1,13 +1,11 @@
 ---
+permalink: /02-tutorial.html
 ---
+
 # 02. FACET v2.1.3 Complete Tutorial
-
 **Reading Time:** 30-60 minutes | **Difficulty:** Beginner → Advanced | **Previous:** [01-quickstart.md](01-quickstart.html) | **Next:** [03-architecture.md](03-architecture.html)
-
 **Learning Path:** Beginner → Intermediate → Advanced
 **Prerequisites:** Basic programming knowledge
-
----
 
 ## Table of Contents
 

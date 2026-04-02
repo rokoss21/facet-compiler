@@ -1,4 +1,8 @@
 ---
+permalink: /test.html
+---
+
+---
 ---
 # Test Page
 

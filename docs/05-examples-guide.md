@@ -1,14 +1,12 @@
 ---
+permalink: /05-examples-guide.html
 ---
+
 # 05. FACET Examples Guide
-
 **Reading Time:** 45-60 minutes | **Difficulty:** Beginner → Advanced | **Previous:** [04-type-system.md](04-type-system.html) | **Next:** [06-cli.md](06-cli.html)
-
 **Version:** 1.0
 **Last Updated:** 2025-12-09
 **Status:** Production Ready
-
----
 
 ## Table of Contents
 

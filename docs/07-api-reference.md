@@ -1,14 +1,12 @@
 ---
+permalink: /07-api-reference.html
 ---
+
 # 07. FACET v2.1.3 Rust API Reference
-
 **Reading Time:** 30-40 minutes | **Difficulty:** Advanced | **Previous:** [06-cli.md](06-cli.html) | **Next:** [08-lenses.md](08-lenses.html)
-
 **Version:** 0.1.0
 **Last Updated:** 2025-12-09
 **Status:** Production Ready
-
----
 
 ## Table of Contents
 

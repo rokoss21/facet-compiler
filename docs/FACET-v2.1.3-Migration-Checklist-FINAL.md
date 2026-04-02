@@ -1,3 +1,7 @@
+---
+permalink: /FACET-v2.1.3-Migration-Checklist-FINAL.html
+---
+
 # 14. FACET v2.1.3 Migration Checklist
 
 Status: Final  

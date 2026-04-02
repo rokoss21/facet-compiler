@@ -1,3 +1,7 @@
+---
+permalink: /README.html
+---
+
 # FACET v2.1.3 Documentation
 
 Current documentation hub for the Rust implementation of FACET v2.1.3.
