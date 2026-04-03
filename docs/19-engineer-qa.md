@@ -3,35 +3,25 @@ permalink: /19-engineer-qa.html
 title: Engineer Q&A
 ---
 
-# 19. Engineer Q&A (Hard Questions)
-**Reading Time:** 6-8 minutes
+# 19. Engineer Q&A
 
-## Q: Is FACET deterministic end-to-end?
-No. FACET guarantees deterministic contract compilation/execution boundaries; model generation remains probabilistic.
+## Is FACET model output deterministic?
 
-## Q: What exactly is deterministic then?
-Normalization, import/merge order, type/policy checks, R-DAG traversal, layout ordering, canonical JSON, and guard decision evaluation rules.
+No. FACET standardizes deterministic contract compilation/execution boundaries, not model internals.
 
-## Q: Where is compile-time boundary?
-Parsing/resolution/type/policy validation are compile-time checks; they run before runtime side effects.
+## What is deterministic then?
 
-## Q: What happens on contract violation?
-Execution stops immediately with explicit `F*` error; execution never continues after contract violation.
+Normalization, parse/merge ordering, type checks, R-DAG evaluation order, layout packing rules, canonical JSON ordering, and policy/guard decision logic.
 
-## Q: What about malformed model output?
-That is application-layer response validation; FACET controls request-side correctness, host controls response acceptance policy.
+## Where is the integration boundary?
 
-## Q: Is this a framework replacement?
-No. FACET is a control layer for request contracts and bounded execution behavior.
+Canonical JSON (`metadata/tools/messages`) is the provider-agnostic boundary object.
 
-## Q: Can I adopt it without rewriting everything?
-Yes. Insert FACET as sidecar request compiler and keep existing provider client/business logic.
+## Why both `F454` and `F455`?
 
-## Q: Where is auditability?
-Use `document_hash`, `policy_hash`, and (Hypervisor) guard decision artifact/hash chain.
+- `F454`: deterministic policy deny.
+- `F455`: guard undecidable/evaluation failure; fail-closed deny.
 
-## Related
+## Why does `@system role/model` fail?
 
-- [Execution Model](15-execution-model.html)
-- [Integration Guide](18-integration-guide.html)
-- [Production Scenario](16-production-scenario.html)
+Because v2.1.3 message schema allows `content`, layout fields, optional `when`, and `@system.tools` only.

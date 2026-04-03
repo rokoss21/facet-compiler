@@ -3,83 +3,42 @@ permalink: /18-integration-guide.html
 title: Integration Guide
 ---
 
-# 18. Integration Guide (Brownfield)
-**Reading Time:** 10-12 minutes | **Difficulty:** Intermediate
-**Compiler Version:** 0.1.2 | **Spec Version:** 2.1.3
+# 18. Integration Guide
 
-This guide focuses on integrating FACET into existing systems without a full rewrite.
+## Goal
 
-## 1. Minimal Insertion Points
+Integrate FACET as a deterministic request-construction layer in an existing AI stack.
 
-### Pattern A: Sidecar Compiler (lowest risk)
+## Recommended flow
 
-- Keep current application flow.
-- Replace prompt assembly function with `fct run` call.
-- Continue using your existing provider client and response validator.
+1. store `.facet` contracts in repo
+2. run `facet-fct build` in CI
+3. run `facet-fct test` for contract tests
+4. run `facet-fct run` at execution time with runtime input JSON
+5. pass canonical JSON to provider adapter
 
-### Pattern B: CI Contract Gate
+## Minimal runtime contract
 
-- Keep runtime unchanged initially.
-- Add `fct build` in CI for all `.facet` contracts.
-- Block merges on contract/type/policy failures.
+- input: facet file + runtime input JSON
+- output: canonical JSON (`metadata/tools/messages`)
+- optional output: execution artifact for audit
 
-### Pattern C: Runtime Guard Rollout
+## Integration rules
 
-- Start in `core` profile for static validation.
-- Move selected flows to `hypervisor` with policy/guard events.
-- Enable strict fail-closed behavior for high-risk operations.
+- treat canonical JSON as the boundary object
+- keep provider-specific settings outside FACET syntax unless represented as host extensions
+- keep policy in `@policy` and enforce via guard path
+- log `document_hash` + `policy_hash` with downstream request ids
 
-## 2. Migration Plan (Incremental)
+## CI template
 
-1. Inventory 3 high-value prompt flows.
-2. Port them to `.facet` contracts.
-3. Add CI gate: `fct build --input <file>`.
-4. Add runtime call path: `fct run` -> provider.
-5. Enforce schema validation on provider response.
-6. Add bounded retry/fallback policy.
+```bash
+facet-fct build --input contracts/main.facet
+facet-fct test --input contracts/main.facet --output summary --pure
+```
 
-## 3. Cost of Adoption
+## Runtime template
 
-### Engineering Cost
-
-- Initial contract modeling effort.
-- Host-side response validation and retry policy wiring.
-- Policy/guard setup for Hypervisor flows.
-
-### Runtime Cost
-
-- Additional per-request compile/run overhead.
-- Artifact/telemetry storage if guard provenance is enabled.
-
-### Risk Reduction Value
-
-- Contract errors move left (compile-time).
-- Runtime failures become explicit and classifiable.
-- Guarded operations become auditable.
-
-## 4. Compatibility Strategy
-
-- Keep provider SDKs unchanged.
-- Keep business logic unchanged.
-- Replace only request construction and policy gating layer first.
-
-## 5. Anti-Patterns
-
-- Treating FACET as response truth validator by itself.
-- Skipping host response schema checks.
-- Enabling retries without strict bounds.
-- Using nondeterministic host defaults for policy decisions.
-
-## 6. Recommended “First Week” Checklist
-
-- [ ] Add `fct build` in CI on changed contracts.
-- [ ] Add one production flow via sidecar integration.
-- [ ] Log `document_hash` and `policy_hash` per request.
-- [ ] Add deterministic retry/fallback policy.
-- [ ] Validate post-model response schema in host code.
-
-## 7. Related
-
-- [Execution Model](15-execution-model.html)
-- [Production Scenario](16-production-scenario.html)
-- [Mini Benchmark Report](17-benchmark-report.html)
+```bash
+facet-fct run --input contracts/main.facet --runtime-input runtime.json --format json --exec
+```
