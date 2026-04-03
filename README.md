@@ -19,13 +19,25 @@ Deterministic compiler and execution layer for **FACET v2.1.3**.
 - Canonical JSON output + stable document and policy hashes
 - Spec-oriented examples and conformance suites in CI
 
-## Quick Start (2 Minutes)
-
-### 1) Build the compiler
+## Install in One Command (Recommended)
 
 ```bash
-cargo build --release --bin facet-fct
-./target/release/facet-fct --version
+cargo install --git https://github.com/rokoss21/facet-compiler --bin facet-fct
+facet-fct --version
+```
+
+Optional short alias:
+
+```bash
+alias fct=facet-fct
+```
+
+## Quick Start (2 Minutes)
+
+### 1) Ensure compiler is installed
+
+```bash
+facet-fct --version
 # fct 0.1.2
 ```
 
@@ -59,13 +71,20 @@ Save as `hello.input.json`.
 ### 3) Validate and run
 
 ```bash
-./target/release/facet-fct build --input hello.facet
-./target/release/facet-fct run --input hello.facet --runtime-input hello.input.json --exec --format pretty
+facet-fct build --input hello.facet
+facet-fct run --input hello.facet --runtime-input hello.input.json --exec --format pretty
 ```
 
 ## Installation
 
-### Option A: Download release binary
+### Option A: Fast install from Git (Cargo)
+
+```bash
+cargo install --git https://github.com/rokoss21/facet-compiler --bin facet-fct
+facet-fct --version
+```
+
+### Option B: Download release binary
 
 From [Releases](https://github.com/rokoss21/facet-compiler/releases/latest):
 
@@ -81,20 +100,25 @@ chmod +x facet-fct
 ./facet-fct --version
 ```
 
-### Option B: Install from local source with Cargo
+### Option C: Build from source (compile locally)
+
+```bash
+git clone https://github.com/rokoss21/facet-compiler
+cd facet-compiler
+cargo build --release --bin facet-fct
+./target/release/facet-fct --version
+```
+
+### Option D: Install from local source with Cargo
 
 ```bash
 cargo install --path . --bin facet-fct
 facet-fct --version
 ```
 
-### Option C: Build from source
+### Homebrew
 
-```bash
-git clone https://github.com/rokoss21/facet-compiler
-cd facet-compiler
-cargo build --release --bin facet-fct
-```
+Official Homebrew formula is not published yet. Use `cargo install` or release binaries.
 
 ## CLI Cheatsheet
 

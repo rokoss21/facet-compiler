@@ -11,6 +11,7 @@ Complete command-line interface documentation for the FACET v2.1.3 Compiler (`fc
 ## Table of Contents
 
 - [Overview](#overview)
+- [Install & Command Name](#install--command-name)
 - [Global Options](#global-options)
 - [Commands](#commands)
   - [build](#build)
@@ -37,6 +38,33 @@ The FACET compiler provides five main commands:
 - `run` - Execute the full compilation pipeline and render output
 - `test` - Run @test blocks and generate test reports
 - `codegen` - Generate SDKs from FACET interfaces (TypeScript, Python, Rust)
+
+## Install & Command Name
+
+### Fast install
+
+```bash
+cargo install --git https://github.com/rokoss21/facet-compiler --bin facet-fct
+facet-fct --version
+```
+
+### Compile locally
+
+```bash
+git clone https://github.com/rokoss21/facet-compiler
+cd facet-compiler
+cargo build --release --bin facet-fct
+./target/release/facet-fct --version
+```
+
+### Command naming
+
+The binary name is `facet-fct`. In docs we may use `fct` as shorthand.
+If you want shorthand locally:
+
+```bash
+alias fct=facet-fct
+```
 
 ## Global Options
 
@@ -68,8 +96,12 @@ Output logs in JSON format for structured logging.
 ```bash
 fct --json-logs build --input myfile.facet
 ```
-[INFO] Validating types...
-[INFO] All checks passed
+
+Sample output:
+
+```json
+{"level":"INFO","message":"Validating types..."}
+{"level":"INFO","message":"All checks passed"}
 ```
 
 ### `-h, --help`

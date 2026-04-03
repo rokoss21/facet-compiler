@@ -37,16 +37,29 @@ Get up and running with FACET in 5 minutes.
 ### Prerequisites
 - Rust 1.70+ ([install here](https://rustup.rs/))
 
-### Build
+### Fast install (recommended)
+```bash
+cargo install --git https://github.com/rokoss21/facet-compiler --bin facet-fct
+facet-fct --version
+# Output: fct 0.1.2
+```
+
+Optional alias:
+```bash
+alias fct=facet-fct
+```
+
+### Compile from source
 ```bash
 git clone https://github.com/rokoss21/facet-compiler
 cd facet-compiler
-cargo build --release
+cargo build --release --bin facet-fct
+./target/release/facet-fct --version
 ```
 
 ### Verify
 ```bash
-cargo run -- --version
+facet-fct --version
 # Output: fct 0.1.2
 ```
 
@@ -76,13 +89,13 @@ Create `hello.facet`:
 
 ### Validate
 ```bash
-cargo run -- build --input hello.facet
+facet-fct build --input hello.facet
 # Output: ✓ Build successful
 ```
 
 ### Execute
 ```bash
-cargo run -- run --input hello.facet --format pretty
+facet-fct run --input hello.facet --format pretty
 ```
 
 **Output:**
@@ -273,7 +286,7 @@ FACET supports standard types:
 
 **Run:**
 ```bash
-cargo run -- run --input support_bot.facet --budget 8192
+facet-fct run --input support_bot.facet --budget 8192
 ```
 
 ### Example 3: RAG Pipeline
@@ -316,31 +329,31 @@ cargo run -- run --input support_bot.facet --budget 8192
 ### Build (Validate)
 ```bash
 # Parse and validate
-cargo run -- build --input myfile.facet
+facet-fct build --input myfile.facet
 
 # With verbose output
-cargo run -- -v build --input myfile.facet
+facet-fct -v build --input myfile.facet
 ```
 
 ### Inspect (View AST)
 ```bash
 # See parsed structure
-cargo run -- inspect --input myfile.facet
+facet-fct inspect --input myfile.facet
 ```
 
 ### Run (Full Pipeline)
 ```bash
 # Execute and render
-cargo run -- run --input myfile.facet
+facet-fct run --input myfile.facet
 
 # Custom token budget
-cargo run -- run --input myfile.facet --budget 16384
+facet-fct run --input myfile.facet --budget 16384
 
 # Pretty-printed output
-cargo run -- run --input myfile.facet --format pretty
+facet-fct run --input myfile.facet --format pretty
 
 # Verbose execution log
-cargo run -- -v run --input myfile.facet
+facet-fct -v run --input myfile.facet
 ```
 
 ---
@@ -406,7 +419,7 @@ Error: F002: Tab characters forbidden (use 2 spaces)
 ### Try These
 1. **Modify examples** - Change variables, add pipelines
 2. **Create your own** - Start with `@vars` and `@user`
-3. **Use verbose mode** - See what happens: `cargo run -- -v run --input myfile.facet`
+3. **Use verbose mode** - See what happens: `facet-fct -v run --input myfile.facet`
 4. **Experiment with budgets** - Try different `--budget` values
 
 ---
@@ -435,19 +448,19 @@ Error: F002: Tab characters forbidden (use 2 spaces)
 ## Getting Help
 
 ### Documentation
-- Run `cargo run -- --help` for CLI help
-- Run `cargo run -- run --help` for command-specific help
+- Run `facet-fct --help` for CLI help
+- Run `facet-fct run --help` for command-specific help
 
 ### Debugging
 ```bash
 # 1. Validate syntax
-cargo run -- build --input myfile.facet
+facet-fct build --input myfile.facet
 
 # 2. Inspect AST structure
-cargo run -- inspect --input myfile.facet
+facet-fct inspect --input myfile.facet
 
 # 3. Run with verbose logging
-cargo run -- -v run --input myfile.facet
+facet-fct -v run --input myfile.facet
 ```
 
 ### Common Issues
