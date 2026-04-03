@@ -1,49 +1,36 @@
 ---
 permalink: /README.html
+title: Documentation Hub
 ---
 
-# FACET v2.1.3 Documentation
+# FACET Documentation (Spec-First)
 
-Current documentation hub for the Rust implementation of FACET v2.1.3.
+This documentation targets **FACET language spec v2.1.3** and compiler **fct 0.1.2**.
+If any page conflicts with the spec, the spec is authoritative.
 
-## Canonical References
+## Source of Truth
 
-- Language specification: [`../FACET-v2.1.3-Production-Language-Specification.md`](https://github.com/rokoss21/facet-compiler/blob/master/FACET-v2.1.3-Production-Language-Specification.md)
-- Migration/conformance status: [`14-v2.1.3-migration-checklist.md`](14-v2.1.3-migration-checklist.html)
-- Project overview: [`../README.md`](https://github.com/rokoss21/facet-compiler/blob/master/README.md)
+- [FACET v2.1.3 Production Language Specification](https://github.com/rokoss21/facet-compiler/blob/master/FACET-v2.1.3-Production-Language-Specification.md)
+- [Migration & conformance checklist](14-v2.1.3-migration-checklist.html)
+- [Project README](https://github.com/rokoss21/facet-compiler/blob/master/README.md)
 
-## Recommended Reading Order
+## Recommended Order
 
-1. [`01-quickstart.md`](01-quickstart.html)
-2. [`02-tutorial.md`](02-tutorial.html)
-3. [`06-cli.md`](06-cli.html)
-4. [`05-examples-guide.md`](05-examples-guide.html)
-5. [`03-architecture.md`](03-architecture.html)
-6. [`04-type-system.md`](04-type-system.html)
-7. [`08-lenses.md`](08-lenses.html)
-8. [`09-testing.md`](09-testing.html)
-9. [`11-security.md`](11-security.html)
-10. [`12-errors.md`](12-errors.html)
+1. [Quick Start](01-quickstart.html)
+2. [Tutorial](02-tutorial.html)
+3. [Examples Guide](05-examples-guide.html)
+4. [CLI Reference](06-cli.html)
+5. [Architecture](03-architecture.html)
+6. [Execution Model](15-execution-model.html)
+7. [Type System](04-type-system.html)
+8. [Lenses](08-lenses.html)
+9. [Testing](09-testing.html)
+10. [Security](11-security.html)
+11. [Errors](12-errors.html)
+12. [Import System](13-import-system.html)
+13. [FAQ](faq.html)
 
-## Functional Areas
+## Scope Guarantee
 
-- Runtime and execution:
-  - [`03-architecture.md`](03-architecture.html)
-  - [`10-performance.md`](10-performance.html)
-  - [`11-security.md`](11-security.html)
-- Language details:
-  - [`04-type-system.md`](04-type-system.html)
-  - [`08-lenses.md`](08-lenses.html)
-  - [`13-import-system.md`](13-import-system.html)
-- Tooling:
-  - [`06-cli.md`](06-cli.html)
-  - [`07-api-reference.md`](07-api-reference.html)
-  - [`09-testing.md`](09-testing.html)
-- Troubleshooting:
-  - [`12-errors.md`](12-errors.html)
-  - [`faq.md`](faq.html)
-
-## Notes
-
-- `docs/facet2-specification.md` is retained for compatibility with old links.
-- Source of truth for language semantics is the root spec file for v2.1.3.
+All syntax and semantic examples in this docs set use only normative FACET v2.1.3 constructs.
+No legacy `@system.role/model/instructions/temperature` or `@context.documents` patterns are used as valid syntax.
